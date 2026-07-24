@@ -1,0 +1,12 @@
+*.xlsx
+*.xls
+*.pbix
+node_modules/
+.git/
+.agents/
+*.temp.xlsx
+*.bak
+lt_output.txt
+smtp_config.json
+*.log
+scratch/

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comunicado de Transporte - Falecimento de Juvenil Pereira dos Santos</title>
+    
+    <!-- Google Fonts: Playfair Display (Serif) & Inter (Sans-serif) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Leaflet.js for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- QRCode.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['Playfair Display', 'serif'],
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        solene: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                            950: '#020617',
+                        },
+                        accent: {
+                            gold: '#d97706',
+                            goldlight: '#f59e0b',
+                            golddark: '#b45309',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0b0f19;
+            background-image: radial-gradient(circle at top right, rgba(30, 41, 59, 0.5), transparent), radial-gradient(circle at bottom left, rgba(15, 23, 42, 0.8), transparent);
+        }
+        
+        .glass-card {
+            background: rgba(30, 41, 59, 0.45);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .border-gold-gradient {
+            border-image: linear-gradient(to right, #b45309, #f59e0b, #b45309) 1;
+        }
+
+        /* Leaflet custom styling to match dark theme */
+        .leaflet-container {
+            background: #1e293b !important;
+        }
+        .leaflet-tile {
+            filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3);
+        }
+        .leaflet-bar a {
+            background-color: #1e293b !important;
+            color: #f3f4f6 !important;
+            border-bottom: 1px solid #334155 !important;
+        }
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+            background: #1e293b !important;
+            color: #f3f4f6 !important;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .glass-card {
+                background: white !important;
+                border: 2px solid #ccc !important;
+                box-shadow: none !important;
+                color: black !important;
+                backdrop-filter: none !important;
+            }
+            .print-text-dark {
+                color: black !important;
+            }
+            .print-border {
+                border: 1px solid #666 !important;
+            }
+            #map {
+                height: 250px !important;
+                page-break-inside: avoid;
+            }
+            .leaflet-tile {
+                filter: none !important; /* normal map color on print */
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-100 font-sans flex flex-col justify-between antialiased">
+
+    <!-- Top Navigation / Decorative Bar -->
+    <header class="no-print w-full py-4 px-6 flex justify-between items-center border-b border-slate-800/80 bg-slate-950/40 backdrop-blur-md">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
+                <i class="fa-solid fa-bus text-accent-gold"></i>
+            </div>
+            <div>
+                <span class="text-xs uppercase tracking-widest text-slate-400 font-semibold block">Empresa Santa Terezinha</span>
+                <span class="text-sm font-bold text-white">Serviço Especial de Transporte</span>
+            </div>
+        </div>
+        <div class="flex space-x-2">
+            <button onclick="window.print()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold flex items-center space-x-2 transition duration-200 border border-slate-700">
+                <i class="fa-solid fa-print"></i>
+                <span>Imprimir Comunicado</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow flex items-center justify-center p-4 md:p-8">
+        <div class="w-full max-w-3xl glass-card rounded-2xl p-6 md:p-10 relative overflow-hidden">
+            <!-- Decorative Solene Border Top -->
+            <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-accent-golddark via-accent-goldlight to-accent-golddark"></div>
+            
+            <!-- Floral/Solene Cross Icon -->
+            <div class="flex justify-center mb-6 mt-2">
+                <div class="text-center">
+                    <span class="text-accent-gold/40 text-4xl block mb-1">✦</span>
+                    <h2 class="text-xs uppercase tracking-widest text-accent-gold font-bold">Comunicado de Falecimento e Transporte</h2>
+                </div>
+            </div>
+
+            <!-- Main Notice Header -->
+            <div class="text-center space-y-4 mb-8">
+                <h1 class="font-serif text-3xl md:text-4xl text-white font-medium italic tracking-wide">
+                    Juvenil Pereira dos Santos
+                </h1>
+                <div class="w-24 h-0.5 bg-accent-gold/40 mx-auto"></div>
+                <p class="text-slate-300 text-sm md:text-base max-w-lg mx-auto leading-relaxed">
+                    Comunicamos o seu falecimento e informamos que haverá transporte gratuito para o velório e sepultamento no <strong class="text-white">Cemitério de Vila Rosali</strong>.
+                </p>
+            </div>
+
+            <!-- Details Section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Departure Info Card -->
+                <div class="bg-slate-900/60 rounded-xl p-5 border border-slate-800/80 space-y-4">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-accent-gold flex items-center space-x-2">
+                        <i class="fa-solid fa-circle-info text-sm"></i>
+                        <span>Informações de Partida</span>
+                    </h3>
+                    
+                    <div class="space-y-3 text-sm text-slate-300">
+                        <div class="flex items-start space-x-3">
+                            <i class="fa-regular fa-calendar-check mt-1 text-slate-400"></i>
+                            <div>
+                                <span class="text-xs text-slate-400 block">Data da Saída</span>
+                                <span class="font-medium text-white text-base">Terça-feira, 07 de Julho de 2026</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-3">
+                            <i class="fa-regular fa-clock mt-1 text-slate-400"></i>
+                            <div>
+                                <span class="text-xs text-slate-400 block">Horário de Saída</span>
+                                <span class="font-medium text-white text-base">13:20h</span>
+                                <span class="text-xs text-amber-500/80 block mt-0.5 font-medium italic">* Chegue com 10 min de antecedência</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-3">
+                            <i class="fa-solid fa-bus-simple mt-1 text-slate-400"></i>
+                            <div>
+                                <span class="text-xs text-slate-400 block">Empresa de Ônibus</span>
+                                <span class="font-medium text-white text-base">Empresa Santa Terezinha</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Location details -->
+                <div class="bg-slate-900/60 rounded-xl p-5 border border-slate-800/80 space-y-4 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-accent-gold flex items-center space-x-2 mb-3">
+                            <i class="fa-solid fa-map-location-dot text-sm"></i>
+                            <span>Local de Embarque</span>
+                        </h3>
+                        
+                        <div class="space-y-2 text-sm text-slate-300">
+                            <div class="flex items-start space-x-3">
+                                <i class="fa-solid fa-location-dot mt-1 text-slate-400"></i>
+                                <div>
+                                    <span class="text-xs text-slate-400 block">Ponto de Encontro</span>
+                                    <span class="font-medium text-white">Pracinha da Esquina da Rua Carlos Gentil Homem com a Rua Ana Brito</span>
+                                    <span class="text-xs text-slate-400 block mt-1">Bairro São Mateus, São João de Meriti - RJ</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Button & QR -->
+                    <div class="flex items-center space-x-4 pt-3 border-t border-slate-800">
+                        <div id="qrcode" class="bg-white p-1.5 rounded-lg w-16 h-16 flex-shrink-0 flex items-center justify-center">
+                            <!-- QR Code will be rendered here -->
+                        </div>
+                        <div class="flex-grow">
+                            <span class="text-[10px] text-slate-400 block mb-1">Escaneie o QR Code ou clique abaixo para traçar a rota:</span>
+                            <a href="https://maps.app.goo.gl/bLN9zpTrLnkJABMP9" target="_blank" class="w-full text-center px-3 py-1.5 bg-gradient-to-r from-accent-golddark to-accent-gold hover:from-accent-gold hover:to-accent-goldlight text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-2 transition-all duration-300 shadow-lg shadow-accent-golddark/20">
+                                <i class="fa-solid fa-route"></i>
+                                <span>Abrir no Google Maps</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map View Section -->
+            <div class="mb-6">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center space-x-2">
+                    <i class="fa-solid fa-map"></i>
+                    <span>Mapa de Localização do Ponto de Saída</span>
+                </h4>
+                <div id="map" class="w-full h-64 rounded-xl overflow-hidden border border-slate-800 shadow-inner"></div>
+            </div>
+
+            <!-- Share and Notice Section -->
+            <div class="no-print border-t border-slate-800/80 pt-6 flex flex-col sm:flex-row sm:justify-between items-center gap-4">
+                <p class="text-xs text-slate-500 italic text-center sm:text-left">
+                    * Favor repassar este comunicado aos conhecidos que necessitam de transporte.
+                </p>
+                <div class="flex space-x-2 w-full sm:w-auto">
+                    <button onclick="copiarTextoComunicado()" class="flex-1 sm:flex-initial px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold flex items-center justify-center space-x-2 transition duration-200 border border-slate-700">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>Copiar Texto</span>
+                    </button>
+                    <a id="btn-whatsapp" href="#" target="_blank" class="flex-1 sm:flex-initial px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center justify-center space-x-2 transition duration-200">
+                        <i class="fa-brands fa-whatsapp text-sm"></i>
+                        <span>Enviar no WhatsApp</span>
+                    </a>
+                </div>
+            </div>
+            
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="no-print py-4 text-center text-xs text-slate-600 border-t border-slate-900/60 bg-slate-950/20">
+        <p>Desenvolvido para auxílio no planejamento de embarques e suporte a eventos.</p>
+    </footer>
+
+    <!-- Scripting for map and interactivity -->
+    <script>
+        // Init Map
+        const departureCoords = [-22.795604, -43.376785]; // Coordinates for Rua Carlos Gentil Homem & Rua Ana Brito
+        const map = L.map('map', {
+            zoomControl: true,
+            scrollWheelZoom: false
+        }).setView(departureCoords, 16);
+
+        // Tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Marker for Departure
+        const marker = L.marker(departureCoords).addTo(map);
+        marker.bindPopup(`
+            <div style="font-family: 'Inter', sans-serif; text-align: left; padding: 4px;">
+                <h4 style="font-weight: bold; margin-bottom: 4px; color: #1e293b;">Ponto de Saída do Ônibus</h4>
+                <p style="font-size: 11px; margin: 0; color: #64748b;">Pracinha na esquina da Rua Carlos Gentil Homem com Rua Ana Brito.</p>
+                <p style="font-size: 11px; margin-top: 4px; font-weight: bold; color: #d97706;">Saída: 13:20h (Terça, 07/07)</p>
+            </div>
+        `).openPopup();
+
+        // Generate QR Code
+        const mapsLink = "https://maps.app.goo.gl/bLN9zpTrLnkJABMP9";
+        new QRCode(document.getElementById("qrcode"), {
+            text: mapsLink,
+            width: 64,
+            height: 64,
+            colorDark : "#0f172a",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.M
+        });
+
+        // WhatsApp Share Generator
+        const textToShare = `*COMUNICADO DE TRANSPORTE - VELÓRIO E SEPULTAMENTO*
+
+Comunicamos o falecimento de *Juvenil Pereira dos Santos*.
+
+Para os familiares e amigos que desejam prestar suas últimas homenagens, haverá um ônibus gratuito da *Empresa Santa Terezinha* para realizar o transporte até o *Cemitério de Vila Rosali*.
+
+*Informações do Transporte:*
+📅 *Data:* Terça-feira, 07 de Julho de 2026
+🕐 *Horário de Saída:* 13:20h (favor chegar com 10 minutos de antecedência)
+📍 *Ponto de Partida:* Pracinha da esquina da Rua Carlos Gentil Homem com a Rua Ana Brito.
+🗺️ *Localização no Google Maps:* https://maps.app.goo.gl/bLN9zpTrLnkJABMP9
+
+_Por favor, repasse este comunicado para os amigos e conhecidos._`;
+
+        // Configure Whatsapp Share Link
+        document.getElementById('btn-whatsapp').href = "https://api.whatsapp.com/send?text=" + encodeURIComponent(textToShare);
+
+        // Copy Text Function
+        function copiarTextoComunicado() {
+            navigator.clipboard.writeText(textToShare).then(() => {
+                alert("Texto do comunicado copiado para a área de transferência!");
+            }).catch(err => {
+                console.error('Erro ao copiar texto: ', err);
+            });
+        }
+    </script>
+</body>
+</html>

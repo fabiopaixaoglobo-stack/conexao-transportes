@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "build": "node build.js",
+    "deploy:test": "npm run build && npx surge deploy_dist conexao-transportes-globo-teste-8210.surge.sh",
+    "deploy:prod": "npm run build && npx surge deploy_dist conexao-transportes-globo-8210.surge.sh"
+  },
+  "dependencies": {
+    "localtunnel": "^2.0.2",
+    "xlsx": "^0.18.5"
+  }
+}
