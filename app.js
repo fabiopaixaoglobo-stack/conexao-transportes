@@ -1,6 +1,13 @@
 // Conexão Transportes - Application Engine
 // Lógica do Front-end e Gerenciamento de Estado (Persistência via localStorage)
 
+document.addEventListener('DOMContentLoaded', () => {
+    // Clear old localStorage mock database to ensure fresh fetch from PostgreSQL
+    try { window.localStorage.removeItem('conexao_transportes_db'); } catch(e) {}
+});
+
+let db = {};
+
 // Safe localStorage/sessionStorage wrapper for file:// protocol support in corporate networks
 const safeStorage = {
     session: {
@@ -303,10 +310,10 @@ function checkTestEnvironment() {
 async function initDatabase() {
     // 1. Load static structure
     db = {};
-    if (!db.trips) db.trips = SIMULATED_DATABASE.trips || [];
-    if (!db.drivers || db.drivers.length < 100) db.drivers = SIMULATED_DATABASE.drivers || [];
-    if (!db.vehicles || db.vehicles.length < 5) db.vehicles = SIMULATED_DATABASE.vehicles || [];
-    if (!db.companies || db.companies.length < 2) db.companies = SIMULATED_DATABASE.companies || [];
+    if (!db.trips) db.trips = [];
+    if (!db.drivers) db.drivers = [];
+    if (!db.vehicles) db.vehicles = [];
+    if (!db.companies) db.companies = [];
     if (!db.sessions) db.sessions = [];
     if (!db.users) db.users = [];
     
@@ -461,7 +468,7 @@ function syncBookingCancel(id) {
 function saveDatabase() {
     if (db) {
         // Exclude collaborators and accredited to keep localStorage small
-        const baseCol = SIMULATED_DATABASE.collaborators || [];
+        const baseCol = [];
         const baseColMapMat = new Map();
         const baseColMapCpf = new Map();
         baseCol.forEach(row => {
@@ -479,7 +486,7 @@ function saveDatabase() {
             return found[1] !== c.nome || found[3] !== c.cargo || found[4] !== c.diretoria || found[5] !== c.tipo_vinculo;
         });
         
-        const baseAcc = SIMULATED_DATABASE.accredited || [];
+        const baseAcc = [];
         const baseAccMapMat = new Map();
         const baseAccMapCpf = new Map();
         baseAcc.forEach(row => {
@@ -8271,14 +8278,9 @@ function verifyDriverCpf() {
         return;
     }
     
-    // Ensure database drivers is populated from SIMULATED_DATABASE if needed
+    // Ensure database drivers is populated from backend if needed
     if (!db || !db.drivers) {
-        if (typeof SIMULATED_DATABASE !== 'undefined' && SIMULATED_DATABASE.drivers) {
-            if (!db) db = {};
-            db.drivers = SIMULATED_DATABASE.drivers;
-        } else {
-            db.drivers = [];
-        }
+        db.drivers = [];
     }
     
     // Find driver in database
@@ -8677,12 +8679,7 @@ function handleDriverNameAutocomplete(query) {
     
     // Ensure database drivers is populated
     if (!db || !db.drivers) {
-        if (typeof SIMULATED_DATABASE !== 'undefined' && SIMULATED_DATABASE.drivers) {
-            if (!db) db = {};
-            db.drivers = SIMULATED_DATABASE.drivers;
-        } else {
-            db.drivers = [];
-        }
+        db.drivers = [];
     }
     
     // Filter matches
