@@ -5678,13 +5678,13 @@ function closeEmailSimulator() {
 // --- TEMPLATE DOWNLOADS (STYLED EXCEL) ---
 // ==========================================
 function downloadCollaboratorTemplate() {
-    const filename = "modelo_base_colaboradores.xls";
-    const headers = ["Matrícula", "Nome", "Função", "Empresa", "Área", "Diretoria", "CPF", "e-mail"];
-    const rows = [
-        ["68808", "JULIANA GONCALVES DA SILVA", "LÍDER", "Globo", "Transportes RJ", "Suprimentos Serviços e Logística", "8018382743", "feijao.arroz@g.globo"],
-        ["68813", "ROBSON AUGUSTO ADAO", "LÍDER", "Globo", "Transportes RJ", "Suprimentos Serviços e Logística", "8018382743", "feijao.arroz@g.globo"]
-    ];
-    generateStyledExcel(filename, headers, rows);
+    const filename = "Planilha Modelo de Agendamento em Lote - Transportes Rock in Rio 2026.xlsx";
+    const link = document.createElement("a");
+    link.href = `./${encodeURIComponent(filename)}`;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 function downloadBookingTemplate() {
