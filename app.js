@@ -4957,19 +4957,19 @@ function applyRoleConfiguration(role) {
         defaultTab = 'booking-portal';
         document.getElementById('active-profile-name').textContent = 'Passageiro';
     } else if (role === 'representative') {
-        visibleTabs = ['collaborators', 'bulk-booking', 'tutorials'];
-        defaultTab = 'collaborators';
-        document.getElementById('active-profile-name').textContent = 'Representante de área';
+        visibleTabs = ['bulk-booking', 'tutorials'];
+        defaultTab = 'bulk-booking';
+        document.getElementById('active-profile-name').textContent = 'Representante de Área';
     } else if (role === 'operator') {
-        visibleTabs = ['operation', 'management', 'fleet', 'driver-portal', 'tutorials'];
+        visibleTabs = ['operation', 'management', 'fleet', 'tutorials'];
         defaultTab = 'operation';
         document.getElementById('active-profile-name').textContent = 'Operador de Transportes';
     } else if (role === 'driver') {
-        visibleTabs = ['driver-portal', 'tutorials'];
-        defaultTab = 'driver-portal';
+        visibleTabs = ['tutorials'];
+        defaultTab = 'tutorials';
         document.getElementById('active-profile-name').textContent = 'Motorista';
     } else if (role === 'manager') {
-        visibleTabs = ['booking-portal', 'passenger', 'operation', 'management', 'collaborators', 'bulk-booking', 'fleet', 'driver-portal', 'access-management', 'tutorials'];
+        visibleTabs = ['booking-portal', 'passenger', 'operation', 'management', 'bulk-booking', 'fleet', 'access-management', 'tutorials'];
         defaultTab = 'management';
         document.getElementById('active-profile-name').textContent = 'Acesso Master';
     } else {
@@ -10629,4 +10629,38 @@ function prevPresentationSlide() {
     }
 }
 
-
+async function refreshLiveDbViewer() {
+    const tbody = document.getElementById('db-live-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-xs text-blue-400"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Buscando dados no Render...</td></tr>';
+    
+    try {
+        const res = await fetch(getApiUrl() + '/bookings');
+        if (!res.ok) throw new Error('API Error');
+        const data = await res.json();
+        
+        document.getElementById('db-live-count').textContent = data.length;
+        document.getElementById('db-live-time').textContent = new Date().toLocaleTimeString();
+        document.getElementById('db-live-status').innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> Conectado';
+        
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-xs text-gray-500">Nenhum agendamento encontrado no banco.</td></tr>';
+            return;
+        }
+        
+        // Renderizar os últimos 50 do mais recente para o mais antigo
+        tbody.innerHTML = data.slice(-50).reverse().map(b => `
+        <tr>
+            <td class="p-3 text-xs text-gray-400 border-b border-gray-800/50 font-mono">${b.id || '-'}</td>
+            <td class="p-3 text-xs text-white border-b border-gray-800/50 font-bold">${b.passageiro_nome} <span class="text-[9px] text-gray-500 font-normal block">CPF: ${b.passageiro_matricula}</span></td>
+            <td class="p-3 text-xs text-gray-300 border-b border-gray-800/50">${b.base_saida} <i class="fa-solid fa-arrow-right text-[8px] mx-1 text-gray-600"></i> ${b.base_destino}<br><span class="text-[9px] text-indigo-400">${b.data_viagem} às ${b.horario_saida}</span></td>
+            <td class="p-3 border-b border-gray-800/50"><span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded text-[9px] font-bold uppercase">${b.status}</span></td>
+        </tr>
+        `).join('');
+        
+    } catch(err) {
+        console.error("Erro Live DB:", err);
+        document.getElementById('db-live-status').innerHTML = '<i class="fa-solid fa-circle-xmark mr-1 text-rose-500"></i> Erro de Conexão';
+        tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-xs text-rose-500">Erro ao acessar banco de dados. A API está online?</td></tr>';
+    }
+}

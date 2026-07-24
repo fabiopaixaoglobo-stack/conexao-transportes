@@ -283,10 +283,23 @@
 
     <!-- Navigation Tabs -->
     <div id="tabs-navigation" class="bg-gray-950/60 border-b border-gray-900 py-3 px-6 flex flex-wrap justify-start gap-2">
+        <!-- 1. Agendamentos -->
         <button onclick="switchTab('booking-portal')" id="tab-booking-portal" data-tooltip="📅 Agendamentos individuais de viagens de ida/volta e emissão do bilhete digital." class="tab-btn flex items-center space-x-2 px-4 py-2.5 rounded-xl border border-gray-800 bg-gray-900/50 hover:bg-gray-900 text-sm font-semibold transition-all duration-300 text-gray-300 hover:text-white">
             <i class="fa-solid fa-calendar-days"></i>
             <span>📅 Portal de Pré-Agendamento</span>
         </button>
+        <button onclick="switchTab('bulk-booking')" id="tab-bulk-booking" data-tooltip="📂 Permite que representantes de área carreguem a planilha padrão de agendamentos." class="tab-btn flex items-center space-x-2 px-4 py-2.5 rounded-xl border border-gray-800 bg-gray-900/50 hover:bg-gray-900 text-sm font-semibold transition-all duration-300 text-gray-300 hover:text-white">
+            <i class="fa-solid fa-file-excel"></i>
+            <span>📂 Agendamento em Lote</span>
+        </button>
+
+        <!-- 2. Programação de Veículos -->
+        <button onclick="switchTab('fleet')" id="tab-fleet" data-tooltip="🚛 Cadastro de empresas de ônibus/van, veículos autorizados e controle de frotas." class="tab-btn flex items-center space-x-2 px-4 py-2.5 rounded-xl border border-gray-800 bg-gray-900/50 hover:bg-gray-900 text-sm font-semibold transition-all duration-300 text-gray-300 hover:text-white">
+            <i class="fa-solid fa-truck-monster"></i>
+            <span>🚛 Gestão de Transportes</span>
+        </button>
+
+        <!-- 3. Fase de Embarques -->
         <button onclick="switchTab('passenger')" id="tab-passenger" data-tooltip="📱 Tela de totem para passageiros efetuarem check-in e emitirem bilhete na hora." class="tab-btn active flex items-center space-x-2 px-4 py-2.5 rounded-xl border border-transparent text-sm font-semibold transition-all duration-300 text-white">
             <i class="fa-solid fa-mobile-screen-button"></i>
             <span>📱 Check-in Passageiro (Totem)</span>
@@ -299,22 +312,18 @@
             <i class="fa-solid fa-chart-line"></i>
             <span>📊 Gestão & Analytics</span>
         </button>
-        <button onclick="switchTab('driver-portal')" id="tab-driver-portal" data-tooltip="🚛 Portal do motorista para login via CPF, início de viagem e compartilhamento de satélite GPS." class="tab-btn flex items-center space-x-2 px-4 py-2.5 rounded-xl border border-gray-800 bg-gray-900/50 hover:bg-gray-900 text-sm font-semibold transition-all duration-300 text-gray-300 hover:text-white">
+
+        <!-- Ocultos (Funções baseadas em banco e mobile app) -->
+        <button onclick="switchTab('driver-portal')" id="tab-driver-portal" class="hidden tab-btn flex items-center space-x-2 px-4 py-2.5 rounded-xl border border-gray-800 bg-gray-900/50 hover:bg-gray-900 text-sm font-semibold transition-all duration-300 text-gray-300 hover:text-white">
             <i class="fa-solid fa-truck-steering"></i>
             <span>🚛 Portal do Motorista</span>
         </button>
-        <button onclick="switchTab('collaborators')" id="tab-collaborators" data-tooltip="👥 Interface para o representante de área importar a planilha de colaboradores elegíveis." class="tab-btn flex items-center space-x-2 px-4 py-2.5 rounded-xl border border-gray-800 bg-gray-900/50 hover:bg-gray-900 text-sm font-semibold transition-all duration-300 text-gray-300 hover:text-white">
+        <button onclick="switchTab('collaborators')" id="tab-collaborators" class="hidden tab-btn flex items-center space-x-2 px-4 py-2.5 rounded-xl border border-gray-800 bg-gray-900/50 hover:bg-gray-900 text-sm font-semibold transition-all duration-300 text-gray-300 hover:text-white">
             <i class="fa-solid fa-users-line"></i>
             <span>👥 Importar Base</span>
         </button>
-        <button onclick="switchTab('bulk-booking')" id="tab-bulk-booking" data-tooltip="📂 Permite que representantes de área carreguem arquivos CSV de agendamentos em massa." class="tab-btn flex items-center space-x-2 px-4 py-2.5 rounded-xl border border-gray-800 bg-gray-900/50 hover:bg-gray-900 text-sm font-semibold transition-all duration-300 text-gray-300 hover:text-white">
-            <i class="fa-solid fa-file-excel"></i>
-            <span>📂 Agendamento em Lote</span>
-        </button>
-        <button onclick="switchTab('fleet')" id="tab-fleet" data-tooltip="🚛 Cadastro de empresas de ônibus/van, veículos autorizados e controle de frotas." class="tab-btn flex items-center space-x-2 px-4 py-2.5 rounded-xl border border-gray-800 bg-gray-900/50 hover:bg-gray-900 text-sm font-semibold transition-all duration-300 text-gray-300 hover:text-white">
-            <i class="fa-solid fa-truck-monster"></i>
-            <span>🚛 Gestão de Transportes</span>
-        </button>
+        
+        <!-- Admin -->
         <button onclick="switchTab('access-management')" id="tab-access-management" data-tooltip="🔒 Acesso master para controle de sessões ativas, auditoria de check-ins e motoristas." class="tab-btn flex items-center space-x-2 px-4 py-2.5 rounded-xl border border-gray-800 bg-gray-900/50 hover:bg-gray-900 text-sm font-semibold transition-all duration-300 text-gray-300 hover:text-white" style="display: none;">
             <i class="fa-solid fa-user-shield text-rose-500 animate-pulse"></i>
             <span>🔒 Administração de Acessos</span>
@@ -1278,6 +1287,9 @@
                 <button onclick="switchSubTab('upload-panel')" id="subtab-upload-panel" data-tooltip="📤 Painel para importação em massa de planilhas de credenciados e agendamentos." class="subtab-btn text-xs font-bold uppercase tracking-wider text-gray-400 pb-2 transition duration-200">
                     <i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> Importar Planilhas
                 </button>
+                <button onclick="switchSubTab('db-viewer')" id="subtab-db-viewer" data-tooltip="💾 Validação de Gravação no Render" class="subtab-btn text-xs font-bold uppercase tracking-wider text-blue-400 pb-2 transition duration-200">
+                    <i class="fa-solid fa-database mr-1.5"></i> Live DB Render
+                </button>
             </div>
 
             <!-- SUBTAB CONTENT: GRAPHS -->
@@ -2054,6 +2066,52 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- SUBTAB CONTENT: LIVE DB VIEWER -->
+            <div id="subtab-content-db-viewer" class="subtab-content space-y-4 hidden">
+                <div class="glass p-5 rounded-2xl border border-blue-500/30">
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-xs font-bold text-blue-400 uppercase"><i class="fa-solid fa-server mr-2"></i>Status do Banco de Dados (PostgreSQL Render)</h4>
+                        <button onclick="refreshLiveDbViewer()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs shadow-lg shadow-blue-500/20 transition">
+                            <i class="fa-solid fa-rotate mr-1"></i> Atualizar Agora
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="bg-gray-900 rounded-xl p-4 border border-gray-800 text-center">
+                            <div class="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-1">Total de Agendamentos (Render)</div>
+                            <div id="db-live-count" class="text-3xl font-black text-white">0</div>
+                        </div>
+                        <div class="bg-gray-900 rounded-xl p-4 border border-gray-800 text-center">
+                            <div class="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-1">Última Sincronização</div>
+                            <div id="db-live-time" class="text-sm font-medium text-blue-400 mt-2">Nunca</div>
+                        </div>
+                        <div class="bg-gray-900 rounded-xl p-4 border border-gray-800 text-center">
+                            <div class="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-1">Status da API</div>
+                            <div id="db-live-status" class="text-sm font-medium text-emerald-400 mt-2"><i class="fa-solid fa-circle-check mr-1"></i> Conectado</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-950 rounded-xl border border-gray-800 overflow-hidden">
+                        <div class="max-h-60 overflow-y-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-gray-900/80 sticky top-0 backdrop-blur-sm z-10">
+                                    <tr>
+                                        <th class="p-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-800">ID</th>
+                                        <th class="p-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-800">Passageiro</th>
+                                        <th class="p-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-800">Trajeto</th>
+                                        <th class="p-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-800">Status DB</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="db-live-tbody" class="divide-y divide-gray-800/50">
+                                    <tr><td colspan="4" class="p-4 text-center text-xs text-gray-500">Clique em Atualizar para carregar dados do servidor.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
         </section>
 
         <!-- ==================== 4. IMPORTAÇÃO DE BASE DE COLABORADORES E TERCEIROS ==================== -->
