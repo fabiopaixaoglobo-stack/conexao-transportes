@@ -116,8 +116,8 @@ app.post('/api/bookings/cancel', async (req, res) => {
     }
 });
 
-// Catch-all route to// Serve index.html for all other routes (SPA fallback)
-app.get('/(.*)', (req, res) => {
+// Serve index.html for all other routes (SPA fallback)
+app.use((req, res) => {
     res.sendFile(path.join(__dirname, '../index.html'));
 });
 
