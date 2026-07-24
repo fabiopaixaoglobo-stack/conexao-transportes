@@ -48,8 +48,8 @@ let egChartInstance = null;
 let ionChartInstance = null;
 
 // --- INICIALIZAÇÃO ---
-document.addEventListener("DOMContentLoaded", () => {
-    initDatabase();
+document.addEventListener("DOMContentLoaded", async () => {
+    await initDatabase();
     checkTestEnvironment();
     setupEventHandlers();
     
@@ -300,86 +300,53 @@ function checkTestEnvironment() {
 }
 
 // --- CONTROLE DE BANCO DE DADOS (LOCALSTORAGE MOCK) ---
-function initDatabase() {
-    const saved = safeStorage.local.getItem('conexao_transportes_db');
-    if (saved) {
-        try {
-            db = JSON.parse(saved);
-        } catch (e) {
-            console.error("Erro ao carregar banco de dados local. Resetando...", e);
-            db = {};
-        }
-    } else {
-        db = {};
-    }
-    
-    // Load static arrays from SIMULATED_DATABASE, mapping collaborators if they are array-of-arrays
-    let baseCollaborators = SIMULATED_DATABASE.collaborators || [];
-    if (baseCollaborators.length > 0 && Array.isArray(baseCollaborators[0])) {
-        baseCollaborators = baseCollaborators.map(row => ({
-            matricula: row[0] || "",
-            nome: row[1],
-            cpf: row[2],
-            cargo: row[3] || "",
-            diretoria: row[4] || "",
-            departamento: row[4] || "",
-            tipo_vinculo: row[5] || "GLOBO",
-            empresa: row[6] || (row[5] === 'GLOBO' ? 'Globo' : 'Terceiro'),
-            email: row[7] || '',
-            dias_acesso: ['Todos os Dias'],
-            status_credencial: 'MONTAGEM + EVENTO',
-            tipo_credencial: 'FÍSICA',
-            nome_credencial: row[1].split(' ')[0] + ' ' + (row[1].split(' ')[1] || '')
-        }));
-    }
-    
-    const customCollaborators = db.custom_collaborators || [];
-    const customAccredited = db.custom_accredited || [];
-    
-    const deletedCol = new Set(db.deleted_collaborators || []);
-    const deletedAcc = new Set(db.deleted_accredited || []);
-    
-    let baseColClean = baseCollaborators.filter(row => {
-        const id = String(row.matricula || row.cpf || '').trim();
-        return !deletedCol.has(id);
-    });
-    
-    let baseAccClean = (SIMULATED_DATABASE.accredited || []).filter(row => {
-        const id = String(row.matricula || row.cpf || '').trim();
-        return !deletedAcc.has(id);
-    });
-    
-    db.collaborators = [...baseColClean, ...customCollaborators];
-    db.accredited = [...baseAccClean, ...customAccredited];
-    
-    // Safety initialization of other lists
-    if (!db.bookings) db.bookings = SIMULATED_DATABASE.bookings || [];
+async function initDatabase() {
+    // 1. Load static structure
+    db = {};
     if (!db.trips) db.trips = SIMULATED_DATABASE.trips || [];
     if (!db.drivers || db.drivers.length < 100) db.drivers = SIMULATED_DATABASE.drivers || [];
     if (!db.vehicles || db.vehicles.length < 5) db.vehicles = SIMULATED_DATABASE.vehicles || [];
     if (!db.companies || db.companies.length < 2) db.companies = SIMULATED_DATABASE.companies || [];
     if (!db.sessions) db.sessions = [];
-    
-    // Inicializar base de usuários corporativos se não existir
     if (!db.users) db.users = [];
+    
     const adminExists = db.users.some(u => u.email === 'admin@globo.com' || u.matricula === '123456');
     if (!adminExists) {
         db.users.push({
-            nome: 'Admin',
-            sobrenome: 'Master',
-            matricula: '123456',
-            email: 'admin@globo.com',
-            senha: 'admin123',
-            perfil: 'manager'
+            nome: 'Admin', sobrenome: 'Master', matricula: '123456', email: 'admin@globo.com', senha: 'admin123', perfil: 'manager'
         });
     }
 
-    // Inicializar controle de solicitantes autorizados e logs de auditoria
-    if (!db.authorized_solicitants) {
-        db.authorized_solicitants = [];
-    }
-    if (!db.booking_logs) {
-        db.booking_logs = [];
+    if (!db.authorized_solicitants) db.authorized_solicitants = [];
+    if (!db.booking_logs) db.booking_logs = [];
+
+    // 2. Fetch from Backend
+    try {
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+            ? 'http://localhost:8000/api'
+            : '/api'; // Use relative path on production
+
+        console.log("Fetching data from backend...");
+        const [collabRes, accRes, bookRes] = await Promise.all([
+            fetch(`${API_URL}/collaborators`),
+            fetch(`${API_URL}/accredited`),
+            fetch(`${API_URL}/bookings`)
+        ]);
+
+        if (collabRes.ok) db.collaborators = await collabRes.json();
+        else db.collaborators = [];
+
+        if (accRes.ok) db.accredited = await accRes.json();
+        else db.accredited = [];
+
+        if (bookRes.ok) db.bookings = await bookRes.json();
+        else db.bookings = [];
+        
+    } catch (err) {
+        console.error("Backend unreachable, using empty arrays fallback", err);
+        db.collaborators = [];
+        db.accredited = [];
+        db.bookings = [];
     }
 
     // Adicionar por padrão o administrador e colaboradores de tecnologia como autorizados
@@ -398,14 +365,45 @@ function initDatabase() {
 
         techCollabs.forEach(tc => {
             db.authorized_solicitants.push({
-                matricula: tc.matricula || '',
-                cpf: tc.cpf || '',
+                matricula: tc.matricula,
                 nome: tc.nome,
-                cargo: tc.cargo || 'Ponto Focal',
-                departamento: tc.departamento || 'TECNOLOGIA'
+                cargo: tc.cargo,
+                departamento: tc.departamento
             });
         });
     }
+} // <--- Fechar initDatabase aqui
+
+// --- INTEGRAÇÃO BACKEND ---
+function getApiUrl() {
+    return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+        ? 'http://localhost:8000/api'
+        : '/api';
+}
+
+function syncBookingCreate(booking) {
+    fetch(`${getApiUrl()}/bookings/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(booking)
+    }).catch(console.error);
+}
+
+function syncBookingBulk(bookings) {
+    fetch(`${getApiUrl()}/bookings/bulk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookings })
+    }).catch(console.error);
+}
+
+function syncBookingCancel(id) {
+    fetch(`${getApiUrl()}/bookings/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+    }).catch(console.error);
+}
     
     // CORREÇÃO: Transição para fase de agendamento. Limpar status 'Embarcado' e 'No-Show' gerados pelo mock.
     if (!localStorage.getItem('fixed_mock_status_v1') && db.bookings) {
@@ -620,6 +618,7 @@ function ensureRirDataExists() {
             }
         });
         db.bookings.push(...newBookings);
+        syncBookingBulk(newBookings);
         
         saveDatabase();
         console.log("Dados do Rock in Rio 2026 criados com sucesso!");
@@ -1185,6 +1184,7 @@ function createBooking(person, origin, dest, serviceType, accompany, date, time,
     };
     
     db.bookings.push(newBooking);
+    syncBookingCreate(newBooking);
     trip.planejado += 1;
 
     // Registrar no log de auditoria
@@ -1957,7 +1957,7 @@ function renderPreTicket(booking) {
     const accBox = document.getElementById('pre-ticket-accompany-box');
     const accList = document.getElementById('pre-ticket-accompany-list');
     if (booking.accompany && booking.accompany.trim() !== '') {
-        accBox.classList.remove('hidden');
+        accBox.classList.add('hidden');
         accList.textContent = booking.accompany;
     } else {
         accBox.classList.add('hidden');
@@ -2363,6 +2363,7 @@ function simulateBipCheckin() {
                         service_type: document.getElementById('op-service-type').value !== 'ALL' ? document.getElementById('op-service-type').value : 'Vai e Vem Van'
                     };
                     db.bookings.push(newBooking);
+                    syncBookingCreate(newBooking);
                     
                     const trip = db.trips.find(t => t.id === trip_id);
                     if (trip) trip.real = (trip.real || 0) + 1;
@@ -2466,6 +2467,7 @@ function handleEncaixeSubmit() {
     };
     
     db.bookings.push(newBooking);
+    syncBookingCreate(newBooking);
     
     // Auto-cria trip se necessário e adiciona real count
     let trip = db.trips.find(t => t.id === trip_id);
@@ -4190,6 +4192,7 @@ function cancelBooking(booking) {
     if (!booking || booking.status === 'Cancelado') return;
     const oldStatus = booking.status;
     booking.status = 'Cancelado';
+    syncBookingCancel(booking.id);
     const trip = db.trips.find(t => t.id === booking.trip_id);
     if (trip) {
         if (trip.planejado > 0) trip.planejado -= 1;

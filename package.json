@@ -1,11 +1,18 @@
 {
   "scripts": {
+    "start": "node server/server.js",
+    "migrate": "node scripts/seed.js",
     "build": "node build.js",
     "deploy:test": "npm run build && npx surge deploy_dist conexao-transportes-globo-teste-8210.surge.sh",
     "deploy:prod": "npm run build && npx surge deploy_dist conexao-transportes-globo-8210.surge.sh"
   },
   "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "localtunnel": "^2.0.2",
+    "multer": "^2.2.0",
+    "pg": "^8.22.0",
     "xlsx": "^0.18.5"
   }
 }
