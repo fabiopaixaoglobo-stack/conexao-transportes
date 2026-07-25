@@ -64,41 +64,73 @@ app.get('/api/ping', (req, res) => {
     res.json({ status: 'ok', time: new Date() });
 });
 
-// POST Login (Auth)
+// POST Login (Auth) - Regra de Acesso Agente RIT
 app.post('/api/auth/login', async (req, res) => {
     const { username, password } = req.body;
     try {
-        const uLower = String(username || '').toLowerCase().trim();
+        const queryVal = String(username || '').trim();
+        const uLower = queryVal.toLowerCase();
         
-        let result = await pool.query('SELECT * FROM users WHERE LOWER(username) = $1 OR LOWER(email) = $1', [uLower]);
-        
-        if (result.rows.length === 0 && (uLower === '68808' || uLower.includes('fabio.paixao') || uLower === 'master' || uLower === 'admin')) {
-            const passHash = await bcrypt.hash(password || '123', 10);
-            await pool.query(
-                `INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
-                [username, passHash, 'Master']
+        // 1. Verificar se a matrícula / e-mail / CPF existe na base oficial de Colaboradores Globo
+        const colabRes = await pool.query(
+            `SELECT * FROM collaborators 
+             WHERE matricula = $1 
+                OR LOWER(email) = $2 
+                OR (cpf = $3 AND $3 <> '')
+                OR (matricula = '68808' AND ($1 = '68808' OR $2 LIKE '%fabio.paixao%'))
+             LIMIT 1`,
+            [queryVal, uLower, queryVal.replace(/\D/g, '')]
+        );
+
+        let person = colabRes.rows[0];
+
+        // 2. Verificar na base de Terceiros Credenciados
+        if (!person) {
+            const accRes = await pool.query(
+                `SELECT * FROM accredited 
+                 WHERE documento = $1 OR LOWER(nome) LIKE $2 LIMIT 1`,
+                [queryVal, `%${uLower}%`]
             );
-            result = await pool.query('SELECT * FROM users WHERE LOWER(username) = $1', [uLower]);
+            person = accRes.rows[0];
         }
 
-        if (result.rows.length > 0) {
-            const user = result.rows[0];
-            const validPass = await bcrypt.compare(password, user.password_hash);
-            if (validPass) {
-                const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-                return res.json({ success: true, token, role: user.role, name: user.username });
+        // 3. Verificar usuários do sistema padrão (ex: master/admin)
+        if (!person) {
+            const userRes = await pool.query('SELECT * FROM users WHERE LOWER(username) = $1 OR LOWER(email) = $1', [uLower]);
+            if (userRes.rows.length > 0) {
+                const user = userRes.rows[0];
+                const validPass = await bcrypt.compare(password, user.password_hash);
+                if (validPass) {
+                    const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+                    return res.json({ success: true, token, role: user.role, name: user.username });
+                }
             }
         }
 
-        if (uLower.includes('globo.com') || uLower.includes('g.globo') || uLower === '68808') {
-            const token = jwt.sign({ username, role: 'Master' }, JWT_SECRET, { expiresIn: '7d' });
-            return res.json({ success: true, token, role: 'Master', name: username });
+        // Se NÃO estiver na base de colaboradores Globo ou credenciados: ACESSO NEGADO (Regra RIT)
+        if (!person) {
+            return res.status(401).json({ error: 'Acesso negado. Matrícula ou E-mail não localizado na base corporativa Globo.' });
         }
 
-        return res.status(401).json({ error: 'Matrícula ou E-mail não localizado.' });
+        // SE CONSTA NA BASE DE COLABORADORES GLOBO: Valida e libera Acesso Master
+        const isMaster = (person.tipo_vinculo === 'GLOBO' || person.matricula === '68808' || uLower.includes('fabio.paixao') || (person.cargo && (person.cargo.toUpperCase().includes('COORD') || person.cargo.toUpperCase().includes('GESTOR') || person.cargo.toUpperCase().includes('GERENTE'))));
+        const userRole = isMaster ? 'Master' : 'Operator';
+        const token = jwt.sign({ username: person.matricula || person.documento, role: userRole }, JWT_SECRET, { expiresIn: '7d' });
+        
+        return res.json({
+            success: true,
+            token,
+            role: userRole,
+            name: person.nome,
+            matricula: person.matricula || person.documento,
+            cargo: person.cargo,
+            departamento: person.departamento || person.area,
+            diretoria: person.diretoria
+        });
+
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Erro no login' });
+        res.status(500).json({ error: 'Erro de validação no servidor corporativo.' });
     }
 });
 
