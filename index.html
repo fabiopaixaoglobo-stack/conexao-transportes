@@ -433,15 +433,15 @@
                             <div class="inline-flex bg-blue-500/10 text-blue-400 p-3 rounded-full mb-2">
                                 <i class="fa-solid fa-calendar-plus text-2xl"></i>
                             </div>
-                            <h3 class="text-lg font-bold text-white">Pr</h3>
-                            <p class="text-xs text-gray-400">Agende seu transporte com anteced</p>
+                            <h3 class="text-lg font-bold text-white">Pré-Agendamento</h3>
+                            <p class="text-xs text-gray-400">Agende seu transporte com antecedência</p>
                         </div>
 
                         <!-- Pre-Booking Form -->
                         <form id="form-pre-booking" class="space-y-4" onsubmit="event.preventDefault(); handlePreBookingSubmit();">
                             <!-- Destino do Agendamento (Mim ou Terceiro) -->
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">O agendamento  para:</label>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">O agendamento é para:</label>
                                 <div class="grid grid-cols-2 gap-2">
                                     <button type="button" id="pre-btn-target-self" onclick="selectPreBookingTarget('self')" class="bg-blue-600 text-white font-bold py-2 rounded-xl text-xs transition border border-blue-500 shadow-md flex items-center justify-center gap-1.5">
                                         <i class="fa-solid fa-user"></i> Mim mesmo
@@ -455,9 +455,9 @@
 
                             <!-- ID Input (Passageiro) -->
                             <div id="div-pre-passenger-id">
-                                <label id="lbl-pre-id-title" class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Sua Matr ou CPF</label>
+                                <label id="lbl-pre-id-title" class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Sua Matrícula ou CPF</label>
                                 <div class="relative">
-                                    <input type="text" id="pre-id" required placeholder="Digite sua Matr ou CPF" 
+                                    <input type="text" id="pre-id" required placeholder="Digite sua Matrícula ou CPF" 
                                            class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition pl-10"
                                            oninput="lookupPreBookingCollaborator(this.value)">
                                     <i class="fa-solid fa-id-card absolute left-3.5 top-3.5 text-gray-500"></i>
@@ -467,8 +467,8 @@
 
                             <!-- ID Input (Solicitante - Terceiro) -->
                             <div id="div-pre-solicitant-id" class="hidden bg-gray-950/80 p-3.5 rounded-xl border border-gray-800/80 space-y-2">
-                                <label class="block text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-1">Sua Matr ou CPF (Solicitante)</label>
-                                <input type="text" id="pre-solicitant-id" placeholder="Digite sua Matr ou CPF" 
+                                <label class="block text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-1">Sua Matrícula ou CPF (Solicitante)</label>
+                                <input type="text" id="pre-solicitant-id" placeholder="Digite sua Matrícula ou CPF" 
                                        class="w-full bg-gray-900 border border-gray-850 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
                                        oninput="lookupPreBookingSolicitant(this.value)">
                                 <p id="pre-solicitant-lookup-msg" class="text-[10px] mt-1 hidden"></p>
@@ -479,7 +479,7 @@
                                     </div>
                                     <div class="flex justify-between items-center">
                                         <div>
-                                            <span class="text-[9px] uppercase font-bold text-gray-500 block"></span>
+                                            <span class="text-[9px] uppercase font-bold text-gray-500 block">Área Solicitante</span>
                                             <span id="lbl-solicitant-dept" class="text-gray-400 font-semibold"></span>
                                         </div>
                                         <span id="lbl-solicitant-badge" class="px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider font-sans"></span>
@@ -495,17 +495,18 @@
                                 </div>
                                 <div class="grid grid-cols-3 gap-2">
                                     <div>
-                                        <span class="text-[9px] uppercase font-bold text-gray-500 block">Fun / Cargo</span>
+                                        <span class="text-[9px] uppercase font-bold text-gray-500 block">Função / Cargo</span>
                                         <span id="lbl-pre-cargo" class="text-gray-400"></span>
                                     </div>
                                     <div>
-                                        <span class="text-[9px] uppercase font-bold text-gray-500 block"> / Departamento</span>
+                                        <span class="text-[9px] uppercase font-bold text-gray-500 block">Área / Departamento</span>
                                         <span id="lbl-pre-dept" class="text-gray-400 text-xs font-semibold"></span>
                                     </div>
                                     <div>
                                         <span class="text-[9px] uppercase font-bold text-gray-500 block">Empresa</span>
                                         <span id="lbl-pre-company" class="text-gray-400 text-xs font-semibold"></span>
                                     </div>
+                                </div>
                             </div>
 
                             <!-- Agendamentos Salvos -->
@@ -526,8 +527,8 @@
 
                             <!-- Companion list for cars -->
                             <div id="pre-div-passenger-list" class="hidden">
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Acompanhantes (Obrigat</label>
-                                <textarea id="pre-list" placeholder="Ex: Jo da Silva (Operador), Maria Souza (Editora)" 
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Acompanhantes (Obrigatório)</label>
+                                <textarea id="pre-list" placeholder="Ex: João da Silva (Operador), Maria Souza (Editora)" 
                                           class="w-full bg-gray-900 border border-gray-800 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none h-14 resize-none"></textarea>
                             </div>
 
@@ -539,7 +540,7 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Hor</label>
+                                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Horário</label>
                                     <select id="pre-time" required class="w-full bg-gray-900 border border-gray-800 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none">
                                     </select>
                                 </div>
@@ -550,17 +551,17 @@
                                 <div class="flex items-center justify-between">
                                     <label class="flex items-center space-x-2 cursor-pointer select-none">
                                         <input type="checkbox" id="pre-enable-vai" checked class="rounded border-gray-800 bg-gray-900 text-blue-600 focus:ring-0 cursor-pointer" onchange="toggleLegInputs('pre', 'vai')">
-                                        <span class="text-xs font-bold text-white uppercase tracking-wider">Vai (Sa Globo)</span>
+                                        <span class="text-xs font-bold text-white uppercase tracking-wider">Vai (Saída Globo)</span>
                                     </label>
                                     <span class="text-[9px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded font-semibold uppercase">Ida</span>
                                 </div>
                                 <div id="pre-vai-inputs" class="grid grid-cols-2 gap-2 transition duration-200">
                                     <div>
-                                        <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1">Base de Sa</label>
+                                        <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1">Base de Saída</label>
                                         <select id="pre-vai-origin" class="w-full bg-gray-900 border border-gray-800 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none">
-                                            <option value="EG">Est Globo (EG)</option>
-                                            <option value="JB">Jardim Bot (JB)</option>
-                                            <option value="ION"> (ION)</option>
+                                            <option value="EG">Estúdios Globo (EG)</option>
+                                            <option value="JB">Jardim Botânico (JB)</option>
+                                            <option value="ION">Íon (ION)</option>
                                         </select>
                                     </div>
                                     <div>
@@ -582,20 +583,20 @@
                                 <div id="pre-vem-inputs" class="space-y-2 transition duration-200">
                                     <div class="grid grid-cols-2 gap-2">
                                         <div>
-                                            <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1">Local do Evento (Sa</label>
+                                            <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1">Local do Evento (Saída)</label>
                                             <input type="text" class="event-local-label w-full bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-gray-400 focus:outline-none" readonly>
                                         </div>
                                         <div>
                                             <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1">Base Globo (Destino)</label>
                                             <select id="pre-vem-destination" class="w-full bg-gray-900 border border-gray-800 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none">
-                                                <option value="EG">Est Globo (EG)</option>
-                                                <option value="JB">Jardim Bot (JB)</option>
-                                                <option value="ION"> (ION)</option>
+                                                <option value="EG">Estúdios Globo (EG)</option>
+                                                <option value="JB">Jardim Botânico (JB)</option>
+                                                <option value="ION">Íon (ION)</option>
                                             </select>
                                         </div>
                                     </div>
                                     <div id="pre-vem-time-container" class="hidden">
-                                        <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1">Hor Volta</label>
+                                        <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1">Horário Volta</label>
                                         <select id="pre-vem-time" class="w-full bg-gray-900 border border-gray-800 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none">
                                         </select>
                                     </div>
@@ -606,7 +607,7 @@
                             <div class="bg-gray-900/50 p-3 rounded-xl border border-gray-800 space-y-2">
                                 <label class="block text-[10px] font-bold text-gray-400 uppercase leading-relaxed">Deseja replicar este agendamento para os demais dias do evento?</label>
                                 <div class="flex space-x-2">
-                                    <button type="button" onclick="setReplicationChoice('pre', 'nao')" id="pre-btn-repl-nao" class="flex-grow bg-blue-600 text-white font-bold py-1.5 rounded-lg text-xs transition">N</button>
+                                    <button type="button" onclick="setReplicationChoice('pre', 'nao')" id="pre-btn-repl-nao" class="flex-grow bg-blue-600 text-white font-bold py-1.5 rounded-lg text-xs transition">Não</button>
                                     <button type="button" onclick="setReplicationChoice('pre', 'sim')" id="pre-btn-repl-sim" class="flex-grow bg-gray-800 text-gray-300 font-bold py-1.5 rounded-lg text-xs transition border border-gray-700">Todos</button>
                                     <button type="button" onclick="setReplicationChoice('pre', 'custom')" id="pre-btn-repl-custom" class="flex-grow bg-gray-800 text-gray-300 font-bold py-1.5 rounded-lg text-xs transition border border-gray-700">Escolher Dias</button>
                                 </div>
@@ -631,7 +632,7 @@
                 </div>
             </div>
 
-            <!-- Center: Phone Mockup for Boarding Card Confirmation -->
+            <!-- Right Side: Phone Mockup for Boarding Card Confirmation -->
             <div id="pre-booking-confirm-phone" class="w-full max-w-[390px] phone-mockup bg-gray-950 overflow-hidden shrink-0">
                 <div class="h-[700px] overflow-y-auto px-4 py-6 flex flex-col justify-between">
                     <div>
@@ -651,8 +652,8 @@
                                     <div class="absolute -inset-3 bg-blue-500/5 rounded-full blur-xl"></div>
                                     <i class="fa-solid fa-clipboard-check text-5xl text-gray-700 relative"></i>
                                 </div>
-                                <h4 class="text-sm font-bold text-white mb-2">Cart de Embarque</h4>
-                                <p class="text-xs text-gray-500 max-w-[260px] leading-relaxed">Seu cart de embarque digital ser exibido aqui ap confirmar o agendamento.</p>
+                                <h4 class="text-sm font-bold text-white mb-2">Cartão de Embarque</h4>
+                                <p class="text-xs text-gray-500 max-w-[260px] leading-relaxed">Seu cartão de embarque digital será exibido aqui após confirmar o agendamento.</p>
                             </div>
                         </div>
 
@@ -666,14 +667,14 @@
                             <!-- Digital Boarding Card -->
                             <div class="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 shadow-xl flex flex-col text-left">
                                 <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-4 py-3 text-white flex justify-between items-center">
-                                    <span class="text-xs font-bold tracking-widest uppercase">Cart de Agendamento</span>
+                                    <span class="text-xs font-bold tracking-widest uppercase">Cartão de Agendamento</span>
                                     <i id="pre-ticket-vehicle-icon" class="fa-solid fa-bus text-sm opacity-80"></i>
                                 </div>
                                 <div class="p-4 flex flex-col space-y-4">
                                     <div class="flex justify-between items-center px-2">
                                         <div class="text-center">
                                             <span id="pre-ticket-route-from-sig" class="text-2xl font-black text-white block">EG</span>
-                                            <span id="pre-ticket-route-from" class="text-[10px] text-gray-400 max-w-[80px] overflow-hidden text-ellipsis block">Est Globo</span>
+                                            <span id="pre-ticket-route-from" class="text-[10px] text-gray-400 max-w-[80px] overflow-hidden text-ellipsis block">Estúdios Globo</span>
                                         </div>
                                         <div class="flex-grow flex flex-col items-center px-4">
                                             <span id="pre-ticket-service-badge" class="text-[9px] font-bold text-blue-400 uppercase bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full mb-1">Van</span>
@@ -695,7 +696,7 @@
                                             <span id="pre-ticket-passenger-name" class="font-semibold text-white line-clamp-1">-</span>
                                         </div>
                                         <div>
-                                            <span class="text-[9px] uppercase font-bold text-gray-500 block">Matr</span>
+                                            <span class="text-[9px] uppercase font-bold text-gray-500 block">Matrícula/CPF</span>
                                             <span id="pre-ticket-passenger-id" class="font-mono font-semibold text-white">-</span>
                                         </div>
                                         <div>
@@ -703,7 +704,7 @@
                                             <span id="pre-ticket-date-time" class="font-semibold text-white">-</span>
                                         </div>
                                         <div>
-                                            <span class="text-[9px] uppercase font-bold text-gray-500 block">C Localizador</span>
+                                            <span class="text-[9px] uppercase font-bold text-gray-500 block">Código Localizador</span>
                                             <span id="pre-ticket-localizador" class="font-mono font-bold text-blue-400 uppercase tracking-widest text-[10px]">-</span>
                                         </div>
                                     </div>
@@ -712,14 +713,14 @@
                                         <p id="pre-ticket-accompany-list" class="text-gray-300 italic"></p>
                                     </div>
                                     <div id="pre-ticket-dates-box" class="hidden bg-gray-950 p-2 rounded-lg border border-gray-800 text-[10px] space-y-1.5">
-                                        <span class="text-gray-500 font-bold uppercase block text-[9px] border-b border-gray-900 pb-1 mb-1"><i class="fa-solid fa-calendar-check mr-1 text-emerald-400"></i>Datas e Hor Agendados</span>
+                                        <span class="text-gray-500 font-bold uppercase block text-[9px] border-b border-gray-900 pb-1 mb-1"><i class="fa-solid fa-calendar-check mr-1 text-emerald-400"></i>Datas e Horários Agendados</span>
                                         <div id="pre-ticket-dates-list" class="space-y-1 text-gray-300 max-h-[120px] overflow-y-auto pr-1"></div>
                                     </div>
                                     <hr class="border-gray-800 border-dashed">
                                     <div class="flex flex-col items-center py-2">
                                         <div id="pre-ticket-qrcode" class="bg-white p-2 rounded-xl flex items-center justify-center">
                                         </div>
-                                        <span class="text-[10px] text-gray-400 font-semibold mt-2.5 text-center max-w-[280px] leading-normal block">Apresente esse cart de Embarque quando for acessar o ve de Transporte no dia do evento.</span>
+                                        <span class="text-[10px] text-gray-400 font-semibold mt-2.5 text-center max-w-[280px] leading-normal block">Apresente esse cartão de Embarque quando for acessar o veículo de Transporte no dia do evento.</span>
                                     </div>
                                 </div>
                             </div>
@@ -759,7 +760,7 @@
                     <div class="flex justify-between items-center pb-2 border-b border-gray-800">
                         <div>
                             <h3 class="text-sm font-bold text-white uppercase"><i class="fa-solid fa-file-excel mr-1.5 text-emerald-400"></i>Agendamento em Lote (Planilha Modelo)</h3>
-                            <p class="text-[11px] text-gray-500">Envie o arquivo modelo preenchido por sua  operacional.</p>
+                            <p class="text-[11px] text-gray-500">Envie o arquivo modelo preenchido por sua área operacional.</p>
                         </div>
                         <button onclick="downloadBookingTemplate()" class="bg-gray-800 hover:bg-gray-700 text-emerald-400 border border-gray-700 font-bold px-3 py-1.5 rounded-xl text-[10px] flex items-center transition duration-200">
                             <i class="fa-solid fa-download mr-1"></i> Baixar Planilha Modelo (.xlsx)
@@ -768,10 +769,10 @@
                     <div onclick="simulateBulkBookingUpload()" class="border-2 border-dashed border-gray-800 hover:border-emerald-500/60 bg-gray-900/10 hover:bg-emerald-500/5 p-6 rounded-xl flex flex-col items-center justify-center text-center cursor-pointer transition duration-300">
                         <i class="fa-solid fa-file-excel text-3xl text-emerald-400 mb-2"></i>
                         <span class="text-xs text-gray-300 font-bold block">Simular Upload de Agendamentos em Lote</span>
-                        <span class="text-[9px] text-gray-500 mt-1">Garante a valida de credenciamento e a replica de datas configuradas na planilha.</span>
+                        <span class="text-[9px] text-gray-500 mt-1">Garante a validação de credenciamento e a replicação de datas configuradas na planilha.</span>
                     </div>
                     <div id="bulk-pre-success" class="hidden text-[10px] text-emerald-400 bg-emerald-500/10 p-2.5 rounded-lg border border-emerald-500/20 text-center font-semibold">
-                        <i class="fa-solid fa-circle-check mr-1.5"></i>Lote processado: Novos agendamentos criados com sucesso respeitando a replica de datas.
+                        <i class="fa-solid fa-circle-check mr-1.5"></i>Lote processado: Novos agendamentos criados com sucesso respeitando a replicação de datas.
                     </div>
                 </div>
             </div>
