@@ -1,4 +1,4 @@
-﻿// ConexÃ£o Transportes - Application Engine
+// ConexÃ£o Transportes - Application Engine
 // LÃ³gica do Front-end e Gerenciamento de Estado (PersistÃªncia via localStorage)
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -35,7 +35,7 @@ const safeStorage = {
 };
 
 // --- ESTADO GLOBAL DA APLICAÃ‡ÃƒO ---
-let db = null;
+// let db = null;
 let currentTab = 'passenger';
 let currentSubTab = 'graphs';
 let currentRegional = 'RJ';
@@ -378,6 +378,9 @@ async function initDatabase() {
             });
         });
     }
+    
+    // Constrói mapas indexados para buscas O(1)
+    rebuildDatabaseMaps();
 } // <--- Fechar initDatabase aqui
 
 // --- INTEGRAÃ‡ÃƒO BACKEND ---
@@ -431,59 +434,7 @@ function syncBookingCheckin(id, type) {
         body: JSON.stringify({ id, type })
     }).catch(console.error);
 }
-    
-    // CORREÃ‡ÃƒO: TransiÃ§Ã£o para fase de agendamento. Limpar status 'Embarcado' e 'No-Show' gerados pelo mock.
-    if (!localStorage.getItem('fixed_mock_status_v1') && db.bookings) {
-        db.bookings.forEach(b => {
-            if (b.status === 'Embarcado' || b.status === 'No-Show') {
-                b.status = 'Agendado';
-                delete b.status_checkin;
-                delete b.checkin_time;
-            }
-        });
-        if (typeof saveDatabase === 'function') saveDatabase();
-        try { localStorage.setItem('fixed_mock_status_v1', 'true'); } catch(e) {}
-    }
 
-    // Garante a existÃªncia dos dados simulados para Rock in Rio 2026
-    // ensureRirDataExists(); // REMOVIDO A PEDIDO DO USUARIO
-    
-    // Garantir que todas as viagens de Vai e Vem Van tenham capacidade de 15 passageiros
-    if (db.trips) {
-        let changed = false;
-        db.trips.forEach(t => {
-            if (t.tipo_atendimento === 'Vai e Vem Van' && t.capacidade !== 15) {
-                t.capacidade = 15;
-                changed = true;
-            }
-        });
-        if (changed) {
-            saveDatabase();
-        }
-    }
-    
-    // Simular VAPs iniciais se os veÃ­culos existirem e nÃ£o tiverem VAP cadastrado ainda
-    if (db.vehicles) {
-        let changed = false;
-        db.vehicles.forEach((v, idx) => {
-            if (!v.vap) {
-                if (idx < 5) {
-                    v.vap = `VAP-0${100 + idx}`;
-                    changed = true;
-                } else if (idx < 10) {
-                    v.vap = `VAPP-${250 + idx}`;
-                    changed = true;
-                }
-            }
-        });
-        if (changed) {
-            saveDatabase();
-        }
-    }
-    
-    // ConstrÃ³i mapas indexados para buscas O(1)
-    rebuildDatabaseMaps();
-}
 
 function saveDatabase() {
     if (db) {
@@ -906,7 +857,7 @@ function togglePreBookingPassengerList(serviceType) {
 async function fetchAndCachePerson(q) {
     if (q.length < 3) return false;
     try {
-        const res = await fetch("$" + {getApiUrl()}/collaborators/search?q="$" + {q});
+        const res = await fetch(`${getApiUrl()}/collaborators/search?q=${q}`);
         if (!res.ok) return false;
         const data = await res.json();
         let updated = false;
@@ -918,7 +869,7 @@ async function fetchAndCachePerson(q) {
                 updated = true;
             }
         });
-        const accRes = await fetch("$" + {getApiUrl()}/accredited/search?q="$" + {q});
+        const accRes = await fetch(`${getApiUrl()}/accredited/search?q=${q}`);
         if (accRes.ok) {
             const accData = await accRes.json();
             accData.forEach(a => {
@@ -1454,7 +1405,7 @@ function downloadAgendamentoModelCSV() {
     const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     link.setAttribute("href", URL.createObjectURL(blob));
-    link.setAttribute("download", "Modelo_Agendamento_CCO_Eventos.csv");
+    link.setAttribute("download", `Modelo_Agendamento_CCO_Eventos.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -4814,9 +4765,16 @@ async function doLoginSeguro() {
         if (welcome) welcome.classList.add('hidden');
         
         registerUserSession(finalRole, `${user.nome} ${user.sobrenome}`, user.matricula);
+        
+        applyRoleConfiguration(finalRole);
+    } catch(err) {
+        btn.innerHTML = oldBtnText;
+        btn.disabled = false;
+        if (errDiv) {
+            errDiv.textContent = "Erro ao conectar com servidor.";
+            errDiv.classList.remove('hidden');
+        }
     }
-    
-    applyRoleConfiguration(finalRole);
 }
 
 // Registro / Cadastro de UsuÃ¡rios
@@ -10817,15 +10775,15 @@ window.openDrillDownModal = function(areaName, statusType) {
     } else {
         bookingsFiltro.forEach(b => {
             const passId = (b.matricula || b.cpf || '-').replace(/\D/g, '');
-            const maskedId = passId.length === 11 ? ***. + passId.substring(3,6) + . + passId.substring(6,9) + -** : passId;
+            const maskedId = passId.length === 11 ? '***.' + passId.substring(3,6) + '.' + passId.substring(6,9) + '-**' : passId;
             const pNome = b.nome || 'Não identificado';
             
-            let statusPill = <span class="status-pill text-emerald-400 border-emerald-500/20 px-2 py-0.5 text-[9px] uppercase">+b.status+</span>;
-            if (b.status === 'Agendado') statusPill = <span class="status-pill text-blue-400 border-blue-500/20 px-2 py-0.5 text-[9px] uppercase">Agendado</span>;
-            if (b.status === 'No-Show') statusPill = <span class="status-pill text-red-400 border-red-500/20 px-2 py-0.5 text-[9px] uppercase">No-Show</span>;
+            let statusPill = `<span class="status-pill text-emerald-400 border-emerald-500/20 px-2 py-0.5 text-[9px] uppercase">${b.status}</span>`;
+            if (b.status === 'Agendado') statusPill = `<span class="status-pill text-blue-400 border-blue-500/20 px-2 py-0.5 text-[9px] uppercase">Agendado</span>`;
+            if (b.status === 'No-Show') statusPill = `<span class="status-pill text-red-400 border-red-500/20 px-2 py-0.5 text-[9px] uppercase">No-Show</span>`;
             
             if (b.status_checkin) {
-                statusPill += <br><span class="text-[8px] text-gray-400 mt-0.5 block">+b.status_checkin+</span>;
+                statusPill += `<br><span class="text-[8px] text-gray-400 mt-0.5 block">${b.status_checkin}</span>`;
             }
 
             const tr = document.createElement('tr');
@@ -10858,14 +10816,14 @@ window.exportDrillDownCSV = function() {
     
     let csv = "NOME,IDENTIFICADOR,STATUS,DETALHE_CHECKIN,ORIGEM,DESTINO,DATA,HORA,SOLICITANTE\n";
     window.currentDrillDownData.forEach(b => {
-        csv += "$",$,$,$,$,$,$,$,$\n;
+        csv += `"${b.nome || ''}","${b.cpf || b.matricula || ''}","${b.status || ''}","${b.status_checkin || ''}","${b.origem || ''}","${b.destino || ''}","${b.data || ''}","${b.hora || ''}","${b.solicitante || ''}"\n`;
     });
     
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute("download", nalitico_drilldown.csv);
+    link.setAttribute("download", `analitico_drilldown.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
