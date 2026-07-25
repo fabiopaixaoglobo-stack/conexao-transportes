@@ -7,12 +7,16 @@
     "deploy:prod": "npm run build && npx surge deploy_dist conexao-transportes-globo-8210.surge.sh"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "joi": "^18.2.3",
+    "jsonwebtoken": "^9.0.3",
     "localtunnel": "^2.0.2",
     "multer": "^2.2.0",
     "pg": "^8.22.0",
+    "socket.io": "^4.8.3",
     "xlsx": "^0.18.5"
   }
 }

@@ -3,7 +3,7 @@ const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
 const xlsx = require('xlsx');
-
+const bcrypt = require('bcryptjs');
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
@@ -88,6 +88,15 @@ async function runSeed() {
         } else {
             console.log("Arquivo de Terceiros não encontrado, pulando...");
         }
+
+        // 5. Inserir Usuário Master
+        console.log("Criando usuário master padrão...");
+        const masterPassHash = await bcrypt.hash('master123', 10);
+        await client.query(`
+            INSERT INTO users (username, password_hash, role)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (username) DO NOTHING
+        `, ['master', masterPassHash, 'Master']);
 
         await client.query('COMMIT');
         console.log("Migração e Seed finalizados com sucesso!");

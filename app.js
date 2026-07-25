@@ -1,5 +1,5 @@
-// Conexão Transportes - Application Engine
-// Lógica do Front-end e Gerenciamento de Estado (Persistência via localStorage)
+﻿// ConexÃ£o Transportes - Application Engine
+// LÃ³gica do Front-end e Gerenciamento de Estado (PersistÃªncia via localStorage)
 
 document.addEventListener('DOMContentLoaded', () => {
     // Clear old localStorage mock database to ensure fresh fetch from PostgreSQL
@@ -34,7 +34,7 @@ const safeStorage = {
     }
 };
 
-// --- ESTADO GLOBAL DA APLICAÇÃO ---
+// --- ESTADO GLOBAL DA APLICAÃ‡ÃƒO ---
 let db = null;
 let currentTab = 'passenger';
 let currentSubTab = 'graphs';
@@ -42,19 +42,19 @@ let currentRegional = 'RJ';
 let currentEvent = 'RIR'; // RIR = Rock in Rio 2026, CARNAVAL = Carnaval 2026
 let currentDirection = 'VAI'; // VAI (Globo -> Evento), VEM (Evento -> Globo)
 
-// --- ESTADO DE RESERVAS PENDENTES (REVISÃO INTERATIVA) ---
+// --- ESTADO DE RESERVAS PENDENTES (REVISÃƒO INTERATIVA) ---
 let pendingBookings = [];
 let pendingBookingSource = ''; // 'pre' (individual), 'pass' (totem check-in), 'bulk' (excel import)
 let pendingBookingServiceType = '';
 let pendingBookingAccompany = '';
 let isProcessingBooking = false;
 
-// Instâncias dos Gráficos (Chart.js)
+// InstÃ¢ncias dos GrÃ¡ficos (Chart.js)
 let jbChartInstance = null;
 let egChartInstance = null;
 let ionChartInstance = null;
 
-// --- INICIALIZAÇÃO ---
+// --- INICIALIZAÃ‡ÃƒO ---
 document.addEventListener("DOMContentLoaded", async () => {
     await initDatabase();
     checkTestEnvironment();
@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Check URL parameters for direct driver role access
     checkUrlRoleParameter();
     
-    // Configurações iniciais de telas
+    // ConfiguraÃ§Ãµes iniciais de telas
     const savedRole = safeStorage.session.getItem('conexao_role');
     if (savedRole) {
         selectRole(savedRole);
@@ -92,11 +92,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     populateDateSelectors();
     updateEventLabels();
     
-    // Atualizar horários dos agendamentos
+    // Atualizar horÃ¡rios dos agendamentos
     updatePreBookingTimes();
     updateAvailableTimes();
     
-    // Renderizar checklists de replicação
+    // Renderizar checklists de replicaÃ§Ã£o
     renderReplicationCheckboxes();
     
     // Gerar QR codes do Totem Modal
@@ -192,8 +192,8 @@ function toggleLegInputs(prefix, leg) {
     }
 }
 
-// Limpa matrículas e CPFs para busca precisa (remove .0, espaços, pontos e traços)
-// Limpa matrículas e CPFs para busca precisa (remove .0, espaços, pontos e traços)
+// Limpa matrÃ­culas e CPFs para busca precisa (remove .0, espaÃ§os, pontos e traÃ§os)
+// Limpa matrÃ­culas e CPFs para busca precisa (remove .0, espaÃ§os, pontos e traÃ§os)
 let collaboratorsMapMat = new Map();
 let collaboratorsMapCpf = new Map();
 let accreditedMapMat = new Map();
@@ -261,12 +261,12 @@ function findPerson(id) {
 function getN1Area(person) {
     if (!person) return 'OUTROS';
     let raw = String(person.n1 || person.diretoria || person.departamento || person.tipo_vinculo || 'OUTROS').toUpperCase().trim();
-    if (raw.includes('LOGÍSTICA') || raw.includes('LOGISTICA')) {
-        if (raw.includes('TRANSPORTE')) return 'LOGÍSTICA E TRANSPORTES';
+    if (raw.includes('LOGÃSTICA') || raw.includes('LOGISTICA')) {
+        if (raw.includes('TRANSPORTE')) return 'LOGÃSTICA E TRANSPORTES';
     }
-    if (raw.includes('FINANÇAS') || raw.includes('FINANCAS') || raw.includes('FINANCA')) {
-        if (raw.includes('JURIDICO') || raw.includes('JURÍDICO') || raw.includes('INFRA')) {
-            return 'FINANÇAS, JURÍDICO E INFRAESTRUTURA';
+    if (raw.includes('FINANÃ‡AS') || raw.includes('FINANCAS') || raw.includes('FINANCA')) {
+        if (raw.includes('JURIDICO') || raw.includes('JURÃDICO') || raw.includes('INFRA')) {
+            return 'FINANÃ‡AS, JURÃDICO E INFRAESTRUTURA';
         }
     }
     return raw;
@@ -274,7 +274,7 @@ function getN1Area(person) {
 
 function isValidBookingForReports(b) {
     if (b.status === 'Cancelado') return false;
-    // Removido o filtro rígido de >= 20/07 para permitir exibir o histórico/base importada
+    // Removido o filtro rÃ­gido de >= 20/07 para permitir exibir o histÃ³rico/base importada
     return true;
 }
 
@@ -299,7 +299,7 @@ function checkTestEnvironment() {
         badge.style.display = 'flex';
         badge.style.alignItems = 'center';
         badge.style.gap = '8px';
-        badge.style.pointerEvents = 'none'; // não atrapalha cliques por trás
+        badge.style.pointerEvents = 'none'; // nÃ£o atrapalha cliques por trÃ¡s
         badge.style.fontFamily = 'sans-serif';
         badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="color: #fef08a;"></i> AMBIENTE DE TESTES';
         document.body.appendChild(badge);
@@ -334,20 +334,19 @@ async function initDatabase() {
             : '/api'; // Use relative path on production
 
         console.log("Fetching data from backend...");
-        const [collabRes, accRes, bookRes] = await Promise.all([
-            fetch(`${API_URL}/collaborators`),
-            fetch(`${API_URL}/accredited`),
-            fetch(`${API_URL}/bookings`)
-        ]);
+        const token = safeStorage.local.getItem('rig_token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-        if (collabRes.ok) db.collaborators = await collabRes.json();
-        else db.collaborators = [];
+        db.collaborators = []; // NÃ£o carregamos mais tudo, LGPD! Usaremos autocomplete
+        db.accredited = []; // NÃ£o carregamos mais tudo, LGPD! Usaremos autocomplete
 
-        if (accRes.ok) db.accredited = await accRes.json();
-        else db.accredited = [];
-
-        if (bookRes.ok) db.bookings = await bookRes.json();
-        else db.bookings = [];
+        const bookRes = await fetch(`${API_URL}/bookings`, { headers });
+        if (bookRes.ok) {
+            db.bookings = await bookRes.json();
+        } else {
+            console.warn("Sem token ou erro ao buscar bookings.");
+            db.bookings = [];
+        }
         
     } catch (err) {
         console.error("Backend unreachable, using empty arrays fallback", err);
@@ -356,7 +355,7 @@ async function initDatabase() {
         db.bookings = [];
     }
 
-    // Adicionar por padrão o administrador e colaboradores de tecnologia como autorizados
+    // Adicionar por padrÃ£o o administrador e colaboradores de tecnologia como autorizados
     if (db.authorized_solicitants.length === 0) {
         db.authorized_solicitants.push({
             matricula: '123456',
@@ -381,7 +380,7 @@ async function initDatabase() {
     }
 } // <--- Fechar initDatabase aqui
 
-// --- INTEGRAÇÃO BACKEND ---
+// --- INTEGRAÃ‡ÃƒO BACKEND ---
 function getApiUrl() {
     return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
         ? 'http://localhost:8000/api'
@@ -389,6 +388,7 @@ function getApiUrl() {
 }
 
 function syncBookingCreate(booking) {
+    // Create continua aberto no backend para uso dos funcionÃ¡rios.
     fetch(`${getApiUrl()}/bookings/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -397,22 +397,42 @@ function syncBookingCreate(booking) {
 }
 
 function syncBookingBulk(bookings) {
+    const token = safeStorage.local.getItem('rig_token');
     fetch(`${getApiUrl()}/bookings/bulk`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+        },
         body: JSON.stringify({ bookings })
     }).catch(console.error);
 }
 
 function syncBookingCancel(id) {
+    const token = safeStorage.local.getItem('rig_token');
     fetch(`${getApiUrl()}/bookings/cancel`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+        },
         body: JSON.stringify({ id })
     }).catch(console.error);
 }
+
+function syncBookingCheckin(id, type) {
+    const token = safeStorage.local.getItem('rig_token');
+    fetch(`${getApiUrl()}/bookings/checkin`, {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+        },
+        body: JSON.stringify({ id, type })
+    }).catch(console.error);
+}
     
-    // CORREÇÃO: Transição para fase de agendamento. Limpar status 'Embarcado' e 'No-Show' gerados pelo mock.
+    // CORREÃ‡ÃƒO: TransiÃ§Ã£o para fase de agendamento. Limpar status 'Embarcado' e 'No-Show' gerados pelo mock.
     if (!localStorage.getItem('fixed_mock_status_v1') && db.bookings) {
         db.bookings.forEach(b => {
             if (b.status === 'Embarcado' || b.status === 'No-Show') {
@@ -425,8 +445,8 @@ function syncBookingCancel(id) {
         try { localStorage.setItem('fixed_mock_status_v1', 'true'); } catch(e) {}
     }
 
-    // Garante a existência dos dados simulados para Rock in Rio 2026
-    ensureRirDataExists();
+    // Garante a existÃªncia dos dados simulados para Rock in Rio 2026
+    // ensureRirDataExists(); // REMOVIDO A PEDIDO DO USUARIO
     
     // Garantir que todas as viagens de Vai e Vem Van tenham capacidade de 15 passageiros
     if (db.trips) {
@@ -442,7 +462,7 @@ function syncBookingCancel(id) {
         }
     }
     
-    // Simular VAPs iniciais se os veículos existirem e não tiverem VAP cadastrado ainda
+    // Simular VAPs iniciais se os veÃ­culos existirem e nÃ£o tiverem VAP cadastrado ainda
     if (db.vehicles) {
         let changed = false;
         db.vehicles.forEach((v, idx) => {
@@ -461,7 +481,7 @@ function syncBookingCancel(id) {
         }
     }
     
-    // Constrói mapas indexados para buscas O(1)
+    // ConstrÃ³i mapas indexados para buscas O(1)
     rebuildDatabaseMaps();
 }
 
@@ -528,7 +548,7 @@ function saveDatabase() {
 }
 
 function resetDatabase() {
-    if (confirm("Deseja realmente restaurar o banco de dados original? Todas as alterações, check-ins e agendamentos recentes serão perdidos.")) {
+    if (confirm("Deseja realmente restaurar o banco de dados original? Todas as alteraÃ§Ãµes, check-ins e agendamentos recentes serÃ£o perdidos.")) {
         safeStorage.local.removeItem('conexao_transportes_db');
         initDatabase();
         
@@ -560,7 +580,7 @@ function ensureRirDataExists() {
     const rirDates = ['2026-09-04', '2026-09-05', '2026-09-06', '2026-09-07', '2026-09-11', '2026-09-12', '2026-09-13'];
     const carnaDates = ['2026-02-15', '2026-02-16', '2026-02-17', '2026-02-21'];
     
-    // Verifica se já temos viagens no ano de 2026 no mês 09
+    // Verifica se jÃ¡ temos viagens no ano de 2026 no mÃªs 09
     const hasRirTrips = db.trips.some(t => t.data.startsWith('2026-09'));
     if (!hasRirTrips) {
         console.log("Gerando dados de viagens e agendamentos para o RIR 2026...");
@@ -606,7 +626,7 @@ function ensureRirDataExists() {
                         const rirTripId = b.trip_id.replace(b.data, targetDate);
                         const rirBookingId = b.id.replace(b.data.replace(/-/g, ''), targetDate.replace(/-/g, ''));
                         
-                        // Seleciona um credenciado do RIR de forma pseudo-aleatória
+                        // Seleciona um credenciado do RIR de forma pseudo-aleatÃ³ria
                         const rirPerson = db.accredited[Math.floor(Math.random() * db.accredited.length)];
                         
                         newBookings.push({
@@ -637,7 +657,7 @@ function setupEventHandlers() {
     // Selector regional
     document.getElementById('regional-selector').addEventListener('change', (e) => {
         currentRegional = e.target.value;
-        showToast(`Regional Alterada`, `Operação sincronizada para a regional ${currentRegional}.`, "info");
+        showToast(`Regional Alterada`, `OperaÃ§Ã£o sincronizada para a regional ${currentRegional}.`, "info");
         
         if (currentTab === 'operation') refreshOperationList();
         if (currentTab === 'management') updateDashboard();
@@ -646,7 +666,7 @@ function setupEventHandlers() {
     // Selector evento
     document.getElementById('event-selector').addEventListener('change', (e) => {
         currentEvent = e.target.value;
-        showToast(`Evento Alterado`, `Carregando dados específicos do evento selecionado.`, "info");
+        showToast(`Evento Alterado`, `Carregando dados especÃ­ficos do evento selecionado.`, "info");
         
         populateDateSelectors();
         updateEventLabels();
@@ -664,7 +684,7 @@ function setupEventHandlers() {
     // Reset DB button
     document.getElementById('btn-reset-db').addEventListener('click', resetDatabase);
 
-    // Listeners de mudança de base nos formulários para atualizar os horários
+    // Listeners de mudanÃ§a de base nos formulÃ¡rios para atualizar os horÃ¡rios
     const pvo = document.getElementById('pre-vai-origin');
     if (pvo) pvo.addEventListener('change', updatePreBookingTimes);
     const pvd = document.getElementById('pre-vem-destination');
@@ -676,7 +696,7 @@ function setupEventHandlers() {
     if (avd) avd.addEventListener('change', updateAvailableTimes);
 }
 
-// --- CONTROLE DE NAVEGAÇÃO DE TABS ---
+// --- CONTROLE DE NAVEGAÃ‡ÃƒO DE TABS ---
 function switchTab(tabId) {
     currentTab = tabId;
     
@@ -700,7 +720,7 @@ function switchTab(tabId) {
         }
     });
 
-    // Ações ao trocar de aba
+    // AÃ§Ãµes ao trocar de aba
     if (tabId === 'passenger') {
         updateAvailableTimes();
     } else if (tabId === 'operation') {
@@ -719,11 +739,11 @@ function switchTab(tabId) {
     }
 }
 
-// --- CONTROLE DE SUB-TABS (GESTÃO & ANALYTICS) ---
+// --- CONTROLE DE SUB-TABS (GESTÃƒO & ANALYTICS) ---
 function switchSubTab(subTabId) {
     currentSubTab = subTabId;
     
-    const subtabs = ['graphs', 'adherence', 'loss-sim', 'van-simulator', 'audit', 'drivers', 'tracking', 'upload-panel'];
+    const subtabs = ['graphs', 'adherence', 'loss-sim', 'van-simulator', 'audit', 'drivers', 'tracking', 'upload-panel', 'db-viewer', 'robot-audit'];
     subtabs.forEach(st => {
         const btn = document.getElementById(`subtab-${st}`);
         const content = document.getElementById(`subtab-content-${st}`);
@@ -747,7 +767,7 @@ function switchSubTab(subTabId) {
     }
 }
 
-// --- DINAMIZAÇÃO DE SELETORES DE DATA ---
+// --- DINAMIZAÃ‡ÃƒO DE SELETORES DE DATA ---
 function populateDateSelectors() {
     const dates = getEventDates();
     
@@ -773,7 +793,7 @@ function populateDateSelectors() {
     fillSelect('sim-van-date');
 }
 
-// --- RENDERIZAR CHECKLISTS DE REPLICAÇÃO ---
+// --- RENDERIZAR CHECKLISTS DE REPLICAÃ‡ÃƒO ---
 function renderReplicationCheckboxes() {
     const dates = getEventDates();
     
@@ -799,7 +819,7 @@ function renderReplicationCheckboxes() {
     fillCheckboxes('pass-repl-days-container', 'pass');
 }
 
-// Define escolha de replicação (Sim/Não)
+// Define escolha de replicaÃ§Ã£o (Sim/NÃ£o)
 function setReplicationChoice(prefix, choice) {
     const input = document.getElementById(`${prefix}-repl-choice`);
     if (!input) return;
@@ -831,7 +851,7 @@ function setReplicationChoice(prefix, choice) {
     }
 }
 
-// --- PORTAL DE PRÉ-AGENDAMENTO ---
+// --- PORTAL DE PRÃ‰-AGENDAMENTO ---
 function updatePreBookingRoutes() {
     // Deprecated in favor of dual leg boxes
 }
@@ -883,7 +903,39 @@ function togglePreBookingPassengerList(serviceType) {
     if (textarea) textarea.removeAttribute('required');
 }
 
-function lookupPreBookingCollaborator(idVal) {
+async function fetchAndCachePerson(q) {
+    if (q.length < 3) return false;
+    try {
+        const res = await fetch("$" + {getApiUrl()}/collaborators/search?q="$" + {q});
+        if (!res.ok) return false;
+        const data = await res.json();
+        let updated = false;
+        data.forEach(c => {
+            if (!db.collaborators.find(x => x.matricula === c.matricula)) {
+                db.collaborators.push(c);
+                if (c.cpf) collaboratorsMapCpf.set(String(c.cpf).replace(/\D/g, ''), c);
+                if (c.matricula) collaboratorsMapMat.set(String(c.matricula).trim(), c);
+                updated = true;
+            }
+        });
+        const accRes = await fetch("$" + {getApiUrl()}/accredited/search?q="$" + {q});
+        if (accRes.ok) {
+            const accData = await accRes.json();
+            accData.forEach(a => {
+                if (!db.accredited.find(x => x.cpf === a.cpf)) {
+                    db.accredited.push(a);
+                    if (a.cpf) accreditedMapCpf.set(String(a.cpf).replace(/\D/g, ''), a);
+                    if (a.matricula) accreditedMapMat.set(String(a.matricula).trim(), a);
+                    updated = true;
+                }
+            });
+        }
+        return updated;
+    } catch(err) { console.error(err); return false; }
+}
+
+async function lookupPreBookingCollaborator(idVal) {
+    if (idVal.trim().length >= 3) await fetchAndCachePerson(idVal.trim());
     const id = idVal.trim();
     const msg = document.getElementById('pre-lookup-msg');
     const fields = document.getElementById('pre-details-fields');
@@ -900,11 +952,11 @@ function lookupPreBookingCollaborator(idVal) {
     if (person) {
         msg.classList.remove('hidden');
         msg.className = "text-[10px] mt-1 text-emerald-400 font-semibold";
-        msg.textContent = "✓ Colaborador ativo encontrado";
+        msg.textContent = "âœ“ Colaborador ativo encontrado";
         
         fields.classList.remove('hidden');
         document.getElementById('lbl-pre-name').textContent = person.nome;
-        document.getElementById('lbl-pre-cargo').textContent = person.cargo || "Funcionário";
+        document.getElementById('lbl-pre-cargo').textContent = person.cargo || "FuncionÃ¡rio";
         document.getElementById('lbl-pre-dept').textContent = getN1Area(person);
         
         const companyLabel = document.getElementById('lbl-pre-company');
@@ -916,7 +968,7 @@ function lookupPreBookingCollaborator(idVal) {
     } else {
         msg.classList.remove('hidden');
         msg.className = "text-[10px] mt-1 text-red-400 font-bold";
-        msg.textContent = "✗ Acesso Negado: Colaborador não encontrado na base de colaboradores ou terceiros";
+        msg.textContent = "âœ— Acesso Negado: Colaborador nÃ£o encontrado na base de colaboradores ou terceiros";
         fields.classList.add('hidden');
     }
 }
@@ -942,11 +994,11 @@ function selectPreBookingTarget(type) {
     if (savedContainer) savedContainer.classList.add('hidden');
 
     if (type === 'self') {
-        // Estilo botões
+        // Estilo botÃµes
         btnSelf.className = "bg-blue-600 text-white font-bold py-2 rounded-xl text-xs transition border border-blue-500 shadow-md flex items-center justify-center gap-1.5";
         btnOther.className = "bg-gray-900 text-gray-400 font-bold py-2 rounded-xl text-xs transition border border-gray-800 hover:bg-gray-800 flex items-center justify-center gap-1.5";
         
-        if (labelTitle) labelTitle.textContent = "Sua Matrícula ou CPF";
+        if (labelTitle) labelTitle.textContent = "Sua MatrÃ­cula ou CPF";
         if (divSolicitant) divSolicitant.classList.add('hidden');
         if (inputSolicitant) {
             inputSolicitant.required = false;
@@ -955,17 +1007,18 @@ function selectPreBookingTarget(type) {
         document.getElementById('pre-solicitant-lookup-msg').classList.add('hidden');
         document.getElementById('pre-solicitant-details').classList.add('hidden');
     } else {
-        // Estilo botões
+        // Estilo botÃµes
         btnSelf.className = "bg-gray-900 text-gray-400 font-bold py-2 rounded-xl text-xs transition border border-gray-800 hover:bg-gray-800 flex items-center justify-center gap-1.5";
         btnOther.className = "bg-blue-600 text-white font-bold py-2 rounded-xl text-xs transition border border-blue-500 shadow-md flex items-center justify-center gap-1.5";
         
-        if (labelTitle) labelTitle.textContent = "Matrícula ou CPF do Passageiro";
+        if (labelTitle) labelTitle.textContent = "MatrÃ­cula ou CPF do Passageiro";
         if (divSolicitant) divSolicitant.classList.remove('hidden');
         if (inputSolicitant) inputSolicitant.required = true;
     }
 }
 
-function lookupPreBookingSolicitant(idVal) {
+async function lookupPreBookingSolicitant(idVal) {
+    if (idVal.trim().length >= 3) await fetchAndCachePerson(idVal.trim());
     const id = idVal.trim();
     const msg = document.getElementById('pre-solicitant-lookup-msg');
     const details = document.getElementById('pre-solicitant-details');
@@ -981,7 +1034,7 @@ function lookupPreBookingSolicitant(idVal) {
         if (msg) {
             msg.classList.remove('hidden');
             msg.className = "text-[10px] mt-1 text-emerald-400 font-semibold";
-            msg.textContent = "✓ Solicitante encontrado na base";
+            msg.textContent = "âœ“ Solicitante encontrado na base";
         }
         
         if (details) {
@@ -991,18 +1044,18 @@ function lookupPreBookingSolicitant(idVal) {
             
             const badge = document.getElementById('lbl-solicitant-badge');
             if (badge) {
-                // Verificar se é autorizado
+                // Verificar se Ã© autorizado
                 const isAuthorized = isSolicitantAuthorized(person);
                 if (isAuthorized) {
                     badge.className = "px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
                     badge.textContent = "Autorizado";
-                    if (msg) msg.textContent = "✓ Solicitante autorizado para cadastrar terceiros";
+                    if (msg) msg.textContent = "âœ“ Solicitante autorizado para cadastrar terceiros";
                 } else {
                     badge.className = "px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/30";
-                    badge.textContent = "Não Autorizado";
+                    badge.textContent = "NÃ£o Autorizado";
                     if (msg) {
                         msg.className = "text-[10px] mt-1 text-amber-400 font-bold";
-                        msg.textContent = "⚠️ Solicitante sem permissão para cadastrar terceiros";
+                        msg.textContent = "âš ï¸ Solicitante sem permissÃ£o para cadastrar terceiros";
                     }
                 }
             }
@@ -1011,29 +1064,29 @@ function lookupPreBookingSolicitant(idVal) {
         if (msg) {
             msg.classList.remove('hidden');
             msg.className = "text-[10px] mt-1 text-red-400 font-bold";
-            msg.textContent = "✗ Acesso Negado: Solicitante não credenciado";
+            msg.textContent = "âœ— Acesso Negado: Solicitante nÃ£o credenciado";
         }
         if (details) details.classList.add('hidden');
     }
 }
 
-// Verifica se um solicitante é autorizado a realizar agendamento para terceiros
+// Verifica se um solicitante Ã© autorizado a realizar agendamento para terceiros
 function isSolicitantAuthorized(person) {
     if (!person) return false;
     
-    // 1. Verificar se está explicitamente na lista de autorizados
+    // 1. Verificar se estÃ¡ explicitamente na lista de autorizados
     const isExplicit = (db.authorized_solicitants || []).some(s => 
         (s.matricula && s.matricula === person.matricula) || (s.cpf && s.cpf === person.cpf)
     );
     if (isExplicit) return true;
     
-    // 2. Verificar se é usuário cadastrado com perfil Master/Manager
+    // 2. Verificar se Ã© usuÃ¡rio cadastrado com perfil Master/Manager
     const isSystemUser = (db.users || []).some(u => 
         (u.matricula && u.matricula === person.matricula) || (u.email && u.email.toLowerCase() === (person.email || '').toLowerCase())
     );
     if (isSystemUser) return true;
     
-    // 3. Verificar se pertence a departamentos operacionais críticos (Tecnologia, Transportes, CCO)
+    // 3. Verificar se pertence a departamentos operacionais crÃ­ticos (Tecnologia, Transportes, CCO)
     const dept = (person.departamento || person.diretoria || '').toUpperCase();
     if (dept.includes('TECNOLOGIA') || dept.includes('TRANSPORTES') || dept.includes('CCO') || dept.includes('GERENCIA')) {
         return true;
@@ -1050,9 +1103,9 @@ function logBookingAction(passenger, solicitant, action, date, serviceType, cana
         acao: action, // 'Agendado', 'Cancelado', 'Tentativa Negada'
         passageiro_nome: passenger ? passenger.nome : 'Desconhecido',
         passageiro_id: passenger ? (passenger.matricula || passenger.cpf) : '-',
-        solicitante_nome: solicitant ? solicitant.nome : 'O Próprio',
+        solicitante_nome: solicitant ? solicitant.nome : 'O PrÃ³prio',
         solicitante_id: solicitant ? (solicitant.matricula || solicitant.cpf) : '-',
-        autorizado: solicitant ? (isSolicitantAuthorized(solicitant) ? 'Sim' : 'Não') : 'Sim (Autocadastro)',
+        autorizado: solicitant ? (isSolicitantAuthorized(solicitant) ? 'Sim' : 'NÃ£o') : 'Sim (Autocadastro)',
         data_viagem: date || '-',
         servico: serviceType || '-',
         canal: canal || 'Site'
@@ -1060,7 +1113,7 @@ function logBookingAction(passenger, solicitant, action, date, serviceType, cana
     
     db.booking_logs.push(newLog);
     
-    // Limitar histórico de logs para não estourar armazenamento (últimos 300)
+    // Limitar histÃ³rico de logs para nÃ£o estourar armazenamento (Ãºltimos 300)
     if (db.booking_logs.length > 300) {
         db.booking_logs.shift();
     }
@@ -1100,11 +1153,11 @@ function updatePreBookingSavedList(person) {
             const g = grouped[date];
             let info = '';
             if (g.vai) {
-                info += `VAI (${g.vai.origem} às ${g.vai.hora})`;
+                info += `VAI (${g.vai.origem} Ã s ${g.vai.hora})`;
             }
             if (g.vem) {
                 if (info) info += ' | ';
-                info += `VEM (${g.vem.destino} às ${g.vem.hora})`;
+                info += `VEM (${g.vem.destino} Ã s ${g.vem.hora})`;
             }
             
             const item = document.createElement('div');
@@ -1132,7 +1185,7 @@ function createBooking(person, origin, dest, serviceType, accompany, date, time,
         return false;
     }
 
-    // Auto-criação de viagens/trips se não existirem
+    // Auto-criaÃ§Ã£o de viagens/trips se nÃ£o existirem
     let trip = db.trips.find(t => t.id === trip_id);
     if (!trip) {
         trip = {
@@ -1172,13 +1225,13 @@ function createBooking(person, origin, dest, serviceType, accompany, date, time,
         solicitante_nome: solicitantPerson ? solicitantPerson.nome : "",
         uploaded_by: (function() {
             if (solicitantPerson) {
-                return `Solicitante: ${solicitantPerson.nome} (Matrícula/CPF: ${solicitantPerson.matricula || solicitantPerson.cpf})`;
+                return `Solicitante: ${solicitantPerson.nome} (MatrÃ­cula/CPF: ${solicitantPerson.matricula || solicitantPerson.cpf})`;
             }
             const savedUser = safeStorage.local.getItem('rig_user');
             if (savedUser) {
                 try {
                     const uObj = JSON.parse(savedUser);
-                    return `${uObj.nome} ${uObj.sobrenome} (Matrícula: ${uObj.matricula})`;
+                    return `${uObj.nome} ${uObj.sobrenome} (MatrÃ­cula: ${uObj.matricula})`;
                 } catch(e) {}
             }
             if (typeof representativeFixedArea !== 'undefined' && representativeFixedArea) {
@@ -1200,7 +1253,7 @@ function createBooking(person, origin, dest, serviceType, accompany, date, time,
     return true;
 }
 
-// Lida com replicação de múltiplos dias
+// Lida com replicaÃ§Ã£o de mÃºltiplos dias
 function handleLegReplication(prefix, leg, person, origin, dest, serviceType, accompany, selectedDate, time, canal, solicitantPerson = null) {
     const choice = document.getElementById(`${prefix}-repl-choice`).value;
     const allDates = getEventDates();
@@ -1210,7 +1263,7 @@ function handleLegReplication(prefix, leg, person, origin, dest, serviceType, ac
         // Replica para todos os dias do evento exceto o atual
         targetDates = allDates.filter(d => d !== selectedDate);
     } else {
-        // Obtém apenas os dias selecionados no checklist
+        // ObtÃ©m apenas os dias selecionados no checklist
         allDates.forEach(d => {
             const cb = document.getElementById(`${prefix}-day-${d}`);
             if (cb && cb.checked && d !== selectedDate) {
@@ -1239,47 +1292,47 @@ function handlePreBookingSubmit() {
 
     const person = findPerson(id);
     if (!person) {
-        alert("Erro: O colaborador informado não foi encontrado na base de colaboradores ou terceiros.");
+        alert("Erro: O colaborador informado nÃ£o foi encontrado na base de colaboradores ou terceiros.");
         isProcessingBooking = false;
         return;
     }
 
-    // Rastreabilidade e validação de solicitante (autocadastro vs terceiro)
+    // Rastreabilidade e validaÃ§Ã£o de solicitante (autocadastro vs terceiro)
     const targetType = document.getElementById('pre-target-type').value;
     let solicitantPerson = null;
 
     if (targetType === 'other') {
         const solicitantId = document.getElementById('pre-solicitant-id').value.trim();
         if (!solicitantId) {
-            alert("Erro: Informe a matrícula ou CPF de quem está realizando o agendamento (Solicitante).");
+            alert("Erro: Informe a matrÃ­cula ou CPF de quem estÃ¡ realizando o agendamento (Solicitante).");
             isProcessingBooking = false;
             return;
         }
 
         if (solicitantId === id) {
-            // Se digitou o próprio CPF/Matrícula do passageiro, é autocadastro
+            // Se digitou o prÃ³prio CPF/MatrÃ­cula do passageiro, Ã© autocadastro
             solicitantPerson = null;
         } else {
             solicitantPerson = findPerson(solicitantId);
             if (!solicitantPerson) {
-                alert("Erro: O solicitante informado não foi encontrado na base de colaboradores ou terceiros.");
+                alert("Erro: O solicitante informado nÃ£o foi encontrado na base de colaboradores ou terceiros.");
                 isProcessingBooking = false;
                 return;
             }
 
-            // Verificar autorização do solicitante
+            // Verificar autorizaÃ§Ã£o do solicitante
             if (!isSolicitantAuthorized(solicitantPerson)) {
                 // Registrar log de tentativa negada
                 logBookingAction(
                     person,
                     solicitantPerson,
-                    'Tentativa Negada (Não Autorizado)',
+                    'Tentativa Negada (NÃ£o Autorizado)',
                     date,
                     serviceType,
                     'Site'
                 );
 
-                alert(`Acesso Negado: O solicitante ${solicitantPerson.nome} (Matrícula/CPF: ${solicitantId}) não possui autorização para agendar para terceiros. O agendamento foi bloqueado para auditoria.`);
+                alert(`Acesso Negado: O solicitante ${solicitantPerson.nome} (MatrÃ­cula/CPF: ${solicitantId}) nÃ£o possui autorizaÃ§Ã£o para agendar para terceiros. O agendamento foi bloqueado para auditoria.`);
                 isProcessingBooking = false;
                 return;
             }
@@ -1290,7 +1343,7 @@ function handlePreBookingSubmit() {
     const enableVem = document.getElementById('pre-enable-vem').checked;
 
     if (!enableVai && !enableVem) {
-        alert("Erro: Selecione pelo menos uma das opções de viagem (Ida ou Retorno).");
+        alert("Erro: Selecione pelo menos uma das opÃ§Ãµes de viagem (Ida ou Retorno).");
         isProcessingBooking = false;
         return;
     }
@@ -1302,7 +1355,7 @@ function handlePreBookingSubmit() {
 
     const targetDates = getReplicationTargetDates('pre', date);
 
-    // Validação de agendamentos existentes (conflitos)
+    // ValidaÃ§Ã£o de agendamentos existentes (conflitos)
     const conflictingDates = [];
     targetDates.forEach(d => {
         const hasConflictingVai = enableVai && db.bookings.some(b => 
@@ -1325,7 +1378,7 @@ function handlePreBookingSubmit() {
     });
 
     if (conflictingDates.length > 0) {
-        const confirmMsg = `Atenção: Você já possui agendamento de transporte active para o(s) dia(s) ${conflictingDates.join(', ')}.\nDeseja alterar a opção selecionada anteriormente por estas novas?`;
+        const confirmMsg = `AtenÃ§Ã£o: VocÃª jÃ¡ possui agendamento de transporte active para o(s) dia(s) ${conflictingDates.join(', ')}.\nDeseja alterar a opÃ§Ã£o selecionada anteriormente por estas novas?`;
         if (!confirm(confirmMsg)) {
             isProcessingBooking = false;
             return;
@@ -1366,7 +1419,7 @@ function resetPreBookingInstructions() {
     resetPreBookingForm();
 }
 
-// Reset do formulário de agendamento
+// Reset do formulÃ¡rio de agendamento
 function resetPreBookingForm() {
     document.getElementById('form-pre-booking').reset();
     document.getElementById('pre-lookup-msg').classList.add('hidden');
@@ -1392,11 +1445,11 @@ function resetPreBookingForm() {
     }
 }
 
-// Download de planilha modelo de agendamento (Simulação de geração CSV)
+// Download de planilha modelo de agendamento (SimulaÃ§Ã£o de geraÃ§Ã£o CSV)
 function downloadAgendamentoModelCSV() {
     const csvContent = "MATRICULA;CPF;NOME_COMPLETO;TELEFONE;DIRETORIA;DEPARTAMENTO;CARGO;ORIGEM;DESTINO;DATA_VIAGEM;HORA_VIAGEM;TIPO_ATENDIMENTO;ACOMPANHANTES;REPLICAR_DIAS\n" +
-                       "82093;;Juliana Gonçalves da Silva;21994073626;FINANÇAS_JURIDICO_E_INFRA;TRANSPORTES;ANL SERVICOS I;EG;Sambodromo;2026-02-15;17:00;Vai e Vem Van;;Sim\n" +
-                       ";11536422711;Juliana Terceiro;21994073626;PRESTADOR DE SERVIÇOS;TRANSPORTES;Prestador;JB;Sambodromo;2026-02-15;18:00;Executivo;João Silva (Editor);Não";
+                       "82093;;Juliana GonÃ§alves da Silva;21994073626;FINANÃ‡AS_JURIDICO_E_INFRA;TRANSPORTES;ANL SERVICOS I;EG;Sambodromo;2026-02-15;17:00;Vai e Vem Van;;Sim\n" +
+                       ";11536422711;Juliana Terceiro;21994073626;PRESTADOR DE SERVIÃ‡OS;TRANSPORTES;Prestador;JB;Sambodromo;2026-02-15;18:00;Executivo;JoÃ£o Silva (Editor);NÃ£o";
                        
     const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
@@ -1414,7 +1467,7 @@ function simulateBulkBookingUpload() {
     const candidates = masterList.filter(ac => !db.bookings.some(b => (b.matricula === ac.matricula || b.cpf === ac.cpf) && b.status !== 'Cancelado')).slice(0, 5);
     
     if (candidates.length === 0) {
-        alert("Aviso: Todos os credenciados disponíveis já possuem agendamentos ativos.");
+        alert("Aviso: Todos os credenciados disponÃ­veis jÃ¡ possuem agendamentos ativos.");
         return;
     }
     
@@ -1437,7 +1490,7 @@ function simulateBulkBookingUpload() {
             vemTime: '23:00',
             serviceType: 'Vai e Vem Van',
             accompany: '',
-            canal: 'Importação'
+            canal: 'ImportaÃ§Ã£o'
         });
         
         if (isReplicated) {
@@ -1454,7 +1507,7 @@ function simulateBulkBookingUpload() {
                         vemTime: '23:00',
                         serviceType: 'Vai e Vem Van',
                         accompany: '',
-                        canal: 'Importação'
+                        canal: 'ImportaÃ§Ã£o'
                     });
                 }
             });
@@ -1481,7 +1534,7 @@ function generateTotemQRCodes() {
         ctx.fillStyle = '#1e293b';
         ctx.fillRect(0, 0, 110, 110);
         
-        // Desenha caixas de calibração do QR
+        // Desenha caixas de calibraÃ§Ã£o do QR
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(10, 10, 30, 30);
         ctx.fillRect(70, 10, 30, 30);
@@ -1491,7 +1544,7 @@ function generateTotemQRCodes() {
         ctx.fillRect(75, 15, 20, 20);
         ctx.fillRect(15, 75, 20, 20);
         
-        // Pontos aleatórios
+        // Pontos aleatÃ³rios
         ctx.fillStyle = '#ffffff';
         for (let x = 10; x < 100; x += 5) {
             for (let y = 10; y < 100; y += 5) {
@@ -1522,14 +1575,14 @@ function simulateTotemScan(base) {
     toggleTotemModal(false);
     switchTab('passenger');
     
-    // Configura o totem nas caixas de agendamento móvel
+    // Configura o totem nas caixas de agendamento mÃ³vel
     const vaiOrigin = document.getElementById('pass-vai-origin');
     if (vaiOrigin) vaiOrigin.value = base;
     
     const vemDest = document.getElementById('pass-vem-destination');
     if (vemDest) vemDest.value = base;
     
-    // Ativa ambas as viagens por padrão
+    // Ativa ambas as viagens por padrÃ£o
     const checkVai = document.getElementById('pass-enable-vai');
     if (checkVai) {
         checkVai.checked = true;
@@ -1544,10 +1597,10 @@ function simulateTotemScan(base) {
     // Focus matricula
     document.getElementById('pass-id').focus();
     
-    showToast("Totem Escaneado", `Celular do passageiro conectado ao Totem da base ${base === 'EG' ? 'Estúdios Globo' : (base === 'JB' ? 'Jardim Botânico' : 'Íon (Barra)')}.`, "success");
+    showToast("Totem Escaneado", `Celular do passageiro conectado ao Totem da base ${base === 'EG' ? 'EstÃºdios Globo' : (base === 'JB' ? 'Jardim BotÃ¢nico' : 'Ãon (Barra)')}.`, "success");
 }
 
-// --- DINAMIZAÇÃO DE SELETORES DE CHECK-IN (PASSAGEIRO) ---
+// --- DINAMIZAÃ‡ÃƒO DE SELETORES DE CHECK-IN (PASSAGEIRO) ---
 function updatePassengerRoutes() {
     // Deprecated in favor of dual leg boxes
 }
@@ -1624,7 +1677,7 @@ function populatePassengerDates(person) {
     return uniqueDates;
 }
 
-// Sincroniza os checkboxes e horários do formulário de check-in de acordo com o agendamento da data selecionada
+// Sincroniza os checkboxes e horÃ¡rios do formulÃ¡rio de check-in de acordo com o agendamento da data selecionada
 function updatePassengerFormForSelectedDate() {
     const passId = document.getElementById('pass-id').value.trim();
     const date = document.getElementById('pass-date').value;
@@ -1670,7 +1723,8 @@ function updatePassengerFormForSelectedDate() {
     }
 }
 
-function lookupCollaborator(idVal) {
+async function lookupCollaborator(idVal) {
+    if (idVal.trim().length >= 3) await fetchAndCachePerson(idVal.trim());
     const id = idVal.trim();
     const msg = document.getElementById('pass-lookup-msg');
     const fields = document.getElementById('pass-details-fields');
@@ -1695,11 +1749,11 @@ function lookupCollaborator(idVal) {
         
         msg.classList.remove('hidden');
         msg.className = "text-[11px] mt-1 text-emerald-400 font-semibold";
-        msg.textContent = "✓ Colaborador Credenciado";
+        msg.textContent = "âœ“ Colaborador Credenciado";
         
         fields.classList.remove('hidden');
         document.getElementById('lbl-pass-name').textContent = person.nome;
-        document.getElementById('lbl-pass-cargo').textContent = person.cargo || "Funcionário";
+        document.getElementById('lbl-pass-cargo').textContent = person.cargo || "FuncionÃ¡rio";
         document.getElementById('lbl-pass-dept').textContent = getN1Area(person);
         
         const companyLabel = document.getElementById('lbl-pass-company');
@@ -1711,12 +1765,12 @@ function lookupCollaborator(idVal) {
     } else {
         msg.classList.remove('hidden');
         msg.className = "text-[11px] mt-1 text-red-400 font-bold";
-        msg.textContent = "✗ Acesso Negado: Não credenciado para o evento";
+        msg.textContent = "âœ— Acesso Negado: NÃ£o credenciado para o evento";
         fields.classList.add('hidden');
     }
 }
 
-// --- SUBMISSÃO E VALIDAÇÃO DE CHECK-IN (PASSAGEIRO) ---
+// --- SUBMISSÃƒO E VALIDAÃ‡ÃƒO DE CHECK-IN (PASSAGEIRO) ---
 function handlePassengerSubmit() {
     const passId = document.getElementById('pass-id').value.trim();
     const serviceType = document.getElementById('pass-service-type').value;
@@ -1725,7 +1779,7 @@ function handlePassengerSubmit() {
 
     const person = findPerson(passId);
     if (!person) {
-        alert("Erro: Este colaborador não está credenciado no evento.");
+        alert("Erro: Este colaborador nÃ£o estÃ¡ credenciado no evento.");
         return;
     }
 
@@ -1733,11 +1787,11 @@ function handlePassengerSubmit() {
     const enableVem = document.getElementById('pass-enable-vem').checked;
 
     if (!enableVai && !enableVem) {
-        alert("Erro: Selecione pelo menos uma das opções de viagem (Ida ou Retorno).");
+        alert("Erro: Selecione pelo menos uma das opÃ§Ãµes de viagem (Ida ou Retorno).");
         return;
     }
 
-    // Validações
+    // ValidaÃ§Ãµes
     if (enableVai) {
         const origin = document.getElementById('pass-vai-origin').value;
         const dest = 'Sambodromo';
@@ -1745,8 +1799,8 @@ function handlePassengerSubmit() {
         if (!booking) {
             document.getElementById('pass-lookup-msg').classList.remove('hidden');
             document.getElementById('pass-lookup-msg').className = "text-[11px] mt-1 text-red-500 font-bold leading-normal";
-            document.getElementById('pass-lookup-msg').innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i> Acesso Negado: Nenhum agendamento ativo para Ida (Vai) encontrado neste horário. Procure o Operador no guichê.`;
-            alert("Atenção: Você não possui agendamento ativo para a Ida (Vai) neste horário. Dirija-se ao Operador.");
+            document.getElementById('pass-lookup-msg').innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i> Acesso Negado: Nenhum agendamento ativo para Ida (Vai) encontrado neste horÃ¡rio. Procure o Operador no guichÃª.`;
+            alert("AtenÃ§Ã£o: VocÃª nÃ£o possui agendamento ativo para a Ida (Vai) neste horÃ¡rio. Dirija-se ao Operador.");
             return;
         }
     }
@@ -1758,8 +1812,8 @@ function handlePassengerSubmit() {
         if (!booking) {
             document.getElementById('pass-lookup-msg').classList.remove('hidden');
             document.getElementById('pass-lookup-msg').className = "text-[11px] mt-1 text-red-500 font-bold leading-normal";
-            document.getElementById('pass-lookup-msg').innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i> Acesso Negado: Nenhum agendamento ativo para Volta (Vem) encontrado neste horário. Procure o Operador.`;
-            alert("Atenção: Você não possui agendamento ativo para a Volta (Vem) neste horário. Dirija-se ao Operador.");
+            document.getElementById('pass-lookup-msg').innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i> Acesso Negado: Nenhum agendamento ativo para Volta (Vem) encontrado neste horÃ¡rio. Procure o Operador.`;
+            alert("AtenÃ§Ã£o: VocÃª nÃ£o possui agendamento ativo para a Volta (Vem) neste horÃ¡rio. Dirija-se ao Operador.");
             return;
         }
     }
@@ -1809,7 +1863,7 @@ function getCollaboratorEventBookings(matricula, cpf) {
     ).sort((a, b) => a.data.localeCompare(b.data) || a.hora.localeCompare(b.hora));
 }
 
-// Renderiza a listagem de datas e horários confirmados no cartão de embarque
+// Renderiza a listagem de datas e horÃ¡rios confirmados no cartÃ£o de embarque
 function renderDatesList(containerId, listId, bookings) {
     const box = document.getElementById(containerId);
     const list = document.getElementById(listId);
@@ -1864,7 +1918,7 @@ function renderDatesList(containerId, listId, bookings) {
     box.classList.remove('hidden');
 }
 
-// Renderiza o Ticket/Cartão de Embarque Digital
+// Renderiza o Ticket/CartÃ£o de Embarque Digital
 function renderTicket(booking) {
     document.getElementById('passenger-booking-pane').classList.add('hidden');
     const ticketPane = document.getElementById('passenger-ticket-pane');
@@ -1873,15 +1927,15 @@ function renderTicket(booking) {
     const eventLoc = getEventLocationNameFromDate(booking.data);
 
     document.getElementById('ticket-route-from-sig').textContent = booking.origem === 'Sambodromo' ? (eventLoc === 'Rock in Rio' ? 'RIR' : 'SAMB') : booking.origem;
-    document.getElementById('ticket-route-from').textContent = booking.origem === 'EG' ? 'Estúdios Globo' : (booking.origem === 'JB' ? 'Jardim Botânico' : (booking.origem === 'ION' ? 'Íon (Barra)' : eventLoc));
+    document.getElementById('ticket-route-from').textContent = booking.origem === 'EG' ? 'EstÃºdios Globo' : (booking.origem === 'JB' ? 'Jardim BotÃ¢nico' : (booking.origem === 'ION' ? 'Ãon (Barra)' : eventLoc));
     
     document.getElementById('ticket-route-to-sig').textContent = booking.destino === 'Sambodromo' ? (eventLoc === 'Rock in Rio' ? 'RIR' : 'SAMB') : booking.destino;
-    document.getElementById('ticket-route-to').textContent = booking.destino === 'Sambodromo' ? eventLoc : (booking.destino === 'EG' ? 'Estúdios Globo' : (booking.destino === 'JB' ? 'Jardim Botânico' : 'Íon (Barra)'));
+    document.getElementById('ticket-route-to').textContent = booking.destino === 'Sambodromo' ? eventLoc : (booking.destino === 'EG' ? 'EstÃºdios Globo' : (booking.destino === 'JB' ? 'Jardim BotÃ¢nico' : 'Ãon (Barra)'));
 
     const svcBadge = document.getElementById('ticket-service-badge');
     svcBadge.textContent = booking.service_type || 'Van';
 
-    // Ajusta dinamicamente o ícone do transporte (Van ou Carro Passeio/Executivo)
+    // Ajusta dinamicamente o Ã­cone do transporte (Van ou Carro Passeio/Executivo)
     const isVan = (booking.service_type || '').includes('Van');
     const iconEl = document.getElementById('ticket-vehicle-icon');
     if (iconEl) {
@@ -1906,11 +1960,11 @@ function renderTicket(booking) {
         accBox.classList.add('hidden');
     }
 
-    // Renderiza a lista de todas as datas e horários confirmados
+    // Renderiza a lista de todas as datas e horÃ¡rios confirmados
     const userBookings = getCollaboratorEventBookings(booking.matricula, booking.cpf);
     renderDatesList('ticket-dates-box', 'ticket-dates-list', userBookings);
 
-    // Geração dinâmica do QR Code com fallback
+    // GeraÃ§Ã£o dinÃ¢mica do QR Code com fallback
     const qrContainer = document.getElementById('ticket-qrcode');
     qrContainer.innerHTML = '';
     
@@ -1929,7 +1983,7 @@ function renderTicket(booking) {
     }
 }
 
-// Renderiza o Ticket/Cartão de Agendamento Digital para Pré-Agendamento
+// Renderiza o Ticket/CartÃ£o de Agendamento Digital para PrÃ©-Agendamento
 function renderPreTicket(booking) {
     document.getElementById('pre-booking-instructions-empty').classList.add('hidden');
     document.getElementById('pre-booking-instructions-active').classList.remove('hidden');
@@ -1937,15 +1991,15 @@ function renderPreTicket(booking) {
     const eventLoc = getEventLocationNameFromDate(booking.data);
 
     document.getElementById('pre-ticket-route-from-sig').textContent = booking.origem === 'Sambodromo' ? (eventLoc === 'Rock in Rio' ? 'RIR' : 'SAMB') : booking.origem;
-    document.getElementById('pre-ticket-route-from').textContent = booking.origem === 'EG' ? 'Estúdios Globo' : (booking.origem === 'JB' ? 'Jardim Botânico' : (booking.origem === 'ION' ? 'Íon (Barra)' : eventLoc));
+    document.getElementById('pre-ticket-route-from').textContent = booking.origem === 'EG' ? 'EstÃºdios Globo' : (booking.origem === 'JB' ? 'Jardim BotÃ¢nico' : (booking.origem === 'ION' ? 'Ãon (Barra)' : eventLoc));
     
     document.getElementById('pre-ticket-route-to-sig').textContent = booking.destino === 'Sambodromo' ? (eventLoc === 'Rock in Rio' ? 'RIR' : 'SAMB') : booking.destino;
-    document.getElementById('pre-ticket-route-to').textContent = booking.destino === 'Sambodromo' ? eventLoc : (booking.destino === 'EG' ? 'Estúdios Globo' : (booking.destino === 'JB' ? 'Jardim Botânico' : 'Íon (Barra)'));
+    document.getElementById('pre-ticket-route-to').textContent = booking.destino === 'Sambodromo' ? eventLoc : (booking.destino === 'EG' ? 'EstÃºdios Globo' : (booking.destino === 'JB' ? 'Jardim BotÃ¢nico' : 'Ãon (Barra)'));
 
     const svcBadge = document.getElementById('pre-ticket-service-badge');
     svcBadge.textContent = booking.service_type || 'Van';
 
-    // Ajusta dinamicamente o ícone do transporte (Van ou Carro Passeio/Executivo)
+    // Ajusta dinamicamente o Ã­cone do transporte (Van ou Carro Passeio/Executivo)
     const isVan = (booking.service_type || '').includes('Van');
     const iconEl = document.getElementById('pre-ticket-vehicle-icon');
     if (iconEl) {
@@ -1970,11 +2024,11 @@ function renderPreTicket(booking) {
         accBox.classList.add('hidden');
     }
 
-    // Renderiza a lista de todas as datas e horários confirmados
+    // Renderiza a lista de todas as datas e horÃ¡rios confirmados
     const userBookings = getCollaboratorEventBookings(booking.matricula, booking.cpf);
     renderDatesList('pre-ticket-dates-box', 'pre-ticket-dates-list', userBookings);
 
-    // Geração dinâmica do QR Code com fallback
+    // GeraÃ§Ã£o dinÃ¢mica do QR Code com fallback
     const qrContainer = document.getElementById('pre-ticket-qrcode');
     qrContainer.innerHTML = '';
     
@@ -1996,13 +2050,13 @@ function renderPreTicket(booking) {
 function editCurrentPreBooking() {
     const id = document.getElementById('pre-ticket-passenger-id').textContent;
     if (!id || id === '-') {
-        alert("Erro: Nenhum colaborador selecionado para edição.");
+        alert("Erro: Nenhum colaborador selecionado para ediÃ§Ã£o.");
         return;
     }
     
     const person = findPerson(id);
     if (!person) {
-        alert("Erro: Colaborador não encontrado.");
+        alert("Erro: Colaborador nÃ£o encontrado.");
         return;
     }
     
@@ -2064,7 +2118,7 @@ function editCurrentPreBooking() {
     });
     
     document.getElementById('pre-id').focus();
-    showToast("Edição de Agendamento", "Altere as opções no formulário de pré-agendamento (à esquerda) e clique em Reservar Assento.", "info");
+    showToast("EdiÃ§Ã£o de Agendamento", "Altere as opÃ§Ãµes no formulÃ¡rio de prÃ©-agendamento (Ã  esquerda) e clique em Reservar Assento.", "info");
 }
 
 function resetPassengerForm() {
@@ -2086,7 +2140,7 @@ function resetPassengerForm() {
     setReplicationChoice('pass', 'nao');
 }
 
-// --- FILTROS E OPERAÇÃO DO DESPACHO (OPERAÇÃO) ---
+// --- FILTROS E OPERAÃ‡ÃƒO DO DESPACHO (OPERAÃ‡ÃƒO) ---
 function populateOperationFilters() {
     const dateSelect = document.getElementById('op-date');
     const timeSelect = document.getElementById('op-time');
@@ -2116,7 +2170,7 @@ function populateOperationFilters() {
     });
     if (currDate && activeDates.includes(currDate)) dateSelect.value = currDate;
 
-    // 2. Horários baseados na Rota
+    // 2. HorÃ¡rios baseados na Rota
     const route = document.getElementById('op-route').value;
     const routeParts = route.split(' x ');
     const dest = routeParts[1];
@@ -2175,8 +2229,8 @@ function refreshOperationList() {
     const bookedCount = bookings.length;
     const capMax = (serviceType === 'Vai e Vem Van' || (trip && trip.tipo_atendimento === 'Vai e Vem Van')) ? 15 : (trip ? trip.capacidade : 4);
     
-    const ontimeCount = bookings.filter(b => b.status === 'Embarcado' && b.status_checkin === 'No Horário').length;
-    const offtimeCount = bookings.filter(b => b.status === 'Embarcado' && b.status_checkin === 'Fora de Horário').length;
+    const ontimeCount = bookings.filter(b => b.status === 'Embarcado' && b.status_checkin === 'No HorÃ¡rio').length;
+    const offtimeCount = bookings.filter(b => b.status === 'Embarcado' && b.status_checkin === 'Fora de HorÃ¡rio').length;
     const encaixeCount = bookings.filter(b => b.status === 'Embarcado' && b.tipo === 'Encaixe').length;
     const noshowCount = bookings.filter(b => b.status === 'No-Show' || (b.status === 'Agendado' && new Date(`${date}T${time}`) < new Date())).length;
 
@@ -2221,8 +2275,8 @@ function refreshOperationList() {
             
             let statusBadge = '';
             if (b.status === 'Embarcado') {
-                const subStatus = b.status_checkin || 'No Horário';
-                const subClass = subStatus === 'No Horário' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
+                const subStatus = b.status_checkin || 'No HorÃ¡rio';
+                const subClass = subStatus === 'No HorÃ¡rio' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
                 statusBadge = `<span class="${subClass} border px-2 py-0.5 rounded text-[10px] font-bold uppercase">Emb. (${subStatus})</span>`;
             } else if (b.status === 'No-Show') {
                 statusBadge = '<span class="bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase">No-Show</span>';
@@ -2256,7 +2310,7 @@ function refreshOperationList() {
             tr.innerHTML = `
                 <td class="py-3 px-4">
                     <div class="font-bold text-white">${b.nome} ${labelEncaixe}</div>
-                    <div class="text-[10px] text-gray-500 font-mono">${b.cargo || 'Funcionário'}</div>
+                    <div class="text-[10px] text-gray-500 font-mono">${b.cargo || 'FuncionÃ¡rio'}</div>
                 </td>
                 <td class="py-3 px-4">
                     <div class="font-semibold text-gray-300">${docInfo}</div>
@@ -2276,19 +2330,20 @@ function refreshOperationList() {
 }
 
 // Bipagem operacional
-function dispatchBipCheckin(bookingId, checkinType = 'No Horário') {
+function dispatchBipCheckin(bookingId, checkinType = 'No HorÃ¡rio') {
     const booking = db.bookings.find(b => b.id === bookingId);
     if (!booking) return;
 
     booking.status = 'Embarcado';
     booking.status_checkin = checkinType;
+    if (typeof syncBookingCheckin === 'function') syncBookingCheckin(booking.id, checkinType);
 
     const trip = db.trips.find(t => t.id === booking.trip_id);
     if (trip) trip.real = (trip.real || 0) + 1;
 
     saveDatabase();
     refreshOperationList();
-    showToast("Embarque Confirmado", `${booking.nome} embarcou no veículo (${checkinType}).`, "success");
+    showToast("Embarque Confirmado", `${booking.nome} embarcou no veÃ­culo (${checkinType}).`, "success");
 }
 
 function cancelBoarding(bookingId) {
@@ -2322,19 +2377,20 @@ function simulateBipCheckin() {
     let booking = db.bookings.find(b => b.trip_id === trip_id && b.status !== 'Cancelado' && (b.id === val || b.matricula === val || b.cpf === val));
     
     if (booking) {
-        dispatchBipCheckin(booking.id, 'No Horário');
+        dispatchBipCheckin(booking.id, 'No HorÃ¡rio');
         document.getElementById('op-barcode-input').value = '';
     } else {
-        // 2. Procurar agendamento em outra hora do mesmo dia (Mover e Bipar fora de horário)
+        // 2. Procurar agendamento em outra hora do mesmo dia (Mover e Bipar fora de horÃ¡rio)
         booking = db.bookings.find(b => b.status === 'Agendado' && b.data === date && b.origem === orig && b.destino === dest && (b.matricula === val || b.cpf === val));
         
         if (booking) {
-            if (confirm(`Passageiro ${booking.nome} tem agendamento para o horário ${booking.hora}. Deseja registrar o embarque FORA DO HORÁRIO planejado neste veículo?`)) {
+            if (confirm(`Passageiro ${booking.nome} tem agendamento para o horÃ¡rio ${booking.hora}. Deseja registrar o embarque FORA DO HORÃRIO planejado neste veÃ­culo?`)) {
                 const oldTripId = booking.trip_id;
                 booking.hora = time;
                 booking.trip_id = trip_id;
-                booking.status_checkin = 'Fora de Horário';
+                booking.status_checkin = 'Fora de HorÃ¡rio';
                 booking.status = 'Embarcado';
+                if (typeof syncBookingCheckin === 'function') syncBookingCheckin(booking.id, 'Fora de HorÃ¡rio');
                 
                 const oldTrip = db.trips.find(t => t.id === oldTripId);
                 if (oldTrip && oldTrip.planejado > 0) oldTrip.planejado -= 1;
@@ -2345,13 +2401,13 @@ function simulateBipCheckin() {
                 saveDatabase();
                 refreshOperationList();
                 document.getElementById('op-barcode-input').value = '';
-                showToast("Embarque Fora de Horário", `Embarque de ${booking.nome} registrado no horário ${time}.`, "warning");
+                showToast("Embarque Fora de HorÃ¡rio", `Embarque de ${booking.nome} registrado no horÃ¡rio ${time}.`, "warning");
             }
         } else {
-            // 3. Cadastrar como Encaixe rápido (Walk-in)
+            // 3. Cadastrar como Encaixe rÃ¡pido (Walk-in)
             const person = findPerson(val);
             if (person) {
-                if (confirm(`Nenhum agendamento encontrado para o credenciado ${person.nome}. Deseja realizar um ENCAIXE rápido neste veículo?`)) {
+                if (confirm(`Nenhum agendamento encontrado para o credenciado ${person.nome}. Deseja realizar um ENCAIXE rÃ¡pido neste veÃ­culo?`)) {
                     const newBooking = {
                         id: `enc_${Date.now()}`,
                         matricula: person.matricula || "",
@@ -2381,7 +2437,7 @@ function simulateBipCheckin() {
                     showToast("Encaixe Efetuado", `Embarque via Encaixe confirmado para ${person.nome}.`, "success");
                 }
             } else {
-                alert("Acesso Negado: Código ou Documento inválido / não credenciado para o evento.");
+                alert("Acesso Negado: CÃ³digo ou Documento invÃ¡lido / nÃ£o credenciado para o evento.");
             }
         }
     }
@@ -2396,7 +2452,7 @@ function toggleEncaixeModal(show) {
         const service = document.getElementById('op-service-type').value !== 'ALL' ? document.getElementById('op-service-type').value : 'Vai e Vem Van';
         
         document.getElementById('enc-lbl-route').textContent = route;
-        document.getElementById('enc-lbl-time').textContent = time || "Não Definido";
+        document.getElementById('enc-lbl-time').textContent = time || "NÃ£o Definido";
         document.getElementById('enc-lbl-service').textContent = service;
         
         document.getElementById('form-encaixe').reset();
@@ -2410,7 +2466,8 @@ function toggleEncaixeModal(show) {
     }
 }
 
-function lookupEncaixeCollaborator(val) {
+async function lookupEncaixeCollaborator(val) {
+    if (val.trim().length >= 3) await fetchAndCachePerson(val.trim());
     const id = val.trim();
     const msg = document.getElementById('enc-lookup-msg');
     if (id.length < 3) {
@@ -2421,7 +2478,7 @@ function lookupEncaixeCollaborator(val) {
     if (person) {
         msg.classList.remove('hidden');
         msg.className = "text-[10px] mt-1 text-emerald-400 font-semibold";
-        msg.textContent = `✓ Localizado: ${person.nome}`;
+        msg.textContent = `âœ“ Localizado: ${person.nome}`;
         
         document.getElementById('enc-name').value = person.nome;
         document.getElementById('enc-company').value = person.empresa || (person.tipo_vinculo === 'GLOBO' ? 'Globo' : 'Terceiro');
@@ -2429,7 +2486,7 @@ function lookupEncaixeCollaborator(val) {
     } else {
         msg.classList.remove('hidden');
         msg.className = "text-[10px] mt-1 text-red-400 font-bold";
-        msg.textContent = `✗ Alerta: Não credenciado no evento!`;
+        msg.textContent = `âœ— Alerta: NÃ£o credenciado no evento!`;
     }
 }
 
@@ -2441,7 +2498,7 @@ function handleEncaixeSubmit() {
 
     const person = findPerson(id);
     if (!person) {
-        if (!confirm("Alerta crítico: Passageiro não credenciado. Deseja forçar o encaixe por exceção operacional?")) {
+        if (!confirm("Alerta crÃ­tico: Passageiro nÃ£o credenciado. Deseja forÃ§ar o encaixe por exceÃ§Ã£o operacional?")) {
             return;
         }
     }
@@ -2476,7 +2533,7 @@ function handleEncaixeSubmit() {
     db.bookings.push(newBooking);
     syncBookingCreate(newBooking);
     
-    // Auto-cria trip se necessário e adiciona real count
+    // Auto-cria trip se necessÃ¡rio e adiciona real count
     let trip = db.trips.find(t => t.id === trip_id);
     if (!trip) {
         trip = {
@@ -2501,14 +2558,14 @@ function handleEncaixeSubmit() {
     showToast("Encaixe Efetuado", `Passageiro ${name} embarcado.`, "success");
 }
 
-// Remanejamento de Horário
+// Remanejamento de HorÃ¡rio
 function openRescheduleModal(bookingId) {
     const booking = db.bookings.find(b => b.id === bookingId);
     if (!booking) return;
 
     document.getElementById('resch-booking-id').value = bookingId;
     document.getElementById('resch-lbl-name').textContent = booking.nome;
-    document.getElementById('resch-lbl-current').textContent = `${booking.origem} x ${booking.destino} às ${booking.hora} (${booking.data})`;
+    document.getElementById('resch-lbl-current').textContent = `${booking.origem} x ${booking.destino} Ã s ${booking.hora} (${booking.data})`;
 
     const timeSelect = document.getElementById('resch-time-select');
     timeSelect.innerHTML = '';
@@ -2581,7 +2638,7 @@ function printDispatchManifest() {
     window.print();
 }
 
-// ==================== 3. VIEW GESTÃO & ANALYTICS ====================
+// ==================== 3. VIEW GESTÃƒO & ANALYTICS ====================
 function updateDashboard() {
     if (currentTab !== 'management') return;
 
@@ -2612,7 +2669,7 @@ function setDirectionFilter(dir) {
     renderMirroredCharts();
 }
 
-// Renderizar Gráficos Espelhados JB vs EG vs ION por Sentido
+// Renderizar GrÃ¡ficos Espelhados JB vs EG vs ION por Sentido
 function renderMirroredCharts() {
     const activeDates = getEventDates();
     const masterList = currentEvent === 'RIR' ? db.accredited : db.collaborators;
@@ -2662,7 +2719,7 @@ function renderMirroredCharts() {
     jbChartInstance = new Chart(ctxJB, {
         type: 'doughnut',
         data: {
-            labels: ['Embarcados (OK)', 'No-Show (NOK)', 'Encaixes', 'Não Utilizou'],
+            labels: ['Embarcados (OK)', 'No-Show (NOK)', 'Encaixes', 'NÃ£o Utilizou'],
             datasets: [{
                 data: [jbVol.boarded - jbVol.encaixe, jbVol.noshow, jbVol.encaixe, jbVol.naoutilizou],
                 backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#4b5563'],
@@ -2687,7 +2744,7 @@ function renderMirroredCharts() {
     egChartInstance = new Chart(ctxEG, {
         type: 'doughnut',
         data: {
-            labels: ['Embarcados (OK)', 'No-Show (NOK)', 'Encaixes', 'Não Utilizou'],
+            labels: ['Embarcados (OK)', 'No-Show (NOK)', 'Encaixes', 'NÃ£o Utilizou'],
             datasets: [{
                 data: [egVol.boarded - egVol.encaixe, egVol.noshow, egVol.encaixe, egVol.naoutilizou],
                 backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#4b5563'],
@@ -2712,7 +2769,7 @@ function renderMirroredCharts() {
     ionChartInstance = new Chart(ctxION, {
         type: 'doughnut',
         data: {
-            labels: ['Embarcados (OK)', 'No-Show (NOK)', 'Encaixes', 'Não Utilizou'],
+            labels: ['Embarcados (OK)', 'No-Show (NOK)', 'Encaixes', 'NÃ£o Utilizou'],
             datasets: [{
                 data: [ionVol.boarded - ionVol.encaixe, ionVol.noshow, ionVol.encaixe, ionVol.naoutilizou],
                 backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#4b5563'],
@@ -2731,7 +2788,7 @@ function renderMirroredCharts() {
     });
 }
 
-// Renderizar Relatório de Aderência (Top 10 + Outros)
+// Renderizar RelatÃ³rio de AderÃªncia (Top 10 + Outros)
 function renderAdherenceReport() {
     const tbody = document.getElementById('adh-tbody');
     if (!tbody) return;
@@ -2754,7 +2811,7 @@ function renderAdherenceReport() {
         if (b.status === 'Embarcado') {
             if (b.tipo === 'Encaixe') {
                 groups[n1].encaixe += 1;
-            } else if (b.status_checkin === 'Fora de Horário') {
+            } else if (b.status_checkin === 'Fora de HorÃ¡rio') {
                 groups[n1].boarded_offtime += 1;
                 groups[n1].planejado += 1;
             } else {
@@ -2794,7 +2851,7 @@ function renderAdherenceReport() {
     
     if (rest.length > 0) {
         const outros = {
-            name: "Outros (Demais áreas)",
+            name: "Outros (Demais Ã¡reas)",
             planejado: 0, boarded: 0, boarded_offtime: 0, noshow: 0, encaixe: 0, naoutilizou: 0
         };
         rest.forEach(r => {
@@ -2808,7 +2865,7 @@ function renderAdherenceReport() {
     }
 
     top10.forEach(g => {
-        if (g.name === "Outros (Demais áreas)") {
+        if (g.name === "Outros (Demais Ã¡reas)") {
             let sumOciosos = 0;
             rest.forEach(r => { sumOciosos += (areaOciosos[r.name] || 0); });
             g.naoutilizou = sumOciosos;
@@ -2819,7 +2876,7 @@ function renderAdherenceReport() {
         const rate = g.planejado > 0 ? ((g.boarded / g.planejado) * 100).toFixed(1) : "0.0";
         let rateClass = parseFloat(rate) >= 80 ? 'text-emerald-400' : parseFloat(rate) >= 50 ? 'text-amber-400' : 'text-red-400';
 
-        const isOutros = g.name === "Outros (Demais áreas)";
+        const isOutros = g.name === "Outros (Demais Ã¡reas)";
         const nameCell = isOutros 
             ? `<span class="font-bold text-gray-300">${safeEscapeHtml(g.name)}</span>` 
             : `<a href="javascript:void(0)" onclick="showN1NominalDetails('${safeEscapeAttr(g.name)}')" class="font-bold text-teal-400 hover:text-teal-300 hover:underline flex items-center gap-1.5 cursor-pointer" title="Clique para ver os nomes e agendamentos de ${safeEscapeAttr(g.name)}"><i class="fa-solid fa-users-viewfinder text-xs"></i> ${safeEscapeHtml(g.name)}</a>`;
@@ -2839,7 +2896,7 @@ function renderAdherenceReport() {
         tbody.appendChild(tr);
     });
     
-    // Renderiza também a tabela de validação de programações CCO, o dimensionamento de vans e a lista nominal
+    // Renderiza tambÃ©m a tabela de validaÃ§Ã£o de programaÃ§Ãµes CCO, o dimensionamento de vans e a lista nominal
     if (typeof renderAuditValidationTable === 'function') {
         renderAuditValidationTable();
     }
@@ -2851,7 +2908,7 @@ function renderAdherenceReport() {
     }
 }
 
-// --- AUDITORIA DE UPLOADS E VALIDAÇÃO CCO POR N1 ---
+// --- AUDITORIA DE UPLOADS E VALIDAÃ‡ÃƒO CCO POR N1 ---
 function renderAuditValidationTable() {
     const tbody = document.getElementById('audit-booking-tbody');
     if (!tbody) return;
@@ -2896,7 +2953,7 @@ function renderAuditValidationTable() {
     const sortedAreas = Object.values(n1Groups).sort((a, b) => b.count - a.count);
     
     if (sortedAreas.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="py-4 text-center text-gray-500 font-semibold">Nenhuma programação de embarque encontrada para validar.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="py-4 text-center text-gray-500 font-semibold">Nenhuma programaÃ§Ã£o de embarque encontrada para validar.</td></tr>`;
         return;
     }
     
@@ -2908,7 +2965,7 @@ function renderAuditValidationTable() {
         const updateStr = maxUpdate ? formatDateCustom(maxUpdate) : 'N/A';
         
         const statusBadge = g.valid 
-            ? `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-bold uppercase text-[9px]"><i class="fa-solid fa-circle-check mr-1"></i>Confirmado</span>`
+            ? `<span class="status-pill text-emerald-400 px-2.5 py-0.5 rounded-full font-bold uppercase text-[9px]"><i class="fa-solid fa-circle-check mr-1"></i>Confirmado</span>`
             : `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-full font-bold uppercase text-[9px]"><i class="fa-solid fa-circle-exclamation mr-1"></i>Pendente</span>`;
             
         const btnAction = g.valid 
@@ -2958,7 +3015,7 @@ window.invalidateN1Program = function(areaName) {
     });
     
     if (typeof saveDatabase === 'function') saveDatabase();
-    if (typeof showToast === 'function') showToast("Validação Removida", `A programação da área ${areaName} voltou ao status Pendente.`, "warning");
+    if (typeof showToast === 'function') showToast("ValidaÃ§Ã£o Removida", `A programaÃ§Ã£o da Ã¡rea ${areaName} voltou ao status Pendente.`, "warning");
     renderAdherenceReport();
 };
 
@@ -2971,7 +3028,7 @@ window.validateN1Program = function(areaName) {
     );
     
     if (bookingsToValidate.length === 0) {
-        showToast("Validação CCO", "Nenhum agendamento encontrado para esta área.", "warning");
+        showToast("ValidaÃ§Ã£o CCO", "Nenhum agendamento encontrado para esta Ã¡rea.", "warning");
         return;
     }
     
@@ -2991,11 +3048,11 @@ window.validateN1Program = function(areaName) {
         } catch(e) {}
     }
     
-    showToast("Programação Confirmada", `A programação da área ${areaName} foi validada por ${ccoUser}.`, "success");
+    showToast("ProgramaÃ§Ã£o Confirmada", `A programaÃ§Ã£o da Ã¡rea ${areaName} foi validada por ${ccoUser}.`, "success");
     renderAdherenceReport();
 }
 
-// --- RELATÓRIO NOMINAL DE AGENDADOS POR ÁREA E DIAS DO EVENTO (7 DIAS) ---
+// --- RELATÃ“RIO NOMINAL DE AGENDADOS POR ÃREA E DIAS DO EVENTO (7 DIAS) ---
 function safeEscapeHtml(str) {
     if (str === null || str === undefined) return '';
     return String(str)
@@ -3031,7 +3088,7 @@ window.renderScheduledPassengersReport = function() {
     const activeDates = getEventDates();
     const masterList = currentEvent === 'RIR' ? db.accredited : db.collaborators;
 
-    // Atualizar cabeçalhos das 7 colunas dos dias
+    // Atualizar cabeÃ§alhos das 7 colunas dos dias
     activeDates.forEach((dStr, idx) => {
         const th = document.getElementById(`th-day-${idx + 1}`);
         if (th) {
@@ -3041,7 +3098,7 @@ window.renderScheduledPassengersReport = function() {
         }
     });
 
-    // Preencher filtro de Áreas N1
+    // Preencher filtro de Ãreas N1
     const areaFilter = document.getElementById('sched-area-filter');
     if (areaFilter) {
         const currentAreaVal = areaFilter.value;
@@ -3055,7 +3112,7 @@ window.renderScheduledPassengersReport = function() {
         });
         const sortedN1s = Array.from(allN1Set).filter(Boolean).sort();
         
-        areaFilter.innerHTML = '<option value="ALL">Todas as Áreas N1</option>' + 
+        areaFilter.innerHTML = '<option value="ALL">Todas as Ãreas N1</option>' + 
             sortedN1s.map(n1 => `<option value="${safeEscapeAttr(n1)}" ${n1 === currentAreaVal ? 'selected' : ''}>${safeEscapeHtml(n1)}</option>`).join('');
     }
 
@@ -3105,9 +3162,9 @@ window.renderScheduledPassengersReport = function() {
         const mapToSite = (site) => {
             if(!site) return '';
             const s = site.toUpperCase();
-            if(s.includes('ESTUDIOS') || s.includes('ESTÚDIOS') || s === 'EG') return 'EG';
+            if(s.includes('ESTUDIOS') || s.includes('ESTÃšDIOS') || s === 'EG') return 'EG';
             if(s.includes('JARDIM') || s === 'JB') return 'JB';
-            if(s.includes('ION') || s === 'ÍON') return 'ION';
+            if(s.includes('ION') || s === 'ÃON') return 'ION';
             return site.substring(0, 3);
         };
 
@@ -3202,7 +3259,7 @@ window.renderScheduledPassengersReport = function() {
             <tr class="hover:bg-gray-900/50 transition duration-150 border-b border-gray-900/80">
                 <td class="py-2.5 px-3">
                     <div class="font-bold text-white text-xs">${safeEscapeHtml(p.nome)}</div>
-                    <div class="text-[10px] text-gray-400 font-mono">Matrícula/CPF: ${safeEscapeHtml(p.matricula)}</div>
+                    <div class="text-[10px] text-gray-400 font-mono">MatrÃ­cula/CPF: ${safeEscapeHtml(p.matricula)}</div>
                 </td>
                 <td class="py-2.5 px-3 text-[11px] text-gray-300 font-semibold">${safeEscapeHtml(p.area)}</td>
                 <td class="py-2.5 px-3 text-center text-[10px] font-mono text-emerald-400">
@@ -3273,9 +3330,9 @@ window.exportScheduledPassengersCSV = function() {
         const mapToSite = (site) => {
             if(!site) return '';
             const s = site.toUpperCase();
-            if(s.includes('ESTUDIOS') || s.includes('ESTÚDIOS') || s === 'EG') return 'EG';
+            if(s.includes('ESTUDIOS') || s.includes('ESTÃšDIOS') || s === 'EG') return 'EG';
             if(s.includes('JARDIM') || s === 'JB') return 'JB';
-            if(s.includes('ION') || s === 'ÍON') return 'ION';
+            if(s.includes('ION') || s === 'ÃON') return 'ION';
             return site.substring(0, 3);
         };
 
@@ -3324,7 +3381,7 @@ window.exportScheduledPassengersCSV = function() {
     document.body.removeChild(link);
 }
 
-// --- NOVAS FUNÇÕES: LINK N1 & DIMENSIONAMENTO AUTOMÁTICO DE VANS ---
+// --- NOVAS FUNÃ‡Ã•ES: LINK N1 & DIMENSIONAMENTO AUTOMÃTICO DE VANS ---
 
 window.showN1NominalDetails = function(areaName) {
     if (typeof switchSubTab === 'function') switchSubTab('adherence');
@@ -3442,7 +3499,7 @@ window.renderVanSizingConsolidated = function() {
     let sumOccupancy = 0;
 
     if (sortedSlots.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-gray-500 font-semibold">Nenhum agendamento encontrado para os parâmetros de dimensionamento.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-gray-500 font-semibold">Nenhum agendamento encontrado para os parÃ¢metros de dimensionamento.</td></tr>`;
         if (document.getElementById('kpi-sched-total-vans')) document.getElementById('kpi-sched-total-vans').textContent = '0 Vans';
         if (document.getElementById('kpi-sched-avg-days')) document.getElementById('kpi-sched-avg-days').textContent = '0.0%';
         return;
@@ -3497,7 +3554,7 @@ window.filterNominalBySlot = function(dataStr, horaStr) {
     if (searchInput) searchInput.value = horaStr;
     renderScheduledPassengersReport();
     if (typeof showToast === 'function') {
-        showToast("Filtro por Horário", `Filtrando passageiros do dia ${dataStr} às ${horaStr}`, "info");
+        showToast("Filtro por HorÃ¡rio", `Filtrando passageiros do dia ${dataStr} Ã s ${horaStr}`, "info");
     }
 }
 
@@ -3567,7 +3624,7 @@ window.exportAdherenceCSV = function() {
         
         if (b.status === 'Embarcado') {
             if (b.tipo === 'Encaixe') groups[n1].encaixe += 1;
-            else if (b.status_checkin === 'Fora de Horário') { groups[n1].boarded_offtime += 1; groups[n1].planejado += 1; }
+            else if (b.status_checkin === 'Fora de HorÃ¡rio') { groups[n1].boarded_offtime += 1; groups[n1].planejado += 1; }
             else { groups[n1].boarded += 1; groups[n1].planejado += 1; }
         } else if (b.status === 'No-Show') {
             groups[n1].noshow += 1;
@@ -3602,7 +3659,7 @@ window.exportAdherenceCSV = function() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    showToast("CSV Exportado", "Relatório de aderência completo exportado com sucesso.", "success");
+    showToast("CSV Exportado", "RelatÃ³rio de aderÃªncia completo exportado com sucesso.", "success");
 }
 
 // Recalcular Perdas do Simulador Financeiro
@@ -3628,7 +3685,7 @@ function recalculateFinancialLoss() {
         if (b.status === 'No-Show') {
             groups[n1].noshow += 1;
         } else if (b.status === 'Embarcado') {
-            if (b.tipo === 'Encaixe' || b.status_checkin === 'Fora de Horário') {
+            if (b.tipo === 'Encaixe' || b.status_checkin === 'Fora de HorÃ¡rio') {
                 groups[n1].encaixe += 1; 
             }
         }
@@ -3639,7 +3696,7 @@ function recalculateFinancialLoss() {
     const top10 = sorted.slice(0, 10);
     const rest = sorted.slice(10);
     if (rest.length > 0) {
-        const outros = { name: "Outros (Demais áreas)", noshow: 0, encaixe: 0 };
+        const outros = { name: "Outros (Demais Ã¡reas)", noshow: 0, encaixe: 0 };
         rest.forEach(r => {
             outros.noshow += r.noshow;
             outros.encaixe += r.encaixe;
@@ -3728,7 +3785,7 @@ function renderAuditedAccreditedReport() {
     });
 
     if (ociosos.length === 0) {
-        tbodyOciosos.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-500">Parabéns! Todos os credenciados utilizaram o transporte.</td></tr>';
+        tbodyOciosos.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-500">ParabÃ©ns! Todos os credenciados utilizaram o transporte.</td></tr>';
     } else {
         const limit = 100;
         const visibleOciosos = ociosos.slice(0, limit);
@@ -3801,9 +3858,9 @@ function renderDriversList() {
 
     const companyDrivers = {
         'Rio Vans': ['Marcos de Souza', 'Valdir Ferreira'],
-        'Top Service': ['José Roberto Lima', 'Antônio Carlos'],
-        'Aura Imagens': ['Francisco de Assis', 'Sebastião Filho'],
-        'Top Toalet': ['Renato Gonçalves', 'Luiz Fernando']
+        'Top Service': ['JosÃ© Roberto Lima', 'AntÃ´nio Carlos'],
+        'Aura Imagens': ['Francisco de Assis', 'SebastiÃ£o Filho'],
+        'Top Toalet': ['Renato GonÃ§alves', 'Luiz Fernando']
     };
 
     const driverShifts = {};
@@ -3812,7 +3869,7 @@ function renderDriversList() {
             driverShifts[driverName] = {
                 nome: driverName,
                 operadora: comp,
-                veiculo: comp === 'Rio Vans' ? 'Van Executiva' : (comp === 'Top Service' ? 'Executivo Blindado' : 'Passeio Produção'),
+                veiculo: comp === 'Rio Vans' ? 'Van Executiva' : (comp === 'Top Service' ? 'Executivo Blindado' : 'Passeio ProduÃ§Ã£o'),
                 trips: []
             };
         });
@@ -3824,7 +3881,7 @@ function renderDriversList() {
         const driverName = driversList[idx % driversList.length];
         
         if (!driverShifts[driverName]) {
-            driverShifts[driverName] = { nome: driverName, operadora: comp, veiculo: 'Veículo Geral', trips: [] };
+            driverShifts[driverName] = { nome: driverName, operadora: comp, veiculo: 'VeÃ­culo Geral', trips: [] };
         }
         driverShifts[driverName].trips.push(t);
     });
@@ -3855,7 +3912,7 @@ function renderDriversList() {
 
         let status = 'Normal';
         if (shiftHours > 11.0) {
-            status = 'Crítico';
+            status = 'CrÃ­tico';
         } else if (shiftHours > 9.5) {
             status = 'Aviso';
         }
@@ -3874,10 +3931,10 @@ function renderDriversList() {
     if (driversData.length === 0) {
         driversData.push(
             { nome: "Marcos de Souza", operadora: "Rio Vans", veiculo: "Van Executiva", horas: 10.5, status: "Aviso" },
-            { nome: "José Roberto Lima", operadora: "Top Service", veiculo: "Executivo Blindado", horas: 8.0, status: "Normal" },
-            { nome: "Francisco de Assis", operadora: "Aura Imagens", veiculo: "Passeio Produção", horas: 4.5, status: "Normal" },
-            { nome: "Valdir Ferreira", operadora: "Rio Vans", veiculo: "Van Executiva", horas: 11.5, status: "Crítico" },
-            { nome: "Renato Gonçalves", operadora: "Top Toalet", veiculo: "Executivo", horas: 6.2, status: "Normal" }
+            { nome: "JosÃ© Roberto Lima", operadora: "Top Service", veiculo: "Executivo Blindado", horas: 8.0, status: "Normal" },
+            { nome: "Francisco de Assis", operadora: "Aura Imagens", veiculo: "Passeio ProduÃ§Ã£o", horas: 4.5, status: "Normal" },
+            { nome: "Valdir Ferreira", operadora: "Rio Vans", veiculo: "Van Executiva", horas: 11.5, status: "CrÃ­tico" },
+            { nome: "Renato GonÃ§alves", operadora: "Top Toalet", veiculo: "Executivo", horas: 6.2, status: "Normal" }
         );
     }
 
@@ -3890,7 +3947,7 @@ function renderDriversList() {
         if (d.status === 'Aviso') {
             barColor = 'bg-amber-500';
             txtColor = 'text-amber-400';
-        } else if (d.status === 'Crítico') {
+        } else if (d.status === 'CrÃ­tico') {
             barColor = 'bg-red-500 animate-pulse';
             txtColor = 'text-red-500 font-bold';
             alertIcon = '<i class="fa-solid fa-circle-exclamation text-[10px] ml-1"></i>';
@@ -3925,7 +3982,7 @@ function renderFleetDimensionReport() {
     const opDateSelect = document.getElementById('op-date');
     const selectedDate = (opDateSelect && activeDates.includes(opDateSelect.value)) ? opDateSelect.value : baseDate;
 
-    // Todas as horas válidas de VAI
+    // Todas as horas vÃ¡lidas de VAI
     const hours = getAvailableHours('VAI', currentEvent, 'EG');
     
     hours.forEach(hr => {
@@ -3998,7 +4055,7 @@ function showToast(title, body, type = 'info') {
     }
 
     const toastDiv = document.createElement('div');
-    toastDiv.className = "fixed bottom-5 right-5 glass p-4 rounded-2xl border border-gray-800 shadow-2xl z-50 max-w-sm flex items-start space-x-3 transition-all duration-300 transform translate-y-10 opacity-0";
+    toastDiv.className = "fixed top-5 right-5 toast-premium z-[999] max-w-sm flex items-start space-x-3 p-4";
     toastDiv.innerHTML = `
         <div class="p-1 shrink-0">${icon}</div>
         <div class="text-xs text-left">
@@ -4009,11 +4066,11 @@ function showToast(title, body, type = 'info') {
     document.body.appendChild(toastDiv);
 
     setTimeout(() => {
-        toastDiv.classList.remove('translate-y-10', 'opacity-0');
+        toastDiv.classList.add('show');
     }, 50);
 
     setTimeout(() => {
-        toastDiv.classList.add('translate-y-10', 'opacity-0');
+        toastDiv.classList.remove('show');
         setTimeout(() => toastDiv.remove(), 300);
     }, 4500);
 }
@@ -4071,7 +4128,7 @@ function openReplicationReviewModal(source, person, serviceType, accompany, date
         const personHeader = source === 'bulk' 
             ? `<div class="flex justify-between items-center text-xs font-semibold text-gray-300 border-b border-gray-850 pb-2">
                  <span><i class="fa-solid fa-user mr-1.5 text-blue-400"></i>${pb.person.nome}</span>
-                 <span class="font-mono bg-gray-950 px-2 py-0.5 rounded text-[10px]">Matrícula: ${pb.person.matricula || pb.person.cpf}</span>
+                 <span class="font-mono bg-gray-950 px-2 py-0.5 rounded text-[10px]">MatrÃ­cula: ${pb.person.matricula || pb.person.cpf}</span>
                </div>`
             : '';
             
@@ -4089,19 +4146,19 @@ function openReplicationReviewModal(source, person, serviceType, accompany, date
                             <input type="checkbox" onchange="updatePendingBookingLeg(${idx}, 'vai', this.checked)" ${pb.enableVai ? 'checked' : ''} class="rounded border-gray-800 bg-gray-900 text-blue-600 focus:ring-0 cursor-pointer">
                             <span class="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Vai (Ida)</span>
                         </label>
-                        <span class="text-[9px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded font-semibold uppercase">➔ ${eventName}</span>
+                        <span class="text-[9px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded font-semibold uppercase">âž” ${eventName}</span>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <label class="block text-[8px] font-bold text-gray-500 uppercase mb-1">Origem (Saída)</label>
+                            <label class="block text-[8px] font-bold text-gray-500 uppercase mb-1">Origem (SaÃ­da)</label>
                             <select onchange="updatePendingBookingLocation(${idx}, 'vai', this.value)" class="w-full bg-gray-900 border border-gray-800 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500 transition cursor-pointer">
-                                <option value="EG" ${pb.vaiOrigin === 'EG' ? 'selected' : ''}>Estúdios Globo (EG)</option>
-                                <option value="JB" ${pb.vaiOrigin === 'JB' ? 'selected' : ''}>Jardim Botânico (JB)</option>
-                                <option value="ION" ${pb.vaiOrigin === 'ION' ? 'selected' : ''}>Íon (ION)</option>
+                                <option value="EG" ${pb.vaiOrigin === 'EG' ? 'selected' : ''}>EstÃºdios Globo (EG)</option>
+                                <option value="JB" ${pb.vaiOrigin === 'JB' ? 'selected' : ''}>Jardim BotÃ¢nico (JB)</option>
+                                <option value="ION" ${pb.vaiOrigin === 'ION' ? 'selected' : ''}>Ãon (ION)</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[8px] font-bold text-gray-500 uppercase mb-1">Horário Ida</label>
+                            <label class="block text-[8px] font-bold text-gray-500 uppercase mb-1">HorÃ¡rio Ida</label>
                             <select onchange="updatePendingBookingTime(${idx}, 'vai', this.value)" class="w-full bg-gray-900 border border-gray-800 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500 transition cursor-pointer">
                                 ${optionsVaiHtml}
                             </select>
@@ -4116,19 +4173,19 @@ function openReplicationReviewModal(source, person, serviceType, accompany, date
                             <input type="checkbox" onchange="updatePendingBookingLeg(${idx}, 'vem', this.checked)" ${pb.enableVem ? 'checked' : ''} class="rounded border-gray-800 bg-gray-900 text-blue-600 focus:ring-0 cursor-pointer">
                             <span class="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Vem (Volta)</span>
                         </label>
-                        <span class="text-[9px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.5 rounded font-semibold uppercase">${eventName} ➔</span>
+                        <span class="text-[9px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.5 rounded font-semibold uppercase">${eventName} âž”</span>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="block text-[8px] font-bold text-gray-500 uppercase mb-1">Destino (Retorno)</label>
                             <select onchange="updatePendingBookingLocation(${idx}, 'vem', this.value)" class="w-full bg-gray-900 border border-gray-800 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500 transition cursor-pointer">
-                                <option value="EG" ${pb.vemDest === 'EG' ? 'selected' : ''}>Estúdios Globo (EG)</option>
-                                <option value="JB" ${pb.vemDest === 'JB' ? 'selected' : ''}>Jardim Botânico (JB)</option>
-                                <option value="ION" ${pb.vemDest === 'ION' ? 'selected' : ''}>Íon (ION)</option>
+                                <option value="EG" ${pb.vemDest === 'EG' ? 'selected' : ''}>EstÃºdios Globo (EG)</option>
+                                <option value="JB" ${pb.vemDest === 'JB' ? 'selected' : ''}>Jardim BotÃ¢nico (JB)</option>
+                                <option value="ION" ${pb.vemDest === 'ION' ? 'selected' : ''}>Ãon (ION)</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[8px] font-bold text-gray-500 uppercase mb-1">Horário Volta</label>
+                            <label class="block text-[8px] font-bold text-gray-500 uppercase mb-1">HorÃ¡rio Volta</label>
                             <select onchange="updatePendingBookingTime(${idx}, 'vem', this.value)" class="w-full bg-gray-900 border border-gray-800 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500 transition cursor-pointer">
                                 ${optionsVemHtml}
                             </select>
@@ -4392,7 +4449,7 @@ function commitPendingBookings() {
             
             if (booking) {
                 booking.status = 'Embarcado';
-                booking.status_checkin = 'No Horário';
+                booking.status_checkin = 'No HorÃ¡rio';
                 if (primary.accompany) booking.accompany = primary.accompany;
                 const trip = db.trips.find(t => t.id === booking.trip_id);
                 if (trip) trip.real = (trip.real || 0) + 1;
@@ -4411,7 +4468,7 @@ function commitPendingBookings() {
                 }
                 if (booking) {
                     booking.status = 'Embarcado';
-                    booking.status_checkin = 'No Horário';
+                    booking.status_checkin = 'No HorÃ¡rio';
                     if (primary.accompany) booking.accompany = primary.accompany;
                     const trip = db.trips.find(t => t.id === booking.trip_id);
                     if (trip) trip.real = (trip.real || 0) + 1;
@@ -4490,7 +4547,7 @@ function commitPendingBookings() {
             if (bookingVem) renderTicket(bookingVem);
         }
         
-        showToast("Check-in Concluído", `Embarque confirmado e agendamentos replicados salvos.`, "success");
+        showToast("Check-in ConcluÃ­do", `Embarque confirmado e agendamentos replicados salvos.`, "success");
         
     } else if (pendingBookingSource === 'bulk') {
         let bulkCount = 0;
@@ -4562,7 +4619,7 @@ function commitPendingBookings() {
             setTimeout(() => successMsg.classList.add('hidden'), 5000);
         }
         
-        showToast("Importação de Agendamentos", `${bulkCount} agendamentos em lote carregados com sucesso (revisados).`, "success");
+        showToast("ImportaÃ§Ã£o de Agendamentos", `${bulkCount} agendamentos em lote carregados com sucesso (revisados).`, "success");
     }
     
     // Send confirmation email(s)
@@ -4704,8 +4761,8 @@ function openLoginSeguro() {
     openLoginSeguroModal(pendingRoleRedirect || 'manager');
 }
 
-// Execução de Login Seguro
-function doLoginSeguro() {
+// ExecuÃ§Ã£o de Login Seguro
+async function doLoginSeguro() {
     const idVal = document.getElementById('login-seguro-id').value.trim();
     const passVal = document.getElementById('login-seguro-pass').value;
     const errDiv = document.getElementById('login-seguro-error');
@@ -4718,42 +4775,51 @@ function doLoginSeguro() {
         return;
     }
     
-    if (!db.users) db.users = [];
-    
-    const user = db.users.find(u => 
-        (u.email.toLowerCase() === idVal.toLowerCase() || u.matricula === idVal) && 
-        u.senha === passVal
-    );
-    
-    if (!user) {
-        if (errDiv) {
-            errDiv.textContent = "Matrícula/E-mail ou senha incorretos.";
-            errDiv.classList.remove('hidden');
+    const btn = document.querySelector('button[onclick="doLoginSeguro()"]');
+    const oldBtnText = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Entrando...';
+    btn.disabled = true;
+
+    try {
+        const response = await fetch(`${getApiUrl()}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: idVal, password: passVal })
+        });
+        const data = await response.json();
+        
+        if (!response.ok || !data.success) {
+            btn.innerHTML = oldBtnText;
+            btn.disabled = false;
+            if (errDiv) {
+                errDiv.textContent = data.error || "MatrÃ­cula/E-mail ou senha incorretos.";
+                errDiv.classList.remove('hidden');
+            }
+            return;
         }
-        return;
-    }
-    
-    // Sucesso!
-    closeLoginSeguroModal();
-    safeStorage.local.setItem('rig_user', JSON.stringify(user));
-    showToast("Acesso Liberado", `Seja bem-vindo(a), ${user.nome}!`, "success");
-    
-    // Troca para o papel cadastrado (geralmente manager ou operator)
-    const finalRole = user.perfil;
-    currentRole = finalRole;
-    safeStorage.session.setItem('conexao_role', finalRole);
-    
-    const welcome = document.getElementById('welcome-portal');
-    if (welcome) welcome.classList.add('hidden');
-    
-    if (typeof registerUserSession === 'function') {
+
+        // Sucesso JWT!
+        closeLoginSeguroModal();
+        safeStorage.local.setItem('rig_token', data.token);
+        
+        const user = { nome: data.name, perfil: data.role, matricula: idVal };
+        safeStorage.local.setItem('rig_user', JSON.stringify(user));
+        showToast("Acesso Liberado", `Seja bem-vindo(a), ${user.nome}!`, "success");
+        
+        const finalRole = user.perfil.toLowerCase() === 'master' ? 'manager' : 'operator';
+        currentRole = finalRole;
+        safeStorage.session.setItem('conexao_role', finalRole);
+        
+        const welcome = document.getElementById('welcome-portal');
+        if (welcome) welcome.classList.add('hidden');
+        
         registerUserSession(finalRole, `${user.nome} ${user.sobrenome}`, user.matricula);
     }
     
     applyRoleConfiguration(finalRole);
 }
 
-// Registro / Cadastro de Usuários
+// Registro / Cadastro de UsuÃ¡rios
 function doCadastroSeguro() {
     const nome = document.getElementById('reg-seguro-nome').value.trim();
     const sobrenome = document.getElementById('reg-seguro-sobrenome').value.trim();
@@ -4786,7 +4852,7 @@ function doCadastroSeguro() {
     
     if (senha.length < 8) {
         if (errDiv) {
-            errDiv.textContent = "A senha deve ter no mínimo 8 caracteres.";
+            errDiv.textContent = "A senha deve ter no mÃ­nimo 8 caracteres.";
             errDiv.classList.remove('hidden');
         }
         return;
@@ -4794,7 +4860,7 @@ function doCadastroSeguro() {
     
     if (!db.users) db.users = [];
     
-    // Validação corporativa contra a base de colaboradores (pré-carregada)
+    // ValidaÃ§Ã£o corporativa contra a base de colaboradores (prÃ©-carregada)
     const colaborador = db.collaborators.find(c => 
         (c.matricula && String(c.matricula).trim().split('.')[0] === matricula) ||
         (c.email && c.email.toLowerCase().trim() === email.toLowerCase().trim()) ||
@@ -4808,13 +4874,13 @@ function doCadastroSeguro() {
     
     if (!colaborador && !credenciado) {
         if (errDiv) {
-            errDiv.textContent = "Acesso negado. Matrícula ou E-mail não localizado na base corporativa Globo.";
+            errDiv.textContent = "Acesso negado. MatrÃ­cula ou E-mail nÃ£o localizado na base corporativa Globo.";
             errDiv.classList.remove('hidden');
         }
         return;
     }
     
-    // Redefinição de senha — se a matrícula E e-mail baterem exatamente com uma conta existente (comportamento RIT)
+    // RedefiniÃ§Ã£o de senha â€” se a matrÃ­cula E e-mail baterem exatamente com uma conta existente (comportamento RIT)
     const exactMatch = db.users.find(u => 
         String(u.matricula).trim() === matricula &&
         u.email.toLowerCase().trim() === email.toLowerCase().trim()
@@ -4837,11 +4903,11 @@ function doCadastroSeguro() {
         return;
     }
     
-    // Correspondência parcial
+    // CorrespondÃªncia parcial
     const exists = db.users.some(u => u.email.toLowerCase() === email.toLowerCase() || u.matricula === matricula);
     if (exists) {
         if (errDiv) {
-            errDiv.textContent = "Este usuário já possui cadastro ativo com dados divergentes.";
+            errDiv.textContent = "Este usuÃ¡rio jÃ¡ possui cadastro ativo com dados divergentes.";
             errDiv.classList.remove('hidden');
         }
         return;
@@ -4863,7 +4929,7 @@ function doCadastroSeguro() {
     }, 1500);
 }
 
-// Recuperação de Senha
+// RecuperaÃ§Ã£o de Senha
 function doRecuperacaoSegura() {
     const email = document.getElementById('rec-seguro-email').value.trim();
     const errDiv = document.getElementById('rec-seguro-error');
@@ -4882,17 +4948,17 @@ function doRecuperacaoSegura() {
     
     if (!db.users) db.users = [];
     
-    // 1. Verifica se já tem conta ativa no sistema
+    // 1. Verifica se jÃ¡ tem conta ativa no sistema
     const user = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
     if (user) {
         if (succDiv) {
-            succDiv.innerHTML = `E-mail corporativo validado! <br>Sua senha cadastrada é: <strong class="text-white">${user.senha}</strong>`;
+            succDiv.innerHTML = `E-mail corporativo validado! <br>Sua senha cadastrada Ã©: <strong class="text-white">${user.senha}</strong>`;
             succDiv.classList.remove('hidden');
         }
         return;
     }
     
-    // 2. Se não tem conta ativa, verifica se o e-mail está na base corporativa Globo
+    // 2. Se nÃ£o tem conta ativa, verifica se o e-mail estÃ¡ na base corporativa Globo
     const colaborador = db.collaborators.find(c => c.email && c.email.toLowerCase().trim() === email.toLowerCase().trim());
     const credenciado = !colaborador ? db.accredited.find(c => c.email && c.email.toLowerCase().trim() === email.toLowerCase().trim()) : null;
     
@@ -4904,14 +4970,14 @@ function doRecuperacaoSegura() {
         return;
     }
     
-    // 3. E-mail não encontrado na base de colaboradores
+    // 3. E-mail nÃ£o encontrado na base de colaboradores
     if (errDiv) {
-        errDiv.textContent = "E-mail corporativo não encontrado na base de colaboradores autorizados.";
+        errDiv.textContent = "E-mail corporativo nÃ£o encontrado na base de colaboradores autorizados.";
         errDiv.classList.remove('hidden');
     }
 }
 
-// Seletor de Papéis / Interceptação por Senha
+// Seletor de PapÃ©is / InterceptaÃ§Ã£o por Senha
 function selectRole(role) {
     if (role === 'manager') {
         openLoginSeguroModal('manager');
@@ -4924,7 +4990,7 @@ function selectRole(role) {
     const welcome = document.getElementById('welcome-portal');
     if (welcome) welcome.classList.add('hidden');
     
-    // Registrar a sessão de segurança no banco de dados local
+    // Registrar a sessÃ£o de seguranÃ§a no banco de dados local
     if (typeof registerUserSession === 'function') {
         registerUserSession(role);
     }
@@ -4933,7 +4999,7 @@ function selectRole(role) {
 }
 
 function resetRole() {
-    // Encerrar a sessão ativa no banco ao deslogar ou alterar o perfil
+    // Encerrar a sessÃ£o ativa no banco ao deslogar ou alterar o perfil
     const currentSessionId = safeStorage.session.getItem('conexao_current_session_id');
     if (currentSessionId && db && db.sessions) {
         const session = db.sessions.find(s => s.id === currentSessionId);
@@ -4966,7 +5032,7 @@ function applyRoleConfiguration(role) {
     } else if (role === 'representative') {
         visibleTabs = ['bulk-booking', 'tutorials'];
         defaultTab = 'bulk-booking';
-        document.getElementById('active-profile-name').textContent = 'Representante de Área';
+        document.getElementById('active-profile-name').textContent = 'Representante de Ãrea';
     } else if (role === 'operator') {
         visibleTabs = ['operation', 'management', 'fleet', 'tutorials'];
         defaultTab = 'operation';
@@ -5090,7 +5156,7 @@ function handleCollaboratorFile(file) {
         const data = e.target.result;
         try {
             if (typeof XLSX === 'undefined') {
-                alert("Biblioteca Excel (SheetJS) não carregada. Por favor, recarregue a página.");
+                alert("Biblioteca Excel (SheetJS) nÃ£o carregada. Por favor, recarregue a pÃ¡gina.");
                 return;
             }
             const workbook = XLSX.read(data, { type: 'binary' });
@@ -5099,7 +5165,7 @@ function handleCollaboratorFile(file) {
             processCollaboratorRawData(rows);
         } catch (err) {
             console.error(err);
-            alert("Erro ao ler arquivo Excel. Certifique-se de que é um formato válido.");
+            alert("Erro ao ler arquivo Excel. Certifique-se de que Ã© um formato vÃ¡lido.");
         }
     };
     reader.readAsBinaryString(file);
@@ -5141,7 +5207,7 @@ function processCollaboratorRawData(rows) {
             else if (h.includes('mail')) emailIdx = idx;
         });
     } else {
-        // Assume default order: Nome, Matrícula, CPF, Função, Área/Diretoria, E-mail
+        // Assume default order: Nome, MatrÃ­cula, CPF, FunÃ§Ã£o, Ãrea/Diretoria, E-mail
         nameIdx = 0; matrIdx = 1; cpfIdx = 2; roleIdx = 3; dirIdx = 4; emailIdx = 5;
     }
 
@@ -5175,7 +5241,7 @@ function processCollaboratorRawData(rows) {
         
         tr.innerHTML = `
             <td class="py-2 px-3">
-                ${isValid ? '<span class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check"></i> Válido</span>' : '<span class="text-rose-400 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> Ajustar</span>'}
+                ${isValid ? '<span class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check"></i> VÃ¡lido</span>' : '<span class="text-rose-400 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> Ajustar</span>'}
             </td>
             <td class="py-2 px-3 font-semibold ${hasName ? 'text-white' : 'text-rose-400'}">${nome || 'FALTANDO NOME'}</td>
             <td class="py-2 px-3 ${matricula ? '' : 'text-gray-600'}">${matricula || 'N/A'}</td>
@@ -5201,7 +5267,7 @@ function clearCollaboratorImport() {
 function commitCollaboratorImport() {
     const validRecords = parsedCollaboratorsForImport.filter(r => r.isValid);
     if (validRecords.length === 0) {
-        alert("Nenhum registro válido pronto para importação.");
+        alert("Nenhum registro vÃ¡lido pronto para importaÃ§Ã£o.");
         return;
     }
 
@@ -5224,7 +5290,7 @@ function commitCollaboratorImport() {
             tipo_vinculo: c.matricula ? 'GLOBO' : 'TERCEIRO',
             dias_acesso: ['Todos os Dias'],
             status_credencial: 'MONTAGEM + EVENTO',
-            tipo_credencial: 'FÍSICA',
+            tipo_credencial: 'FÃSICA',
             nome_credencial: c.nome.split(' ')[0] + ' ' + (c.nome.split(' ')[1] || '')
         };
 
@@ -5274,7 +5340,7 @@ function handleBookingFile(file) {
         const data = e.target.result;
         try {
             if (typeof XLSX === 'undefined') {
-                alert("Biblioteca Excel não carregada.");
+                alert("Biblioteca Excel nÃ£o carregada.");
                 return;
             }
             const workbook = XLSX.read(data, { type: 'binary' });
@@ -5333,9 +5399,9 @@ function parseTimeValue(val) {
 function mapBase(text) {
     if (!text) return 'EG';
     const clean = String(text).toUpperCase();
-    if (clean.includes('EG') || clean.includes('ESTÚDIOS GLOBO') || clean.includes('ESTUDIOS GLOBO')) return 'EG';
-    if (clean.includes('JB') || clean.includes('JARDIM BOTÂNICO') || clean.includes('JARDIM BOTANICO')) return 'JB';
-    if (clean.includes('ION') || clean.includes('ÍON')) return 'ION';
+    if (clean.includes('EG') || clean.includes('ESTÃšDIOS GLOBO') || clean.includes('ESTUDIOS GLOBO')) return 'EG';
+    if (clean.includes('JB') || clean.includes('JARDIM BOTÃ‚NICO') || clean.includes('JARDIM BOTANICO')) return 'JB';
+    if (clean.includes('ION') || clean.includes('ÃON')) return 'ION';
     return 'EG';
 }
 
@@ -5350,16 +5416,16 @@ function mapServiceType(service) {
 function processBookingRawData(rows) {
     if (!rows || rows.length === 0) return;
 
-    // Detectar dinamicamente qual linha contém os cabeçalhos procurando palavras-chave
+    // Detectar dinamicamente qual linha contÃ©m os cabeÃ§alhos procurando palavras-chave
     let headerRowIdx = -1;
     for (let r = 0; r < Math.min(rows.length, 5); r++) {
         if (!rows[r]) continue;
         const cols = rows[r].map(c => String(c || '').trim().toLowerCase());
         let matchesCount = 0;
-        if (cols.some(c => c.includes('matrícula') || c.includes('matricula') || c.includes('cpf'))) matchesCount++;
+        if (cols.some(c => c.includes('matrÃ­cula') || c.includes('matricula') || c.includes('cpf'))) matchesCount++;
         if (cols.some(c => c.includes('nome'))) matchesCount++;
         if (cols.some(c => c.includes('data'))) matchesCount++;
-        if (cols.some(c => c.includes('saída') || c.includes('saida') || c.includes('retorno'))) matchesCount++;
+        if (cols.some(c => c.includes('saÃ­da') || c.includes('saida') || c.includes('retorno'))) matchesCount++;
         if (matchesCount >= 3) {
             headerRowIdx = r;
             break;
@@ -5375,7 +5441,7 @@ function processBookingRawData(rows) {
         headers.forEach((h, idx) => {
             const norm = h.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             
-            // Ignorar colunas ocultas de validação a partir da coluna M (index 12+)
+            // Ignorar colunas ocultas de validaÃ§Ã£o a partir da coluna M (index 12+)
             if (idx >= 12) return;
 
             if ((norm.includes('MATRICULA') || norm.includes('CPF')) && matrIdx === -1) {
@@ -5404,7 +5470,7 @@ function processBookingRawData(rows) {
             }
         });
     } else {
-        // Fallback padrão indexado
+        // Fallback padrÃ£o indexado
         matrIdx = 1; cpfIdx = 1; nameIdx = 2; cargoIdx = 3; areaIdx = 4; empIdx = 5; dateIdx = 6; timeOutIdx = 7; timeInIdx = 8; baseOutIdx = 9; baseInIdx = 10; serviceIdx = 11;
         startRow = 1;
     }
@@ -5434,7 +5500,7 @@ function processBookingRawData(rows) {
             continue;
         }
 
-        // Determinar Matrícula ou CPF
+        // Determinar MatrÃ­cula ou CPF
         let matricula = '';
         let cpf = '';
         const cleanDigits = rawMatrCpf.replace(/\D/g, '');
@@ -5463,14 +5529,14 @@ function processBookingRawData(rows) {
                 tipo_vinculo: matricula ? 'GLOBO' : 'TERCEIRO',
                 dias_acesso: ['Todos os Dias'],
                 status_credencial: 'MONTAGEM + EVENTO',
-                tipo_credencial: 'FÍSICA',
+                tipo_credencial: 'FÃSICA',
                 nome_credencial: nome.split(' ')[0] + ' ' + (nome.split(' ')[1] || '')
             };
             db.collaborators.push(person);
             db.accredited.push(person);
         }
 
-        // Restrição de área para Representantes
+        // RestriÃ§Ã£o de Ã¡rea para Representantes
         if (typeof representativeFixedArea !== 'undefined' && representativeFixedArea) {
             const cleanArea = representativeFixedArea.toLowerCase();
             const personArea = getN1Area(person).toLowerCase();
@@ -5508,7 +5574,7 @@ function processBookingRawData(rows) {
     }
 
     if (pendingBookings.length === 0) {
-        alert("Nenhum agendamento válido processado. Colunas incompatíveis ou dados faltantes.");
+        alert("Nenhum agendamento vÃ¡lido processado. Colunas incompatÃ­veis ou dados faltantes.");
         return;
     }
 
@@ -5520,7 +5586,7 @@ function processBookingRawData(rows) {
     openReplicationReviewModal('bulk', null, null, null, null, 'Excel');
     
     if (skipped > 0) {
-        showToast("Agendamentos em Lote", `${pendingBookings.length} processados, ${skipped} pulados por falta de dados do colaborador ou horário vazio.`, "warning");
+        showToast("Agendamentos em Lote", `${pendingBookings.length} processados, ${skipped} pulados por falta de dados do colaborador ou horÃ¡rio vazio.`, "warning");
     }
 }
 
@@ -5571,7 +5637,7 @@ function generateConfirmationEmailHTML(person, bookings) {
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid #e5e7eb;">
             <div style="background-color: #1e3a8a; padding: 25px; text-align: center;">
                 <span style="color: #60a5fa; font-size: 11px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; display: block; margin-bottom: 5px;">GLOBO CCO EVENTOS</span>
-                <h1 style="color: #ffffff; font-size: 20px; font-weight: bold; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Confirmação de Agendamento</h1>
+                <h1 style="color: #ffffff; font-size: 20px; font-weight: bold; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">ConfirmaÃ§Ã£o de Agendamento</h1>
             </div>
 
             <div style="padding: 24px; border-bottom: 1px solid #f3f4f6;">
@@ -5579,7 +5645,7 @@ function generateConfirmationEmailHTML(person, bookings) {
                 <h2 style="margin: 0 0 16px 0; font-size: 18px; color: #1f2937; font-weight: bold;">${person.nome}</h2>
                 
                 <div style="font-size: 13px; color: #4b5563;">
-                    <div style="margin-bottom: 4px;"><strong>Matrícula:</strong> ${person.matricula || 'N/A'}</div>
+                    <div style="margin-bottom: 4px;"><strong>MatrÃ­cula:</strong> ${person.matricula || 'N/A'}</div>
                     <div style="margin-bottom: 4px;"><strong>CPF:</strong> ${person.cpf || 'N/A'}</div>
                     <div style="margin-bottom: 4px;"><strong>Setor:</strong> ${person.departamento || 'N/A'}</div>
                     <div style="margin-bottom: 4px;"><strong>Empresa:</strong> ${person.empresa || 'Globo'}</div>
@@ -5587,7 +5653,7 @@ function generateConfirmationEmailHTML(person, bookings) {
             </div>
 
             <div style="padding: 24px;">
-                <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #1e3a8a; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Resumo da Programação (${eventName})</h3>
+                <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #1e3a8a; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Resumo da ProgramaÃ§Ã£o (${eventName})</h3>
                 <table style="width: 100%; border-collapse: collapse; text-align: left;">
                     <thead>
                         <tr style="border-bottom: 2px solid #e5e7eb;">
@@ -5595,7 +5661,7 @@ function generateConfirmationEmailHTML(person, bookings) {
                             <th style="padding: 8px 10px; font-size: 12px; color: #4b5563; font-weight: bold;">Perna</th>
                             <th style="padding: 8px 10px; font-size: 12px; color: #4b5563; font-weight: bold;">Origem</th>
                             <th style="padding: 8px 10px; font-size: 12px; color: #4b5563; font-weight: bold;">Destino</th>
-                            <th style="padding: 8px 10px; font-size: 12px; color: #4b5563; font-weight: bold;">Horário</th>
+                            <th style="padding: 8px 10px; font-size: 12px; color: #4b5563; font-weight: bold;">HorÃ¡rio</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -5610,12 +5676,12 @@ function generateConfirmationEmailHTML(person, bookings) {
                     <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${qrData}" width="150" height="150" alt="QR Code" style="display: block;" />
                 </div>
                 <p style="margin: 0 auto; font-size: 11px; color: #6b7280; max-width: 320px; line-height: 1.5;">
-                    <strong>Apresente esse cartão de Embarque quando for acessar o veículo de Transporte no dia do evento.</strong>
+                    <strong>Apresente esse cartÃ£o de Embarque quando for acessar o veÃ­culo de Transporte no dia do evento.</strong>
                 </p>
             </div>
             
             <div style="background-color: #f3f4f6; padding: 15px; text-align: center; font-size: 10px; color: #9ca3af; border-top: 1px solid #e5e7eb;">
-                Conexão Transportes - CCO Eventos Globo &copy; 2026
+                ConexÃ£o Transportes - CCO Eventos Globo &copy; 2026
             </div>
         </div>
     </body>
@@ -5625,7 +5691,7 @@ function generateConfirmationEmailHTML(person, bookings) {
 
 async function sendConfirmationEmail(person, bookings) {
     const emailTo = person.email || 'agendamento.transporte.eventos@gmail.com';
-    const subject = `Confirmação de Agendamento - Conexão Transportes (${getEventLocationName()})`;
+    const subject = `ConfirmaÃ§Ã£o de Agendamento - ConexÃ£o Transportes (${getEventLocationName()})`;
     const htmlContent = generateConfirmationEmailHTML(person, bookings);
 
     if (isBackendAvailable) {
@@ -5644,7 +5710,7 @@ async function sendConfirmationEmail(person, bookings) {
 
             const data = await res.json();
             if (res.ok && data.success) {
-                showToast("E-mail Enviado", `Confirmação SMTP enviada para ${emailTo}`, "success");
+                showToast("E-mail Enviado", `ConfirmaÃ§Ã£o SMTP enviada para ${emailTo}`, "success");
                 return;
             } else {
                 console.log("SMTP Send failed, fallback to simulator:", data.error);
@@ -5948,11 +6014,11 @@ function saveDatabaseRecord() {
     const email = document.getElementById('db-editor-email').value.trim();
 
     if (!nome) {
-        alert("O nome é obrigatório!");
+        alert("O nome Ã© obrigatÃ³rio!");
         return;
     }
     if (!matricula && !cpf) {
-        alert("Preencha pelo menos um campo identificador (Matrícula ou CPF)!");
+        alert("Preencha pelo menos um campo identificador (MatrÃ­cula ou CPF)!");
         return;
     }
 
@@ -5967,7 +6033,7 @@ function saveDatabaseRecord() {
         tipo_vinculo: matricula ? 'GLOBO' : 'TERCEIRO',
         dias_acesso: ['Todos os Dias'],
         status_credencial: 'MONTAGEM + EVENTO',
-        tipo_credencial: 'FÍSICA',
+        tipo_credencial: 'FÃSICA',
         nome_credencial: nome.split(' ')[0] + ' ' + (nome.split(' ')[1] || '')
     };
 
@@ -5989,7 +6055,7 @@ function saveDatabaseRecord() {
     } else {
         const exists = targetList.some(r => (matricula && r.matricula === matricula) || (cpf && r.cpf === cpf));
         if (exists) {
-            alert("Já existe um registro cadastrado com essa Matrícula ou CPF!");
+            alert("JÃ¡ existe um registro cadastrado com essa MatrÃ­cula ou CPF!");
             return;
         }
 
@@ -6092,7 +6158,7 @@ function renderFleetVaps() {
 
     const query = searchFleetVapVal.toLowerCase().trim();
 
-    // Filtra veículos da frota ativa para prestar contas dos VAPs
+    // Filtra veÃ­culos da frota ativa para prestar contas dos VAPs
     const list = db.vehicles || [];
 
     const filtered = list.filter(v => {
@@ -6118,7 +6184,7 @@ function renderFleetVaps() {
     if (linkedEl) linkedEl.textContent = linkedVehicles;
 
     if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="py-4 text-center text-gray-500">Nenhum VAP ou veículo encontrado.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="py-4 text-center text-gray-500">Nenhum VAP ou veÃ­culo encontrado.</td></tr>`;
         return;
     }
 
@@ -6160,7 +6226,7 @@ function renderFleetVaps() {
             <td class="py-2.5 px-3 font-semibold">${vapBadge}</td>
             <td class="py-2.5 px-3"><span class="bg-gray-800 text-gray-200 border border-gray-700 px-2 py-0.5 rounded font-mono text-[10px] uppercase font-bold tracking-wider">${v.placa}</span></td>
             <td class="py-2.5 px-3 text-white font-semibold">${v.modelo || 'N/A'}</td>
-            <td class="py-2.5 px-3 text-gray-300">${v.empresa || 'Sem vínculo'}</td>
+            <td class="py-2.5 px-3 text-gray-300">${v.empresa || 'Sem vÃ­nculo'}</td>
             <td class="py-2.5 px-3">${driverName}</td>
             <td class="py-2.5 px-3">${statusBadge}</td>
             <td class="py-2.5 px-3 text-center">${actionHtml}</td>
@@ -6175,20 +6241,20 @@ function filterFleetVaps() {
 }
 
 function removeVapLink(placa) {
-    if (confirm(`Deseja realmente remover o vínculo do VAP do veículo com placa ${placa}?`)) {
+    if (confirm(`Deseja realmente remover o vÃ­nculo do VAP do veÃ­culo com placa ${placa}?`)) {
         const vehicle = db.vehicles.find(v => v.placa === placa);
         if (vehicle) {
             vehicle.vap = '';
             saveDatabase();
             renderFleetVaps();
-            showToast("VAP Desvinculado", `O VAP foi removido do veículo ${placa}.`, "warning");
+            showToast("VAP Desvinculado", `O VAP foi removido do veÃ­culo ${placa}.`, "warning");
         }
     }
 }
 
 function exportVapReport() {
     const list = db.vehicles || [];
-    let csvContent = "Número do VAP;Placa Veículo;Modelo;Empresa;Motorista Escala;Status VAP\n";
+    let csvContent = "NÃºmero do VAP;Placa VeÃ­culo;Modelo;Empresa;Motorista Escala;Status VAP\n";
 
     list.forEach(v => {
         const activeDriver = db.drivers.find(d => d.placa_veiculo === v.placa);
@@ -6196,7 +6262,7 @@ function exportVapReport() {
         const vapVal = v.vap || 'Sem VAP';
         const statusVal = v.vap ? 'Em Uso' : 'Pendente';
         
-        csvContent += `"${vapVal}";"${v.placa}";"${v.modelo || 'N/A'}";"${v.empresa || 'Sem vínculo'}";"${driverName}";"${statusVal}"\n`;
+        csvContent += `"${vapVal}";"${v.placa}";"${v.modelo || 'N/A'}";"${v.empresa || 'Sem vÃ­nculo'}";"${driverName}";"${statusVal}"\n`;
     });
 
     const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -6237,7 +6303,7 @@ function renderFleetDrivers() {
         const recordId = d.cpf || d.nome;
         const events = d.eventos && d.eventos.length > 0 ? d.eventos.join(', ') : 'Nenhum';
 
-        // Check for rendição: find if other drivers have the same plate
+        // Check for rendiÃ§Ã£o: find if other drivers have the same plate
         let isShared = false;
         if (d.placa_veiculo) {
             const sharing = db.drivers.filter(other => other.placa_veiculo === d.placa_veiculo);
@@ -6246,8 +6312,8 @@ function renderFleetDrivers() {
 
         const plateCell = d.placa_veiculo ? 
             `<span class="bg-gray-800 text-gray-200 border border-gray-700 px-2 py-0.5 rounded font-mono text-[10px] uppercase font-bold tracking-wider">${d.placa_veiculo}</span>
-             ${isShared ? `<span class="ml-1 text-[9px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1 py-0.2 rounded font-bold" title="Carro compartilhado (Rendição)">Rendição</span>` : ''}` 
-            : '<span class="text-gray-600">Sem veículo</span>';
+             ${isShared ? `<span class="ml-1 text-[9px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1 py-0.2 rounded font-bold" title="Carro compartilhado (RendiÃ§Ã£o)">RendiÃ§Ã£o</span>` : ''}` 
+            : '<span class="text-gray-600">Sem veÃ­culo</span>';
 
         tr.innerHTML = `
             <td class="py-2 px-3 text-white font-semibold">${d.nome || 'N/A'}</td>
@@ -6255,7 +6321,7 @@ function renderFleetDrivers() {
             <td class="py-2 px-3">${d.telefone || 'N/A'}</td>
             <td class="py-2 px-3 text-gray-300 font-medium">${d.categoria || 'Passeio'}</td>
             <td class="py-2 px-3">${plateCell}</td>
-            <td class="py-2 px-3">${d.empresa || 'Autônomo'}</td>
+            <td class="py-2 px-3">${d.empresa || 'AutÃ´nomo'}</td>
             <td class="py-2 px-3 text-[10px] text-gray-400 max-w-[150px] truncate" title="${events}">${events}</td>
             <td class="py-2 px-3 text-center">
                 <button onclick="openFleetEditor('driver', '${recordId}')" title="Editar" class="text-blue-400 hover:text-blue-300 font-bold px-1.5 py-1 transition mr-1.5"><i class="fa-solid fa-pen-to-square"></i></button>
@@ -6287,7 +6353,7 @@ function renderFleetVehicles() {
     });
 
     if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="py-4 text-center text-gray-500">Nenhum veículo encontrado.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="py-4 text-center text-gray-500">Nenhum veÃ­culo encontrado.</td></tr>`;
         return;
     }
 
@@ -6297,15 +6363,15 @@ function renderFleetVehicles() {
         const recordId = v.placa;
 
         let statusClass = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-        if (v.status === 'Em Manutenção') statusClass = "bg-amber-500/10 text-amber-400 border-amber-500/20";
-        else if (v.status === 'Inativo') statusClass = "bg-rose-500/10 text-rose-400 border-rose-500/20";
+        if (v.status === 'Em ManutenÃ§Ã£o') statusClass = "status-pill text-amber-400 border-amber-500/20";
+        else if (v.status === 'Inativo') statusClass = "status-pill text-rose-400 border-rose-500/20";
 
         tr.innerHTML = `
             <td class="py-2 px-3"><span class="bg-gray-800 text-gray-200 border border-gray-700 px-2 py-0.5 rounded font-mono text-[10px] uppercase font-bold tracking-wider">${v.placa}</span></td>
             <td class="py-2 px-3 text-white font-semibold">${v.modelo || 'N/A'}</td>
             <td class="py-2 px-3 text-gray-300 font-medium">${v.tipo || 'Passeio'}</td>
             <td class="py-2 px-3 font-semibold">${v.capacidade || 4} passageiros</td>
-            <td class="py-2 px-3">${v.empresa || 'Sem vínculo'}</td>
+            <td class="py-2 px-3">${v.empresa || 'Sem vÃ­nculo'}</td>
             <td class="py-2 px-3 font-semibold font-mono text-[11px] text-indigo-400">${v.vap || '-'}</td>
             <td class="py-2 px-3"><span class="px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase tracking-wider ${statusClass}">${v.status || 'Ativo'}</span></td>
             <td class="py-2 px-3 text-center">
@@ -6399,7 +6465,7 @@ function openFleetEditor(type, id) {
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">CPF</label>
-                    <input type="text" id="fleet-drv-cpf" value="${record ? record.cpf : ''}" placeholder="Apenas números" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+                    <input type="text" id="fleet-drv-cpf" value="${record ? record.cpf : ''}" placeholder="Apenas nÃºmeros" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Telefone</label>
@@ -6412,39 +6478,39 @@ function openFleetEditor(type, id) {
                     <input type="email" id="fleet-drv-email" value="${record ? record.email : ''}" placeholder="Ex: motorista@email.com" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
                 </div>
                 <div>
-                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Categoria de Veículo</label>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Categoria de VeÃ­culo</label>
                     <select id="fleet-drv-categoria" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
-                        <option value="Veículo de Passeio" ${record && record.categoria === 'Veículo de Passeio' ? 'selected' : ''}>Veículo de Passeio</option>
+                        <option value="VeÃ­culo de Passeio" ${record && record.categoria === 'VeÃ­culo de Passeio' ? 'selected' : ''}>VeÃ­culo de Passeio</option>
                         <option value="Vans Passageiro" ${record && record.categoria === 'Vans Passageiro' ? 'selected' : ''}>Vans Passageiro</option>
-                        <option value="Veículo Blindado" ${record && record.categoria === 'Veículo Blindado' ? 'selected' : ''}>Veículo Blindado</option>
-                        <option value="Ônibus" ${record && record.categoria === 'Ônibus' ? 'selected' : ''}>Ônibus</option>
-                        <option value="Micro-ônibus" ${record && record.categoria === 'Micro-ônibus' ? 'selected' : ''}>Micro-ônibus</option>
+                        <option value="VeÃ­culo Blindado" ${record && record.categoria === 'VeÃ­culo Blindado' ? 'selected' : ''}>VeÃ­culo Blindado</option>
+                        <option value="Ã”nibus" ${record && record.categoria === 'Ã”nibus' ? 'selected' : ''}>Ã”nibus</option>
+                        <option value="Micro-Ã´nibus" ${record && record.categoria === 'Micro-Ã´nibus' ? 'selected' : ''}>Micro-Ã´nibus</option>
                     </select>
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Placa do Veículo (Rendição permitida)</label>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Placa do VeÃ­culo (RendiÃ§Ã£o permitida)</label>
                     <select id="fleet-drv-placa" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
-                        <option value="">-- Sem Veículo --</option>
+                        <option value="">-- Sem VeÃ­culo --</option>
                         ${vehicleOpts.map(plate => `<option value="${plate}" ${record && record.placa_veiculo === plate ? 'selected' : ''}>${plate}</option>`).join('')}
                     </select>
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Empresa</label>
                     <select id="fleet-drv-empresa" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
-                        <option value="Autônomo">Autônomo</option>
+                        <option value="AutÃ´nomo">AutÃ´nomo</option>
                         ${companyOpts.map(c => `<option value="${c}" ${record && record.empresa === c ? 'selected' : ''}>${c}</option>`).join('')}
                     </select>
                 </div>
             </div>
             <div>
-                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Eventos Atuados (separados por vírgula)</label>
+                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Eventos Atuados (separados por vÃ­rgula)</label>
                 <input type="text" id="fleet-drv-eventos" value="${record && record.eventos ? record.eventos.join(', ') : currentEvent}" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
             </div>
         `;
     } else if (type === 'vehicle') {
-        title.textContent = id ? "Editar Veículo" : "Adicionar Veículo";
+        title.textContent = id ? "Editar VeÃ­culo" : "Adicionar VeÃ­culo";
         iconBg.className = "bg-emerald-600/10 text-emerald-400 p-2.5 rounded-xl";
         icon.className = "fa-solid fa-car text-xl";
         
@@ -6454,7 +6520,7 @@ function openFleetEditor(type, id) {
         fieldsContainer.innerHTML = `
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Placa (Única)</label>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Placa (Ãšnica)</label>
                     <input type="text" id="fleet-veh-placa" required ${id ? 'disabled' : ''} value="${record ? record.placa : ''}" placeholder="Ex: SWY7H53" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 uppercase">
                 </div>
                 <div>
@@ -6464,13 +6530,13 @@ function openFleetEditor(type, id) {
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Tipo de Veículo</label>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Tipo de VeÃ­culo</label>
                     <select id="fleet-veh-tipo" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
-                        <option value="Veículo de Passeio" ${record && record.tipo === 'Veículo de Passeio' ? 'selected' : ''}>Veículo de Passeio</option>
+                        <option value="VeÃ­culo de Passeio" ${record && record.tipo === 'VeÃ­culo de Passeio' ? 'selected' : ''}>VeÃ­culo de Passeio</option>
                         <option value="Vans Passageiro" ${record && record.tipo === 'Vans Passageiro' ? 'selected' : ''}>Vans Passageiro</option>
-                        <option value="Veículo Blindado" ${record && record.tipo === 'Veículo Blindado' ? 'selected' : ''}>Veículo Blindado</option>
-                        <option value="Ônibus" ${record && record.tipo === 'Ônibus' ? 'selected' : ''}>Ônibus</option>
-                        <option value="Micro-ônibus" ${record && record.tipo === 'Micro-ônibus' ? 'selected' : ''}>Micro-ônibus</option>
+                        <option value="VeÃ­culo Blindado" ${record && record.tipo === 'VeÃ­culo Blindado' ? 'selected' : ''}>VeÃ­culo Blindado</option>
+                        <option value="Ã”nibus" ${record && record.tipo === 'Ã”nibus' ? 'selected' : ''}>Ã”nibus</option>
+                        <option value="Micro-Ã´nibus" ${record && record.tipo === 'Micro-Ã´nibus' ? 'selected' : ''}>Micro-Ã´nibus</option>
                     </select>
                 </div>
                 <div>
@@ -6482,7 +6548,7 @@ function openFleetEditor(type, id) {
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Empresa Vinculada</label>
                     <select id="fleet-veh-empresa" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
-                        <option value="Autônomo">Autônomo</option>
+                        <option value="AutÃ´nomo">AutÃ´nomo</option>
                         ${companyOpts.map(c => `<option value="${c}" ${record && record.empresa === c ? 'selected' : ''}>${c}</option>`).join('')}
                     </select>
                 </div>
@@ -6490,13 +6556,13 @@ function openFleetEditor(type, id) {
                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Status Operacional</label>
                     <select id="fleet-veh-status" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
                         <option value="Ativo" ${record && record.status === 'Ativo' ? 'selected' : ''}>Ativo</option>
-                        <option value="Em Manutenção" ${record && record.status === 'Em Manutenção' ? 'selected' : ''}>Em Manutenção</option>
+                        <option value="Em ManutenÃ§Ã£o" ${record && record.status === 'Em ManutenÃ§Ã£o' ? 'selected' : ''}>Em ManutenÃ§Ã£o</option>
                         <option value="Inativo" ${record && record.status === 'Inativo' ? 'selected' : ''}>Inativo</option>
                     </select>
                 </div>
             </div>
             <div>
-                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Código/Número do VAP (Opcional)</label>
+                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">CÃ³digo/NÃºmero do VAP (Opcional)</label>
                 <input type="text" id="fleet-veh-vap" value="${record && record.vap ? record.vap : ''}" placeholder="Ex: VAP-0104 ou VAPP-3281" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 uppercase">
             </div>
         `;
@@ -6513,12 +6579,12 @@ function openFleetEditor(type, id) {
 
         fieldsContainer.innerHTML = `
             <div>
-                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Nome / Razão Social</label>
+                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Nome / RazÃ£o Social</label>
                 <input type="text" id="fleet-co-nome" required value="${record ? record.nome : ''}" placeholder="Ex: AS Transportes" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
             </div>
             <div>
                 <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">CNPJ</label>
-                <input type="text" id="fleet-co-cnpj" value="${record ? record.cnpj : ''}" placeholder="Apenas números ou CNPJ formatado" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                <input type="text" id="fleet-co-cnpj" value="${record ? record.cnpj : ''}" placeholder="Apenas nÃºmeros ou CNPJ formatado" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
@@ -6558,7 +6624,7 @@ function saveFleetRecord() {
         const eventos = eventosRaw.split(',').map(e => e.trim()).filter(Boolean);
 
         if (!nome) {
-            alert("Nome completo é obrigatório!");
+            alert("Nome completo Ã© obrigatÃ³rio!");
             return;
         }
 
@@ -6573,7 +6639,7 @@ function saveFleetRecord() {
         } else {
             const exists = db.drivers.some(d => (cpf && d.cpf === cpf) || (nome && d.nome.toLowerCase() === nome.toLowerCase()));
             if (exists) {
-                alert("Já existe um motorista cadastrado com este Nome ou CPF!");
+                alert("JÃ¡ existe um motorista cadastrado com este Nome ou CPF!");
                 return;
             }
             db.drivers.push(payload);
@@ -6589,11 +6655,11 @@ function saveFleetRecord() {
         const vap = document.getElementById('fleet-veh-vap').value.trim().toUpperCase();
 
         if (!placa || placa.length < 5) {
-            alert("Placa de veículo inválida!");
+            alert("Placa de veÃ­culo invÃ¡lida!");
             return;
         }
         if (!modelo) {
-            alert("Modelo do veículo é obrigatório!");
+            alert("Modelo do veÃ­culo Ã© obrigatÃ³rio!");
             return;
         }
 
@@ -6604,15 +6670,15 @@ function saveFleetRecord() {
             if (idx !== -1) {
                 db.vehicles[idx] = Object.assign(db.vehicles[idx], payload);
             }
-            showToast("Veículo Atualizado", "Os dados do veículo foram atualizados.", "success");
+            showToast("VeÃ­culo Atualizado", "Os dados do veÃ­culo foram atualizados.", "success");
         } else {
             const exists = db.vehicles.some(v => v.placa === placa);
             if (exists) {
-                alert("Este veículo com esta Placa já está cadastrado!");
+                alert("Este veÃ­culo com esta Placa jÃ¡ estÃ¡ cadastrado!");
                 return;
             }
             db.vehicles.push(payload);
-            showToast("Veículo Cadastrado", "O veículo foi adicionado à frota.", "success");
+            showToast("VeÃ­culo Cadastrado", "O veÃ­culo foi adicionado Ã  frota.", "success");
         }
     } else if (type === 'company') {
         const nome = document.getElementById('fleet-co-nome').value.trim();
@@ -6621,7 +6687,7 @@ function saveFleetRecord() {
         const contato = document.getElementById('fleet-co-contato').value.trim();
 
         if (!nome) {
-            alert("Razão Social/Nome da Empresa é obrigatório!");
+            alert("RazÃ£o Social/Nome da Empresa Ã© obrigatÃ³rio!");
             return;
         }
 
@@ -6632,11 +6698,11 @@ function saveFleetRecord() {
             if (idx !== -1) {
                 db.companies[idx] = payload;
             }
-            showToast("Empresa Atualizada", "As informações da empresa de transporte foram salvas.", "success");
+            showToast("Empresa Atualizada", "As informaÃ§Ãµes da empresa de transporte foram salvas.", "success");
         } else {
             const exists = db.companies.some(c => typeof c === 'string' ? c.toLowerCase() === nome.toLowerCase() : c.nome.toLowerCase() === nome.toLowerCase());
             if (exists) {
-                alert("Esta empresa já está cadastrada!");
+                alert("Esta empresa jÃ¡ estÃ¡ cadastrada!");
                 return;
             }
             db.companies.push(payload);
@@ -6650,7 +6716,7 @@ function saveFleetRecord() {
 }
 
 function deleteFleetRecord(type, id) {
-    if (!confirm(`Deseja realmente remover este registro de ${type === 'driver' ? 'motorista' : type === 'vehicle' ? 'veículo' : 'empresa'}?`)) return;
+    if (!confirm(`Deseja realmente remover este registro de ${type === 'driver' ? 'motorista' : type === 'vehicle' ? 'veÃ­culo' : 'empresa'}?`)) return;
 
     if (type === 'driver') {
         db.drivers = db.drivers.filter(d => (d.cpf !== id && d.nome !== id));
@@ -6660,7 +6726,7 @@ function deleteFleetRecord(type, id) {
         db.drivers.forEach(d => {
             if (d.placa_veiculo === id) d.placa_veiculo = '';
         });
-        showToast("Veículo Removido", "O veículo foi removido. Os vínculos de motoristas com este veículo foram limpos.", "success");
+        showToast("VeÃ­culo Removido", "O veÃ­culo foi removido. Os vÃ­nculos de motoristas com este veÃ­culo foram limpos.", "success");
     } else if (type === 'company') {
         db.companies = db.companies.filter(c => typeof c === 'string' ? c !== id : (c.id !== id && c.nome !== id));
         showToast("Empresa Removida", "A empresa foi removida do cadastro.", "success");
@@ -6704,7 +6770,7 @@ function handleDriverExcelFile(file) {
             rows.forEach(r => {
                 const name = r.Nome || r.nomeFuncionario || r.nome;
                 const placa = r.Placa || r.placa;
-                const empresa = r.Empresa || r.razaoSocial || r.empresa || 'Autônomo';
+                const empresa = r.Empresa || r.razaoSocial || r.empresa || 'AutÃ´nomo';
                 const tipo_veiculo = r.TipoVeiculo || r.tipoVeiculo || r.Cargo || 'Passeio';
                 const capacidade = parseInt(r.VeiculoCapacidade || r.capacidade) || 4;
                 const cpf = r.CPF || r.cpf || '';
@@ -6727,7 +6793,7 @@ function handleDriverExcelFile(file) {
                     if (!hasVe) {
                         db.vehicles.push({
                             placa: cleanPlaca,
-                            modelo: `Veículo ${tipo_veiculo}`,
+                            modelo: `VeÃ­culo ${tipo_veiculo}`,
                             tipo: tipo_veiculo,
                             capacidade: capacidade,
                             empresa: empresa.trim(),
@@ -6760,7 +6826,7 @@ function handleDriverExcelFile(file) {
             });
 
             saveDatabase();
-            showToast("Planilha Importada", `Sucesso! Importados: ${newDrivers} motoristas, ${newVehicles} veículos e ${newCompanies} empresas.`, "success");
+            showToast("Planilha Importada", `Sucesso! Importados: ${newDrivers} motoristas, ${newVehicles} veÃ­culos e ${newCompanies} empresas.`, "success");
             switchFleetSubTab(currentFleetSubTab);
         } catch (err) {
             console.error("Erro ao ler planilha de motoristas:", err);
@@ -6792,7 +6858,7 @@ function sendWhatsappActual() {
     const phoneInput = document.getElementById('wa-phone');
     const phoneRaw = phoneInput.value.trim();
     if (!phoneRaw) {
-        alert("Por favor, digite o número do telefone.");
+        alert("Por favor, digite o nÃºmero do telefone.");
         return;
     }
     
@@ -6824,13 +6890,13 @@ function sendWhatsappActual() {
     
     const currentUrl = `${window.location.origin}${window.location.pathname}?checkin=${code}`;
     
-    const messageText = `Olá, *${name}*! Confirmamos seu agendamento na Globo Eventos.
-📍 Trecho: *${from}* x *${to}*
-⏰ Saída: *${time}*
-🎫 Localizador: *${code}*
-📲 Cartão de Embarque: ${currentUrl}
+    const messageText = `OlÃ¡, *${name}*! Confirmamos seu agendamento na Globo Eventos.
+ðŸ“ Trecho: *${from}* x *${to}*
+â° SaÃ­da: *${time}*
+ðŸŽ« Localizador: *${code}*
+ðŸ“² CartÃ£o de Embarque: ${currentUrl}
 
-Apresente esse link ou o QR Code dele no momento do embarque. Tenha uma ótima viagem!`;
+Apresente esse link ou o QR Code dele no momento do embarque. Tenha uma Ã³tima viagem!`;
 
     const whatsappUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(messageText)}`;
     window.open(whatsappUrl, '_blank');
@@ -6848,7 +6914,7 @@ function downloadPreTicket() {
     printWindow.document.write(`
         <html>
         <head>
-            <title>Cartão de Embarque</title>
+            <title>CartÃ£o de Embarque</title>
             <script src="https://cdn.tailwindcss.com"><\/script>
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
             <style>
@@ -6880,7 +6946,7 @@ function downloadPassengerTicket() {
     printWindow.document.write(`
         <html>
         <head>
-            <title>Cartão de Embarque</title>
+            <title>CartÃ£o de Embarque</title>
             <script src="https://cdn.tailwindcss.com"><\/script>
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
             <style>
@@ -6916,7 +6982,7 @@ function openScannerModal() {
         activeBookings.forEach(b => {
             const parts = b.data.split('-');
             const dateStr = parts.length === 3 ? `${parts[2]}/${parts[1]}` : b.data;
-            const text = `${b.nome} (${b.origem} x ${b.destino} - ${dateStr} às ${b.hora})`;
+            const text = `${b.nome} (${b.origem} x ${b.destino} - ${dateStr} Ã s ${b.hora})`;
             select.appendChild(createOption(b.id, text));
         });
     }
@@ -6999,7 +7065,7 @@ function handleQuickCheckinUrl(bookingId) {
             const person = findPerson(matriculaOrCpf);
             if (person) {
                 // Cria o booking no banco local
-                const serviceType = 'Vai e Vem Van'; // Padrão
+                const serviceType = 'Vai e Vem Van'; // PadrÃ£o
                 const accompany = '';
                 const canal = 'Totem-Scanner';
                 
@@ -7010,7 +7076,7 @@ function handleQuickCheckinUrl(bookingId) {
     }
     
     if (!booking) {
-        showToast("Erro de Embarque", "Código de agendamento não encontrado.", "error");
+        showToast("Erro de Embarque", "CÃ³digo de agendamento nÃ£o encontrado.", "error");
         return;
     }
     
@@ -7018,13 +7084,13 @@ function handleQuickCheckinUrl(bookingId) {
     document.getElementById('qb-passenger-id').textContent = booking.matricula || booking.cpf;
     
     const eventLoc = getEventLocationNameFromDate(booking.data);
-    const fromStr = booking.origem === 'EG' ? 'Estúdios Globo' : (booking.origem === 'JB' ? 'Jardim Botânico' : (booking.origem === 'ION' ? 'Íon (Barra)' : eventLoc));
-    const toStr = booking.destino === 'Sambodromo' ? eventLoc : (booking.destino === 'EG' ? 'Estúdios Globo' : (booking.destino === 'JB' ? 'Jardim Botânico' : 'Íon (Barra)'));
-    document.getElementById('qb-route').textContent = `${fromStr} ➔ ${toStr}`;
+    const fromStr = booking.origem === 'EG' ? 'EstÃºdios Globo' : (booking.origem === 'JB' ? 'Jardim BotÃ¢nico' : (booking.origem === 'ION' ? 'Ãon (Barra)' : eventLoc));
+    const toStr = booking.destino === 'Sambodromo' ? eventLoc : (booking.destino === 'EG' ? 'EstÃºdios Globo' : (booking.destino === 'JB' ? 'Jardim BotÃ¢nico' : 'Ãon (Barra)'));
+    document.getElementById('qb-route').textContent = `${fromStr} âž” ${toStr}`;
     
     const parts = booking.data.split('-');
     const dateStr = parts.length === 3 ? `${parts[2]}/${parts[1]}` : booking.data;
-    document.getElementById('qb-date-time').textContent = `${dateStr} às ${booking.hora}`;
+    document.getElementById('qb-date-time').textContent = `${dateStr} Ã s ${booking.hora}`;
     
     document.getElementById('qb-service-type').textContent = booking.service_type || 'Van';
     
@@ -7117,7 +7183,7 @@ function showTicketFromUrl(ticketId) {
             const person = findPerson(matriculaOrCpf);
             if (person) {
                 // Cria o booking no banco local
-                const serviceType = 'Vai e Vem Van'; // Padrão
+                const serviceType = 'Vai e Vem Van'; // PadrÃ£o
                 const accompany = '';
                 const canal = 'QR-Code';
                 
@@ -7128,11 +7194,11 @@ function showTicketFromUrl(ticketId) {
     }
     
     if (booking) {
-        // Força a tab de passageiro e exibe o ticket
+        // ForÃ§a a tab de passageiro e exibe o ticket
         selectRole('passenger');
         renderPreTicket(booking);
         
-        // Rola até o ticket
+        // Rola atÃ© o ticket
         setTimeout(() => {
             const ticketEl = document.getElementById('pre-booking-instructions-active');
             if (ticketEl) {
@@ -7140,7 +7206,7 @@ function showTicketFromUrl(ticketId) {
             }
         }, 300);
     } else {
-        showToast("Erro no Ticket", "Não foi possível carregar ou importar as informações deste ticket.", "error");
+        showToast("Erro no Ticket", "NÃ£o foi possÃ­vel carregar ou importar as informaÃ§Ãµes deste ticket.", "error");
     }
 }
 
@@ -7149,7 +7215,7 @@ function performQuickBoarding(bookingId) {
     if (!booking) return;
     
     booking.status = 'Embarcado';
-    booking.status_checkin = 'No Horário';
+    booking.status_checkin = 'No HorÃ¡rio';
     
     const trip = db.trips.find(t => t.id === booking.trip_id);
     if (trip) {
@@ -7184,10 +7250,10 @@ function performQuickBoarding(bookingId) {
 // ==========================================
 
 const BASE_COORDINATES = {
-    EG: [-22.984722, -43.4075], // Estúdios Globo
-    JB: [-22.966944, -43.228056], // Jardim Botânico
-    ION: [-23.003333, -43.328333], // Íon Barra
-    Sambodromo: [-22.911944, -43.197222] // Sambódromo (Destino)
+    EG: [-22.984722, -43.4075], // EstÃºdios Globo
+    JB: [-22.966944, -43.228056], // Jardim BotÃ¢nico
+    ION: [-23.003333, -43.328333], // Ãon Barra
+    Sambodromo: [-22.911944, -43.197222] // SambÃ³dromo (Destino)
 };
 
 const GEOGRAPHIC_ROUTES = {
@@ -7267,7 +7333,7 @@ function populateDriverPortalSelectors() {
 // Start driver tracking / simulation connection
 function getDriverStartingCoords(base, direction) {
     if (direction === 'EVENTO_SAIDA') {
-        return [-22.911944, -43.197222]; // Sambódromo
+        return [-22.911944, -43.197222]; // SambÃ³dromo
     }
     if (base === 'JB') return [-22.966944, -43.228056];
     if (base === 'ION') return [-23.003333, -43.328333];
@@ -7325,7 +7391,7 @@ function toggleDriverGpsConnection() {
             btnGps.className = "w-full bg-red-650 hover:bg-red-600 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-wider transition duration-200 shadow-md flex items-center justify-center gap-1.5 cursor-pointer";
         }
         const btnGpsText = document.getElementById('btn-drv-gps-text');
-        if (btnGpsText) btnGpsText.textContent = "Encerrar Disponibilização";
+        if (btnGpsText) btnGpsText.textContent = "Encerrar DisponibilizaÃ§Ã£o";
         
         // Enable Start Ride
         const btnStart = document.getElementById('btn-drv-start-ride');
@@ -7360,7 +7426,7 @@ function toggleDriverGpsConnection() {
             );
         }
         
-        showToast("GPS Conectado", "Localização compartilhada com a central.", "success");
+        showToast("GPS Conectado", "LocalizaÃ§Ã£o compartilhada com a central.", "success");
     } else {
         // Stop GPS
         stopDriverGpsSharing();
@@ -7402,7 +7468,7 @@ function stopDriverGpsSharing(remotely = false) {
     
     const statusRide = document.getElementById('drv-status-ride');
     if (statusRide) {
-        statusRide.textContent = "FORA DE OPERAÇÃO";
+        statusRide.textContent = "FORA DE OPERAÃ‡ÃƒO";
         statusRide.className = "text-[10px] text-gray-500 block uppercase font-bold";
     }
     
@@ -7435,10 +7501,10 @@ function stopDriverGpsSharing(remotely = false) {
     if (drvDir) drvDir.removeAttribute('disabled');
     
     if (remotely) {
-        alert("Atenção: O compartilhamento de GPS foi encerrado remotamente pelo CCO.");
-        showToast("Conexão Encerrada", "GPS desativado remotamente por comando da Central.", "warning");
+        alert("AtenÃ§Ã£o: O compartilhamento de GPS foi encerrado remotamente pelo CCO.");
+        showToast("ConexÃ£o Encerrada", "GPS desativado remotamente por comando da Central.", "warning");
     } else {
-        showToast("GPS Desconectado", "Transmissão de localização desativada.", "info");
+        showToast("GPS Desconectado", "TransmissÃ£o de localizaÃ§Ã£o desativada.", "info");
     }
 }
 
@@ -7607,7 +7673,7 @@ function endDriverRide() {
     // Update Ride status
     const statusRide = document.getElementById('drv-status-ride');
     if (statusRide) {
-        statusRide.textContent = "FORA DE OPERAÇÃO";
+        statusRide.textContent = "FORA DE OPERAÃ‡ÃƒO";
         statusRide.className = "text-[10px] text-gray-500 block uppercase font-bold";
     }
     
@@ -7653,7 +7719,7 @@ function endDriverRide() {
         );
     }
     
-    showToast("Corrida Concluída", "Viagem finalizada com sucesso.", "success");
+    showToast("Corrida ConcluÃ­da", "Viagem finalizada com sucesso.", "success");
 }
 
 // Compatibility wrapper function
@@ -7687,12 +7753,12 @@ function sendDriverGpsPing(name, vehicle, service, route, coords, speed) {
             
             // Build quick reply buttons
             replyContainer.innerHTML = '';
-            let replies = ["Sim", "Não", "A caminho", "Atraso ~10m", "Sem ocorrências"];
-            if (existing.latest_command.includes("ocorrência")) {
-                replies = ["Sim", "Não", "Sem ocorrências", "Problema mecânico", "Pane / Acidente"];
+            let replies = ["Sim", "NÃ£o", "A caminho", "Atraso ~10m", "Sem ocorrÃªncias"];
+            if (existing.latest_command.includes("ocorrÃªncia")) {
+                replies = ["Sim", "NÃ£o", "Sem ocorrÃªncias", "Problema mecÃ¢nico", "Pane / Acidente"];
             } else if (existing.latest_command.includes("atrasar") || existing.latest_command.includes("atraso") || existing.latest_command.includes("caminho")) {
-                replies = ["Sim", "Não", "A caminho", "Sem atraso", "Atraso ~10m"];
-            } else if (existing.latest_command.includes("posição") || existing.latest_command.includes("rastreamento")) {
+                replies = ["Sim", "NÃ£o", "A caminho", "Sem atraso", "Atraso ~10m"];
+            } else if (existing.latest_command.includes("posiÃ§Ã£o") || existing.latest_command.includes("rastreamento")) {
                 replies = ["Compartilhando!", "GPS ativo", "Sinal fraco", "OK"];
             }
             
@@ -7798,7 +7864,7 @@ function initTrackingMap() {
     
     if (typeof L === 'undefined') {
         console.error("Leaflet.js is not loaded.");
-        mapDiv.innerHTML = '<div class="flex items-center justify-center h-full text-red-500 font-bold text-xs"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>Biblioteca do Mapa indisponível (offline)</div>';
+        mapDiv.innerHTML = '<div class="flex items-center justify-center h-full text-red-500 font-bold text-xs"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>Biblioteca do Mapa indisponÃ­vel (offline)</div>';
         return;
     }
     
@@ -7841,7 +7907,7 @@ function initTrackingMap() {
         ION: L.divIcon({
             className: 'base-marker-icon',
             html: `<div class="bg-blue-600 border border-white text-white font-bold text-[9px] rounded-lg px-1.5 py-0.5 shadow-lg flex items-center gap-1 whitespace-nowrap">
-                       <i class="fa-solid fa-building text-[8px]"></i> Base Íon
+                       <i class="fa-solid fa-building text-[8px]"></i> Base Ãon
                    </div>`,
             iconSize: [65, 20],
             iconAnchor: [32, 10]
@@ -7856,10 +7922,10 @@ function initTrackingMap() {
         })
     };
     
-    L.marker(BASE_COORDINATES.EG, { icon: baseIcons.EG }).addTo(trackingMap).bindPopup("<b>Estúdios Globo (Jacarepaguá)</b><br>Base Principal de Vans");
-    L.marker(BASE_COORDINATES.JB, { icon: baseIcons.JB }).addTo(trackingMap).bindPopup("<b>Jardim Botânico</b><br>Base Zona Sul");
-    L.marker(BASE_COORDINATES.ION, { icon: baseIcons.ION }).addTo(trackingMap).bindPopup("<b>Íon Barra (Barra da Tijuca)</b><br>Base Barra/Recreio");
-    L.marker(BASE_COORDINATES.Sambodromo, { icon: baseIcons.Sambodromo }).addTo(trackingMap).bindPopup("<b>Sambódromo</b><br>Destino de desembarque");
+    L.marker(BASE_COORDINATES.EG, { icon: baseIcons.EG }).addTo(trackingMap).bindPopup("<b>EstÃºdios Globo (JacarepaguÃ¡)</b><br>Base Principal de Vans");
+    L.marker(BASE_COORDINATES.JB, { icon: baseIcons.JB }).addTo(trackingMap).bindPopup("<b>Jardim BotÃ¢nico</b><br>Base Zona Sul");
+    L.marker(BASE_COORDINATES.ION, { icon: baseIcons.ION }).addTo(trackingMap).bindPopup("<b>Ãon Barra (Barra da Tijuca)</b><br>Base Barra/Recreio");
+    L.marker(BASE_COORDINATES.Sambodromo, { icon: baseIcons.Sambodromo }).addTo(trackingMap).bindPopup("<b>SambÃ³dromo</b><br>Destino de desembarque");
     
     // Draw Routes Polylines
     mapPolylines.EG = L.polyline(GEOGRAPHIC_ROUTES['EG x Sambodromo'], { color: '#ef4444', weight: 3, opacity: 0.6 }).addTo(trackingMap);
@@ -7882,7 +7948,7 @@ function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
     return R * c;
 }
 
-// Função para verificar se a escala está ativa com base no horário atual do sistema
+// FunÃ§Ã£o para verificar se a escala estÃ¡ ativa com base no horÃ¡rio atual do sistema
 function getDriverMapStatus(driver, now) {
     if (!driver.start_time || !driver.end_time) return 'ACTIVE';
     try {
@@ -7919,10 +7985,10 @@ function updateLiveMapMarkers() {
     
     const now = new Date();
     
-    // Rastrear quais chaves de marcadores deverão permanecer ativas no mapa
+    // Rastrear quais chaves de marcadores deverÃ£o permanecer ativas no mapa
     const activeMarkerKeys = new Set();
     
-    // 1. Filtrar e exibir os Veículos Ativos (transmitindo GPS)
+    // 1. Filtrar e exibir os VeÃ­culos Ativos (transmitindo GPS)
     const filteredTrackers = {};
     Object.keys(trackers).forEach(name => {
         const tracker = trackers[name];
@@ -7932,7 +7998,7 @@ function updateLiveMapMarkers() {
         const svc = String(tracker.service || '').toLowerCase();
         if (svc.includes('vai e vem') || svc.includes('van')) {
             mappedGroup = 'Vai e Vem';
-        } else if (svc.includes('produção') || svc.includes('producao')) {
+        } else if (svc.includes('produÃ§Ã£o') || svc.includes('producao')) {
             mappedGroup = 'Carros de producao';
         } else if (svc.includes('executivo') || svc.includes('exec')) {
             mappedGroup = 'Veiculos Executivos';
@@ -7966,14 +8032,14 @@ function updateLiveMapMarkers() {
             listContainer.innerHTML = `
                 <div class="text-center py-8 text-gray-500 text-xs">
                     <i class="fa-solid fa-satellite-dish text-2xl mb-2 text-gray-600 block animate-pulse"></i>
-                    Nenhum veículo transmitindo no momento.
+                    Nenhum veÃ­culo transmitindo no momento.
                 </div>`;
         } else {
             listContainer.innerHTML = '';
         }
     }
     
-    // Renderizar veículos ativos no Leaflet
+    // Renderizar veÃ­culos ativos no Leaflet
     Object.values(filteredTrackers).forEach(tracker => {
         const destCoords = tracker.route.includes('Sambodromo') ? BASE_COORDINATES.Sambodromo : (tracker.route.includes('EG') ? BASE_COORDINATES.EG : (tracker.route.includes('JB') ? BASE_COORDINATES.JB : BASE_COORDINATES.ION));
         const distanceRemaining = calculateHaversineDistance(tracker.lat, tracker.lng, destCoords[0], destCoords[1]);
@@ -8012,20 +8078,20 @@ function updateLiveMapMarkers() {
                             <i class="fa-solid fa-chevron-down text-[8px]"></i>
                         </button>
                         <div id="cmd-menu-${tracker.name.replace(/\s+/g, '')}" class="hidden absolute left-0 bottom-full mb-1 w-full bg-gray-900 border border-gray-800 rounded-lg shadow-xl overflow-hidden z-20">
-                            <button onclick="sendCcoMessageToDriver('${tracker.name}', 'Compartilhe sua posição')" class="w-full text-left px-3 py-1.5 hover:bg-gray-800 text-[10px] text-gray-300 border-b border-gray-800 font-medium">
-                                📡 Compartilhe posição
+                            <button onclick="sendCcoMessageToDriver('${tracker.name}', 'Compartilhe sua posiÃ§Ã£o')" class="w-full text-left px-3 py-1.5 hover:bg-gray-800 text-[10px] text-gray-300 border-b border-gray-800 font-medium">
+                                ðŸ“¡ Compartilhe posiÃ§Ã£o
                             </button>
                             <button onclick="sendCcoMessageToDriver('${tracker.name}', 'Encerre o compartilhamento')" class="w-full text-left px-3 py-1.5 hover:bg-gray-800 text-[10px] text-gray-300 border-b border-gray-800 font-medium">
-                                🛑 Encerre compartilhamento
+                                ðŸ›‘ Encerre compartilhamento
                             </button>
                             <button onclick="sendCcoMessageToDriver('${tracker.name}', 'Vai atrasar?')" class="w-full text-left px-3 py-1.5 hover:bg-gray-800 text-[10px] text-gray-300 border-b border-gray-800 font-medium">
-                                ⏰ Vai atrasar?
+                                â° Vai atrasar?
                             </button>
-                            <button onclick="sendCcoMessageToDriver('${tracker.name}', 'Está a caminho?')" class="w-full text-left px-3 py-1.5 hover:bg-gray-800 text-[10px] text-gray-300 border-b border-gray-800 font-medium">
-                                🚐 Está a caminho?
+                            <button onclick="sendCcoMessageToDriver('${tracker.name}', 'EstÃ¡ a caminho?')" class="w-full text-left px-3 py-1.5 hover:bg-gray-800 text-[10px] text-gray-300 border-b border-gray-800 font-medium">
+                                ðŸš EstÃ¡ a caminho?
                             </button>
-                            <button onclick="sendCcoMessageToDriver('${tracker.name}', 'Informe se há alguma ocorrência')" class="w-full text-left px-3 py-1.5 hover:bg-gray-800 text-[10px] text-gray-300 font-medium">
-                                ⚠️ Há alguma ocorrência?
+                            <button onclick="sendCcoMessageToDriver('${tracker.name}', 'Informe se hÃ¡ alguma ocorrÃªncia')" class="w-full text-left px-3 py-1.5 hover:bg-gray-800 text-[10px] text-gray-300 font-medium">
+                                âš ï¸ HÃ¡ alguma ocorrÃªncia?
                             </button>
                         </div>
                     </div>
@@ -8049,8 +8115,8 @@ function updateLiveMapMarkers() {
                     <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] text-gray-700">
                         <div><b>Prestador:</b></div><div class="text-right text-gray-900 font-medium truncate max-w-[120px]">${tracker.company || 'Simulado CCO'}</div>
                         <div><b>Telefone:</b></div><div class="text-right text-gray-900 font-medium">${tracker.phone || '(21) 99999-9999'}</div>
-                        <div><b>Tipo de veículo:</b></div><div class="text-right text-gray-900 font-medium truncate max-w-[120px]">${tracker.vehicleType || 'Van Executiva'}</div>
-                        <div><b>Placa do veículo:</b></div><div class="text-right text-gray-900 font-mono font-bold">${tracker.vehicle || 'AAA-0000'}</div>
+                        <div><b>Tipo de veÃ­culo:</b></div><div class="text-right text-gray-900 font-medium truncate max-w-[120px]">${tracker.vehicleType || 'Van Executiva'}</div>
+                        <div><b>Placa do veÃ­culo:</b></div><div class="text-right text-gray-900 font-mono font-bold">${tracker.vehicle || 'AAA-0000'}</div>
                         <div><b>Programa:</b></div><div class="text-right text-indigo-650 font-bold">${tracker.service || 'Vai e Vem'}</div>
                     </div>
                     <hr class="my-1.5 border-gray-200">
@@ -8059,7 +8125,7 @@ function updateLiveMapMarkers() {
                         <div><b>Velocidade:</b></div><div class="text-right font-bold text-gray-900">${tracker.speed} km/h</div>
                         <div><b>ETA Restante:</b></div><div class="text-right font-bold text-amber-600">${etaMin} min</div>
                     </div>
-                    ${tracker.reply ? `<div class="mt-1 bg-emerald-50 text-emerald-700 p-1.5 rounded font-medium border border-emerald-100">💬 ${tracker.reply}</div>` : ''}
+                    ${tracker.reply ? `<div class="mt-1 bg-emerald-50 text-emerald-700 p-1.5 rounded font-medium border border-emerald-100">ðŸ’¬ ${tracker.reply}</div>` : ''}
                 </div>`;
             
             activeMarkerKeys.add(tracker.name);
@@ -8072,7 +8138,7 @@ function updateLiveMapMarkers() {
                 const sLower = String(tracker.service).toLowerCase();
                 if (sLower.includes('vai e vem')) {
                     colorClass = 'bg-emerald-500 shadow-emerald-500/30';
-                } else if (sLower.includes('produção') || sLower.includes('producao')) {
+                } else if (sLower.includes('produÃ§Ã£o') || sLower.includes('producao')) {
                     colorClass = 'bg-purple-500 shadow-purple-500/30';
                 } else if (sLower.includes('executivo')) {
                     colorClass = 'bg-amber-500 shadow-amber-500/30';
@@ -8099,7 +8165,7 @@ function updateLiveMapMarkers() {
         }
     });
 
-    // 2. Plotar os marcadores de Ponto de Início (origens) da escala db.drivers_map
+    // 2. Plotar os marcadores de Ponto de InÃ­cio (origens) da escala db.drivers_map
     if (db.drivers_map && trackingMap) {
         db.drivers_map.forEach(d => {
             if (!d.lat || !d.lng) return;
@@ -8118,7 +8184,7 @@ function updateLiveMapMarkers() {
             const startPopupHtml = `
                 <div class="text-xs space-y-1.5 font-sans text-gray-900 p-1 min-w-[220px]">
                     <div class="bg-blue-50 p-2 rounded-lg mb-1">
-                        <strong class="font-bold block text-indigo-900 text-sm"><i class="fa-solid fa-flag mr-1 text-blue-600"></i>Saída: ${d.origin}</strong>
+                        <strong class="font-bold block text-indigo-900 text-sm"><i class="fa-solid fa-flag mr-1 text-blue-600"></i>SaÃ­da: ${d.origin}</strong>
                         <span class="text-[8px] bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded uppercase mt-0.5 inline-block">Ponto de Origem da Escala</span>
                     </div>
                     <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] text-gray-700">
@@ -8126,8 +8192,8 @@ function updateLiveMapMarkers() {
                         <div><b>Celular:</b></div><div class="text-right text-gray-900 font-medium">${d.telefone || '(21) 99999-9999'}</div>
                         <div><b>Prestador:</b></div><div class="text-right text-gray-900 font-medium truncate max-w-[120px]">${d.empresa}</div>
                         <div><b>Placa:</b></div><div class="text-right text-gray-900 font-mono font-bold">${d.placa_veiculo}</div>
-                        <div><b>Previsão Início:</b></div><div class="text-right font-medium text-gray-900">${d.start_time || '-'}</div>
-                        <div><b>Previsão Fim:</b></div><div class="text-right font-medium text-gray-900">${d.end_time || '-'}</div>
+                        <div><b>PrevisÃ£o InÃ­cio:</b></div><div class="text-right font-medium text-gray-900">${d.start_time || '-'}</div>
+                        <div><b>PrevisÃ£o Fim:</b></div><div class="text-right font-medium text-gray-900">${d.end_time || '-'}</div>
                         <div><b>Status Sinal:</b></div><div class="text-right font-bold ${isDriverOnline ? 'text-emerald-600' : 'text-red-500'}">${isDriverOnline ? 'ONLINE' : 'OFFLINE'}</div>
                     </div>
                     <hr class="my-1.5 border-gray-200">
@@ -8136,10 +8202,10 @@ function updateLiveMapMarkers() {
                             <i class="fa-solid fa-copy text-[9px]"></i> Copiar Link WhatsApp
                         </button>
                         <button onclick="requestPositionByWhatsapp('${d.nome.replace(/'/g, "\\'")}', '${d.telefone}', '${d.cpf}')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-1 rounded text-[10px] font-bold transition duration-150 flex items-center justify-center gap-1 cursor-pointer">
-                            <i class="fa-brands fa-whatsapp text-[10px]"></i> Solicitar Posição (WhatsApp)
+                            <i class="fa-brands fa-whatsapp text-[10px]"></i> Solicitar PosiÃ§Ã£o (WhatsApp)
                         </button>
                         ${isDriverOnline ? `
-                        <button onclick="sendCcoMessageToDriver('${d.nome.replace(/'/g, "\\'")}', 'Compartilhe sua posição')" class="w-full bg-amber-500 hover:bg-amber-400 text-white py-1 rounded text-[10px] font-bold transition duration-150 flex items-center justify-center gap-1 cursor-pointer">
+                        <button onclick="sendCcoMessageToDriver('${d.nome.replace(/'/g, "\\'")}', 'Compartilhe sua posiÃ§Ã£o')" class="w-full bg-amber-500 hover:bg-amber-400 text-white py-1 rounded text-[10px] font-bold transition duration-150 flex items-center justify-center gap-1 cursor-pointer">
                             <i class="fa-solid fa-bell"></i> Enviar Alerta CCO (In-App)
                         </button>` : ''}
                     </div>
@@ -8168,7 +8234,7 @@ function updateLiveMapMarkers() {
         });
     }
     
-    // 3. Remover marcadores antigos que não passaram nas regras atuais ou estão fora dos filtros
+    // 3. Remover marcadores antigos que nÃ£o passaram nas regras atuais ou estÃ£o fora dos filtros
     Object.keys(mapMarkers).forEach(key => {
         if (!activeMarkerKeys.has(key)) {
             if (trackingMap) trackingMap.removeLayer(mapMarkers[key]);
@@ -8308,7 +8374,7 @@ function verifyDriverCpf() {
     }
     
     if (!driver) {
-        alert("CPF não cadastrado na base de motoristas ou terceiros autorizados. Por favor, verifique os números.");
+        alert("CPF nÃ£o cadastrado na base de motoristas ou terceiros autorizados. Por favor, verifique os nÃºmeros.");
         return;
     }
     
@@ -8334,7 +8400,7 @@ function verifyDriverCpf() {
         }
     }
 
-    // Tratar escala e exibir card de confirmação de escala no login
+    // Tratar escala e exibir card de confirmaÃ§Ã£o de escala no login
     const scaleConfirmInfo = document.getElementById('drv-confirm-scale-info');
     if (driver.origin && driver.destination) {
         if (document.getElementById('drv-confirm-scale-origin')) document.getElementById('drv-confirm-scale-origin').textContent = driver.origin;
@@ -8367,7 +8433,7 @@ function saveDriverProfileConfirmation() {
     const service = document.getElementById('drv-confirm-service').value;
     
     if (!empresa || !telefone || !placa_veiculo) {
-        alert("Por favor, preencha a empresa, o celular e a placa do veículo.");
+        alert("Por favor, preencha a empresa, o celular e a placa do veÃ­culo.");
         return;
     }
     
@@ -8400,7 +8466,7 @@ function saveDriverProfileConfirmation() {
         }
     }
     
-    // Se não encontrou no db.drivers_map (porque ele logou por link e o profile temporário já tinha essas propriedades), vamos mantê-las se já estavam salvas ou passadas via URL!
+    // Se nÃ£o encontrou no db.drivers_map (porque ele logou por link e o profile temporÃ¡rio jÃ¡ tinha essas propriedades), vamos mantÃª-las se jÃ¡ estavam salvas ou passadas via URL!
     const tempProfileJson = safeStorage.local.getItem('conexao_driver_profile');
     if (tempProfileJson) {
         try {
@@ -8417,7 +8483,7 @@ function saveDriverProfileConfirmation() {
     // Save to LocalStorage
     safeStorage.local.setItem('conexao_driver_profile', JSON.stringify(profile));
     
-    // Registrar sessão de segurança do motorista
+    // Registrar sessÃ£o de seguranÃ§a do motorista
     if (typeof registerUserSession === 'function') {
         registerUserSession('driver', profile.nome, profile.cpf);
     }
@@ -8433,7 +8499,7 @@ function loadDriverConfigFromProfile(profile) {
     document.getElementById('drv-config-lbl-name').textContent = profile.nome;
     document.getElementById('drv-config-lbl-meta').textContent = `${profile.empresa} | Placa: ${profile.placa_veiculo} | Cel: ${profile.telefone}`;
     
-    // Configurar card da escala e exibição de seletores manuais
+    // Configurar card da escala e exibiÃ§Ã£o de seletores manuais
     const routeCard = document.getElementById('drv-scale-route-card');
     const routeConfigPanel = document.getElementById('drv-route-config-panel');
     
@@ -8492,7 +8558,7 @@ function updateCompletedTripsList() {
         listContainer.innerHTML = `
             <div class="text-center py-8 text-gray-500 text-xs">
                 <i class="fa-solid fa-route text-xl text-gray-700 mb-1.5 block"></i>
-                Nenhum registro de viagem concluída.
+                Nenhum registro de viagem concluÃ­da.
             </div>`;
         return;
     }
@@ -8506,7 +8572,7 @@ function updateCompletedTripsList() {
         
         let grpColor = 'text-emerald-400';
         if (trip.service === 'Vai e Vem Passeio') grpColor = 'text-blue-400';
-        else if (trip.service === 'Passeio Produção') grpColor = 'text-purple-400';
+        else if (trip.service === 'Passeio ProduÃ§Ã£o') grpColor = 'text-purple-400';
         else if (trip.service === 'Passeio outros Produtos') grpColor = 'text-fuchsia-400';
         else if (trip.service === 'Executivo') grpColor = 'text-amber-400';
 
@@ -8514,7 +8580,7 @@ function updateCompletedTripsList() {
         <div class="bg-gray-950/60 border border-gray-900 p-2.5 rounded-xl space-y-1">
             <div class="flex justify-between items-center text-white font-bold">
                 <span class="truncate max-w-[120px] text-gray-200">${trip.driver}</span>
-                <span class="text-[8px] bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded border border-blue-500/20 font-mono">${timeOut} → ${timeIn}</span>
+                <span class="text-[8px] bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded border border-blue-500/20 font-mono">${timeOut} â†’ ${timeIn}</span>
             </div>
             <div class="flex justify-between items-center text-gray-500 text-[8px]">
                 <span>${trip.route} (${trip.vehicle})</span>
@@ -8540,7 +8606,7 @@ function checkUrlRoleParameter() {
             const cleanCpf = cpf.replace(/\D/g, '');
             passengerFixedCpf = cleanCpf;
             
-            // Força a role do passageiro
+            // ForÃ§a a role do passageiro
             selectRole('passenger');
             
             // Prefill and disable inputs in HTML
@@ -8552,7 +8618,7 @@ function checkUrlRoleParameter() {
                     preInput.readOnly = true;
                     preInput.style.pointerEvents = 'none';
                     preInput.style.opacity = '0.7';
-                    // Dispara a busca automática no Pré-Agendamento
+                    // Dispara a busca automÃ¡tica no PrÃ©-Agendamento
                     if (typeof lookupPreBookingCollaborator === 'function') {
                         lookupPreBookingCollaborator(cleanCpf);
                     }
@@ -8562,7 +8628,7 @@ function checkUrlRoleParameter() {
                     passInput.readOnly = true;
                     passInput.style.pointerEvents = 'none';
                     passInput.style.opacity = '0.7';
-                    // Dispara a busca automática no Totem
+                    // Dispara a busca automÃ¡tica no Totem
                     if (typeof lookupCollaborator === 'function') {
                         lookupCollaborator(cleanCpf);
                     }
@@ -8574,16 +8640,16 @@ function checkUrlRoleParameter() {
         if (area) {
             representativeFixedArea = decodeURIComponent(area);
             
-            // Força a role de representante
+            // ForÃ§a a role de representante
             selectRole('representative');
             
-            // Atualizar o título do perfil no topo
+            // Atualizar o tÃ­tulo do perfil no topo
             setTimeout(() => {
                 const activeProfileName = document.getElementById('active-profile-name');
                 if (activeProfileName) {
                     activeProfileName.textContent = `Representante: ${representativeFixedArea}`;
                 }
-                // Recarregar a lista de colaboradores (já aplicando o filtro permanente)
+                // Recarregar a lista de colaboradores (jÃ¡ aplicando o filtro permanente)
                 renderCollaboratorDatabaseTable();
             }, 300);
         }
@@ -8625,16 +8691,16 @@ function checkUrlRoleParameter() {
                 end_time: endTime ? decodeURIComponent(endTime) : ''
             };
             
-            // Persistir a sessão do motorista
+            // Persistir a sessÃ£o do motorista
             safeStorage.local.setItem('conexao_driver_profile', JSON.stringify(profile));
             
-            // Pular direto para a tela de confirmação preenchida
+            // Pular direto para a tela de confirmaÃ§Ã£o preenchida
             const cpfPanel = document.getElementById('driver-cpf-panel');
             const confirmPanel = document.getElementById('driver-confirm-profile-panel');
             if (cpfPanel) cpfPanel.classList.add('hidden');
             if (confirmPanel) confirmPanel.classList.remove('hidden');
             
-            // Preencher labels do formulário de confirmação
+            // Preencher labels do formulÃ¡rio de confirmaÃ§Ã£o
             if (document.getElementById('drv-confirm-lbl-name')) document.getElementById('drv-confirm-lbl-name').textContent = profile.nome;
             if (document.getElementById('drv-confirm-lbl-cpf')) document.getElementById('drv-confirm-lbl-cpf').textContent = formatCpfString(profile.cpf);
             if (document.getElementById('drv-confirm-company')) document.getElementById('drv-confirm-company').value = profile.empresa;
@@ -8644,7 +8710,7 @@ function checkUrlRoleParameter() {
             if (document.getElementById('drv-confirm-vehicle-type')) document.getElementById('drv-confirm-vehicle-type').value = profile.tipo_veiculo;
             if (document.getElementById('drv-confirm-service')) document.getElementById('drv-confirm-service').value = profile.service;
             
-            // Pré-configurar a Rota e ocultar selects manuais no Portal do Motorista
+            // PrÃ©-configurar a Rota e ocultar selects manuais no Portal do Motorista
             if (profile.origin && profile.destination) {
                 const routeCard = document.getElementById('drv-scale-route-card');
                 if (routeCard) {
@@ -8654,7 +8720,7 @@ function checkUrlRoleParameter() {
                     document.getElementById('drv-scale-end').textContent = profile.end_time || '-';
                     routeCard.classList.remove('hidden');
                     
-                    // Ocultar selects manuais de Base e Sentido e Switch de Simulação
+                    // Ocultar selects manuais de Base e Sentido e Switch de SimulaÃ§Ã£o
                     const routeConfigPanel = document.getElementById('drv-route-config-panel');
                     if (routeConfigPanel) {
                         routeConfigPanel.classList.add('hidden');
@@ -8750,7 +8816,7 @@ function selectDriverFromAutocomplete(nome, cpf) {
     document.getElementById('drv-name-autocomplete').value = '';
     document.getElementById('drv-autocomplete-list').classList.add('hidden');
     
-    // Tratar escala e exibir card de confirmação de escala no login via autocomplete
+    // Tratar escala e exibir card de confirmaÃ§Ã£o de escala no login via autocomplete
     const scaleConfirmInfo = document.getElementById('drv-confirm-scale-info');
     if (driver.origin && driver.destination) {
         if (document.getElementById('drv-confirm-scale-origin')) document.getElementById('drv-confirm-scale-origin').textContent = driver.origin;
@@ -8768,7 +8834,7 @@ function selectDriverFromAutocomplete(nome, cpf) {
 }
 
 // ==========================================
-// --- CENTRAL DE TOOLTIPS DINÂMICOS ---
+// --- CENTRAL DE TOOLTIPS DINÃ‚MICOS ---
 // ==========================================
 document.addEventListener('mouseover', (e) => {
     const target = e.target.closest('[data-tooltip]');
@@ -8808,7 +8874,7 @@ document.addEventListener('mouseout', (e) => {
 });
 
 // ==========================================
-// --- ARQUITETURA DE SEGURANÇA E SESSÕES ---
+// --- ARQUITETURA DE SEGURANÃ‡A E SESSÃ•ES ---
 // ==========================================
 function registerUserSession(role, customName = '', customId = '') {
     if (!db.sessions) db.sessions = [];
@@ -8824,10 +8890,10 @@ function registerUserSession(role, customName = '', customId = '') {
             name = 'Operador CCO (Despacho)';
             identifier = 'OP-CCO';
         } else if (role === 'representative') {
-            name = 'Representante Operacional de Área';
+            name = 'Representante Operacional de Ãrea';
             identifier = 'REP-AREA';
         } else if (role === 'passenger') {
-            name = 'Passageiro Anônimo (Totem)';
+            name = 'Passageiro AnÃ´nimo (Totem)';
             identifier = 'TOTEM-PASS';
         } else {
             name = 'Acesso Geral';
@@ -8848,7 +8914,7 @@ function registerUserSession(role, customName = '', customId = '') {
         ativo: true
     };
     
-    // Limitar o histórico de sessões para não estourar o localStorage (últimas 100)
+    // Limitar o histÃ³rico de sessÃµes para nÃ£o estourar o localStorage (Ãºltimas 100)
     if (db.sessions.length >= 100) {
         db.sessions.shift();
     }
@@ -8857,7 +8923,7 @@ function registerUserSession(role, customName = '', customId = '') {
     saveDatabase();
 }
 
-// Monitor de Sessões Periódico (Validação em Background)
+// Monitor de SessÃµes PeriÃ³dico (ValidaÃ§Ã£o em Background)
 setInterval(() => {
     const currentSessionId = safeStorage.session.getItem('conexao_current_session_id');
     const currentRole = safeStorage.session.getItem('conexao_role');
@@ -8870,7 +8936,7 @@ setInterval(() => {
                 if (latestDb.sessions) {
                     const session = latestDb.sessions.find(s => s.id === currentSessionId);
                     
-                    // Se a sessão atual foi desativada no banco pelo Admin
+                    // Se a sessÃ£o atual foi desativada no banco pelo Admin
                     if (!session || session.ativo === false) {
                         forceLogoutUser();
                         return;
@@ -8882,7 +8948,7 @@ setInterval(() => {
                     }
                 }
             } catch (e) {
-                console.error("Erro no monitor de segurança:", e);
+                console.error("Erro no monitor de seguranÃ§a:", e);
             }
         }
     }
@@ -8908,7 +8974,7 @@ function forceLogoutUser() {
     if (welcome) welcome.classList.remove('hidden');
     
     applyRoleConfiguration('');
-    showToast("Acesso Encerrado", "Sua sessão foi desconectada remotamente pelo administrador.", "danger");
+    showToast("Acesso Encerrado", "Sua sessÃ£o foi desconectada remotamente pelo administrador.", "danger");
 }
 
 function formatTimeElapsed(ms) {
@@ -8921,7 +8987,7 @@ function formatTimeElapsed(ms) {
 }
 
 // ==========================================
-// --- TELA: ADMINISTRAÇÃO DE ACESSOS ---
+// --- TELA: ADMINISTRAÃ‡ÃƒO DE ACESSOS ---
 // ==========================================
 function updateAccessManagement() {
     if (currentTab !== 'access-management') return;
@@ -8933,7 +8999,7 @@ function updateAccessManagement() {
     
     if (!tbodySessions || !tbodyCheckins || !tbodyBoarded || !tbodyDrivers) return;
     
-    // 1. Atualizar KPIs Rápidos
+    // 1. Atualizar KPIs RÃ¡pidos
     const activeSessionsCount = (db.sessions || []).filter(s => s.ativo).length;
     const totalRegisteredCount = (db.collaborators || []).length + (db.accredited || []).length;
     const totalCheckinsCount = (db.bookings || []).filter(b => b.status === 'Confirmado').length;
@@ -8944,7 +9010,7 @@ function updateAccessManagement() {
     document.getElementById('adm-kpi-checkins').textContent = totalCheckinsCount;
     document.getElementById('adm-kpi-boarded').textContent = totalBoardedCount;
     
-    // 2. Renderizar Sessões Ativas
+    // 2. Renderizar SessÃµes Ativas
     tbodySessions.innerHTML = '';
     const sortedSessions = [...(db.sessions || [])].sort((a, b) => {
         if (a.ativo && !b.ativo) return -1;
@@ -8953,19 +9019,19 @@ function updateAccessManagement() {
     });
     
     if (sortedSessions.length === 0) {
-        tbodySessions.innerHTML = `<tr><td colspan="7" class="py-4 text-center text-gray-500">Nenhuma sessão registrada.</td></tr>`;
+        tbodySessions.innerHTML = `<tr><td colspan="7" class="py-4 text-center text-gray-500">Nenhuma sessÃ£o registrada.</td></tr>`;
     } else {
         const currentSessionId = safeStorage.session.getItem('conexao_current_session_id');
         sortedSessions.forEach(s => {
             const timeElapsed = formatTimeElapsed(Date.now() - s.login_timestamp);
             const entryTime = new Date(s.login_timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             
-            let badgeProfileColor = 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+            let badgeProfileColor = 'status-pill text-blue-400 border-blue-500/20';
             let roleText = s.perfil;
-            if (s.perfil === 'manager') { roleText = 'Master'; badgeProfileColor = 'bg-rose-500/10 text-rose-400 border-rose-500/20'; }
+            if (s.perfil === 'manager') { roleText = 'Master'; badgeProfileColor = 'status-pill text-rose-400 border-rose-500/20'; }
             else if (s.perfil === 'operator') { roleText = 'Operador'; badgeProfileColor = 'bg-teal-500/10 text-teal-400 border-teal-500/20'; }
             else if (s.perfil === 'representative') { roleText = 'Representante'; badgeProfileColor = 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'; }
-            else if (s.perfil === 'driver') { roleText = 'Motorista'; badgeProfileColor = 'bg-amber-500/10 text-amber-400 border-amber-500/20'; }
+            else if (s.perfil === 'driver') { roleText = 'Motorista'; badgeProfileColor = 'status-pill text-amber-400 border-amber-500/20'; }
             else if (s.perfil === 'passenger') { roleText = 'Passageiro'; badgeProfileColor = 'bg-sky-500/10 text-sky-400 border-sky-500/20'; }
             
             let statusBadge = s.ativo 
@@ -8982,7 +9048,7 @@ function updateAccessManagement() {
                 actionBtn = '<span class="text-gray-600 text-[10px] font-bold">-</span>';
             }
             
-            const isSelfText = s.id === currentSessionId ? ' <span class="text-[9px] bg-blue-600/25 text-blue-400 px-1 py-0.2 rounded font-bold uppercase ml-1">Você</span>' : '';
+            const isSelfText = s.id === currentSessionId ? ' <span class="text-[9px] bg-blue-600/25 text-blue-400 px-1 py-0.2 rounded font-bold uppercase ml-1">VocÃª</span>' : '';
             
             const tr = document.createElement('tr');
             tr.className = "border-b border-gray-900 hover:bg-gray-900/10 transition-colors";
@@ -8999,7 +9065,7 @@ function updateAccessManagement() {
         });
     }
     
-    // 3. Renderizar Histórico de Check-ins Recentes
+    // 3. Renderizar HistÃ³rico de Check-ins Recentes
     tbodyCheckins.innerHTML = '';
     const sortedCheckins = [...(db.bookings || [])]
         .filter(b => b.status === 'Confirmado' || b.status === 'Embarcado')
@@ -9026,7 +9092,7 @@ function updateAccessManagement() {
         });
     }
     
-    // 4. Renderizar Embarques Confirmados (Período)
+    // 4. Renderizar Embarques Confirmados (PerÃ­odo)
     tbodyBoarded.innerHTML = '';
     const sortedBoarded = [...(db.bookings || [])]
         .filter(b => b.status === 'Embarcado')
@@ -9056,7 +9122,7 @@ function updateAccessManagement() {
     tbodyDrivers.innerHTML = '';
     const activeTrackers = JSON.parse(safeStorage.local.getItem('conexao_active_trackers') || '{}');
     
-    // Se houver mapa importado, usar ele. Senão, usar a lista geral padrão do banco de dados.
+    // Se houver mapa importado, usar ele. SenÃ£o, usar a lista geral padrÃ£o do banco de dados.
     const isUsingMap = db.drivers_map && db.drivers_map.length > 0;
     const driversList = isUsingMap ? db.drivers_map : (db.drivers || []);
     
@@ -9084,16 +9150,16 @@ function updateAccessManagement() {
             
             const badgeLogin = isDriverLoggedIn 
                 ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-500/10 text-green-400 border border-green-500/20 uppercase">Confirmado</span>'
-                : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-800 text-gray-500 border border-gray-700 uppercase">Não Logado</span>';
+                : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-800 text-gray-500 border border-gray-700 uppercase">NÃ£o Logado</span>';
                 
             const badgeGps = isGpsActive
                 ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500 text-white animate-pulse uppercase"><i class="fa-solid fa-satellite-dish mr-1"></i>Transmitindo</span>'
                 : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/10 text-red-500 border border-red-500/20 uppercase">Offline</span>';
                 
-            // Construir as Ações
+            // Construir as AÃ§Ãµes
             let actionsHtml = `<div class="flex flex-wrap gap-1.5 justify-center items-center">`;
             
-            // Botão Copiar Link sempre para motoristas do mapa importado
+            // BotÃ£o Copiar Link sempre para motoristas do mapa importado
             if (isUsingMap) {
                 actionsHtml += `
                     <button onclick="openDriverLinkEditor('${d.nome.replace(/'/g, "\\'")}', '${d.cpf}')" class="bg-indigo-600/20 hover:bg-indigo-650 text-indigo-400 hover:text-white px-2 py-1 rounded-lg border border-indigo-500/20 text-[9px] uppercase font-black transition flex items-center gap-1 cursor-pointer" title="Revisar escala e gerar link do WhatsApp">
@@ -9102,7 +9168,7 @@ function updateAccessManagement() {
                 `;
             }
             
-            // Botão Desconectar se ativo
+            // BotÃ£o Desconectar se ativo
             if (isDriverLoggedIn || isGpsActive) {
                 actionsHtml += `
                     <button onclick="terminateDriverSession('${d.cpf}')" class="bg-rose-600/20 hover:bg-rose-600 text-rose-500 hover:text-white px-2 py-1 rounded-lg border border-rose-500/20 text-[9px] uppercase font-black transition flex items-center gap-1 cursor-pointer" title="Desconectar motorista remotamente">
@@ -9117,12 +9183,12 @@ function updateAccessManagement() {
                 actionsHtml += `</div>`;
             }
             
-            // Se for do mapa, exibir rota e horários previstos da escala na célula de detalhes
+            // Se for do mapa, exibir rota e horÃ¡rios previstos da escala na cÃ©lula de detalhes
             let vehicleInfo = `${vehicleText} (Placa: ${plateText})`;
             if (isUsingMap && d.origin && d.destination) {
                 vehicleInfo += `<div class="text-[9px] text-gray-500 mt-0.5 flex items-center gap-1"><i class="fa-solid fa-map-location text-indigo-400"></i> ${d.origin} <i class="fa-solid fa-arrow-right text-[7px]"></i> ${d.destination}</div>`;
                 if (d.start_time) {
-                    vehicleInfo += `<div class="text-[9px] text-gray-500 flex items-center gap-1"><i class="fa-solid fa-clock text-amber-500"></i> Previsto: ${d.start_time} às ${d.end_time || '-'}</div>`;
+                    vehicleInfo += `<div class="text-[9px] text-gray-500 flex items-center gap-1"><i class="fa-solid fa-clock text-amber-500"></i> Previsto: ${d.start_time} Ã s ${d.end_time || '-'}</div>`;
                 }
             }
             
@@ -9203,7 +9269,7 @@ function renderAuditLogs() {
         const formattedDate = timestamp.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ' ' + 
                               timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         
-        // Cor da ação
+        // Cor da aÃ§Ã£o
         let acaoBadge = '';
         if (log.acao === 'Agendado') {
             acaoBadge = '<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-green-500/15 text-green-400 border border-green-500/20">Agendou</span>';
@@ -9247,16 +9313,16 @@ function addAuthorizedSolicitant() {
     if (!idVal) {
         msg.classList.remove('hidden');
         msg.className = "text-[10px] text-red-400 font-bold";
-        msg.textContent = "Digite uma matrícula ou CPF.";
+        msg.textContent = "Digite uma matrÃ­cula ou CPF.";
         return;
     }
     
-    // Verificar se a matrícula já está autorizada
+    // Verificar se a matrÃ­cula jÃ¡ estÃ¡ autorizada
     const exists = (db.authorized_solicitants || []).some(s => s.matricula === idVal || s.cpf === idVal);
     if (exists) {
         msg.classList.remove('hidden');
         msg.className = "text-[10px] text-amber-400 font-bold";
-        msg.textContent = "Este colaborador já está autorizado.";
+        msg.textContent = "Este colaborador jÃ¡ estÃ¡ autorizado.";
         return;
     }
     
@@ -9265,7 +9331,7 @@ function addAuthorizedSolicitant() {
     if (!person) {
         msg.classList.remove('hidden');
         msg.className = "text-[10px] text-red-400 font-bold";
-        msg.textContent = "Colaborador não credenciado no evento.";
+        msg.textContent = "Colaborador nÃ£o credenciado no evento.";
         return;
     }
     
@@ -9283,7 +9349,7 @@ function addAuthorizedSolicitant() {
     input.value = '';
     msg.classList.remove('hidden');
     msg.className = "text-[10px] text-green-400 font-bold";
-    msg.textContent = `✓ ${person.nome} autorizado com sucesso.`;
+    msg.textContent = `âœ“ ${person.nome} autorizado com sucesso.`;
     
     renderAuthorizedSolicitants();
     
@@ -9293,39 +9359,39 @@ function addAuthorizedSolicitant() {
 }
 
 function removeAuthorizedSolicitant(id) {
-    if (confirm("Deseja realmente revogar a autorização deste ponto focal?")) {
+    if (confirm("Deseja realmente revogar a autorizaÃ§Ã£o deste ponto focal?")) {
         if (db.authorized_solicitants) {
             db.authorized_solicitants = db.authorized_solicitants.filter(s => s.matricula !== id && s.cpf !== id);
             saveDatabase();
             renderAuthorizedSolicitants();
-            showToast("Autorização Revogada", "O colaborador não pode mais agendar para terceiros.", "warning");
+            showToast("AutorizaÃ§Ã£o Revogada", "O colaborador nÃ£o pode mais agendar para terceiros.", "warning");
         }
     }
 }
 
 function clearAuditLogs() {
-    if (confirm("Deseja realmente limpar todos os logs de auditoria de agendamentos? Esta ação não pode ser desfeita.")) {
+    if (confirm("Deseja realmente limpar todos os logs de auditoria de agendamentos? Esta aÃ§Ã£o nÃ£o pode ser desfeita.")) {
         db.booking_logs = [];
         saveDatabase();
         renderAuditLogs();
-        showToast("Logs Limpos", "Histórico de logs de auditoria foi reiniciado.", "success");
+        showToast("Logs Limpos", "HistÃ³rico de logs de auditoria foi reiniciado.", "success");
     }
 }
 
 function terminateSession(sessionId) {
-    if (confirm("Deseja realmente derrubar o acesso desta sessão?")) {
+    if (confirm("Deseja realmente derrubar o acesso desta sessÃ£o?")) {
         const session = (db.sessions || []).find(s => s.id === sessionId);
         if (session) {
             session.ativo = false;
             saveDatabase();
             updateAccessManagement();
-            showToast("Acesso Derrubado", `A sessão de ${session.nome} foi encerrada remotamente.`, "warning");
+            showToast("Acesso Derrubado", `A sessÃ£o de ${session.nome} foi encerrada remotamente.`, "warning");
         }
     }
 }
 
 function terminateDriverSession(cpf) {
-    if (confirm("Deseja realmente derrubar o acesso e suspender a transmissão do motorista?")) {
+    if (confirm("Deseja realmente derrubar o acesso e suspender a transmissÃ£o do motorista?")) {
         const driver = db.drivers.find(d => String(d.cpf || '').replace(/\D/g, '') === String(cpf).replace(/\D/g, ''));
         if (driver) {
             if (db.sessions) {
@@ -9379,32 +9445,32 @@ function switchTutorial(tutId) {
 function downloadTutorialPDF(tutId) {
     const contentDiv = document.getElementById(`tut-content-${tutId}`);
     if (!contentDiv) {
-        alert("Tutorial não encontrado.");
+        alert("Tutorial nÃ£o encontrado.");
         return;
     }
     
     // Clonar o HTML do tutorial
     let htmlContent = contentDiv.innerHTML;
     
-    // Remover o próprio botão de download do PDF para não aparecer na impressão
+    // Remover o prÃ³prio botÃ£o de download do PDF para nÃ£o aparecer na impressÃ£o
     htmlContent = htmlContent.replace(/<button[^>]*downloadTutorialPDF[^>]*>[\s\S]*?<\/button>/gi, '');
     
-    // Abrir uma janela temporária
+    // Abrir uma janela temporÃ¡ria
     const printWindow = window.open('', '_blank', 'width=850,height=850');
     if (!printWindow) {
         alert("Por favor, permita pop-ups para fazer o download do PDF.");
         return;
     }
     
-    // Definir o título do documento com base no tipo
-    let title = "Tutorial do Conexão Transportes";
-    if (tutId === 'driver') title = "Manual do Motorista - Conexão Transportes";
-    else if (tutId === 'passenger') title = "Manual do Passageiro - Conexão Transportes";
-    else if (tutId === 'representative') title = "Manual do Representante - Conexão Transportes";
-    else if (tutId === 'operator') title = "Manual do Time de Transportes - Conexão Transportes";
-    else if (tutId === 'executive') title = "Manual de Gestão & Analytics - Conexão Transportes";
+    // Definir o tÃ­tulo do documento com base no tipo
+    let title = "Tutorial do ConexÃ£o Transportes";
+    if (tutId === 'driver') title = "Manual do Motorista - ConexÃ£o Transportes";
+    else if (tutId === 'passenger') title = "Manual do Passageiro - ConexÃ£o Transportes";
+    else if (tutId === 'representative') title = "Manual do Representante - ConexÃ£o Transportes";
+    else if (tutId === 'operator') title = "Manual do Time de Transportes - ConexÃ£o Transportes";
+    else if (tutId === 'executive') title = "Manual de GestÃ£o & Analytics - ConexÃ£o Transportes";
     
-    // Escrever o conteúdo com layout otimizado para impressão (modo claro e limpo para salvar tinta)
+    // Escrever o conteÃºdo com layout otimizado para impressÃ£o (modo claro e limpo para salvar tinta)
     printWindow.document.write(`
         <!DOCTYPE html>
         <html>
@@ -9463,15 +9529,15 @@ function downloadTutorialPDF(tutId) {
                 <div class="flex items-center space-x-3 mb-6 pb-4 border-b border-slate-200">
                     <i class="fa-solid fa-bus text-indigo-600 text-3xl"></i>
                     <div>
-                        <h1 class="text-xl font-bold text-slate-900">Conexão Transportes</h1>
-                        <p class="text-[10px] text-slate-500">Documento Oficial de Instruções e Treinamento do Usuário</p>
+                        <h1 class="text-xl font-bold text-slate-900">ConexÃ£o Transportes</h1>
+                        <p class="text-[10px] text-slate-500">Documento Oficial de InstruÃ§Ãµes e Treinamento do UsuÃ¡rio</p>
                     </div>
                 </div>
                 <div class="space-y-6">
                     ${htmlContent}
                 </div>
                 <div class="mt-12 pt-4 border-t border-slate-200 text-center text-xs text-slate-400">
-                    Documento gerado em ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()} - Conexão Transportes Eventos
+                    Documento gerado em ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()} - ConexÃ£o Transportes Eventos
                 </div>
             </div>
             <script>
@@ -9492,8 +9558,8 @@ function downloadTutorialPDF(tutId) {
 // --- FLUXO: MAPA DE TRANSPORTE E LINKS ---
 // ==========================================
 
-// Dicionário local para geocodificação instantânea das bases e locais comuns no Rio de Janeiro
-// Coordenadas geográficas terrestres de referência por Bairro (Portado do Agente RIG)
+// DicionÃ¡rio local para geocodificaÃ§Ã£o instantÃ¢nea das bases e locais comuns no Rio de Janeiro
+// Coordenadas geogrÃ¡ficas terrestres de referÃªncia por Bairro (Portado do Agente RIG)
 const BAIRROS_COORDS = {
     // ZONA OESTE
     "guaratiba": { lat: -22.986, lng: -43.593 },
@@ -9501,7 +9567,7 @@ const BAIRROS_COORDS = {
     "ilha de guaratiba": { lat: -22.986, lng: -43.593 },
     "curicica": { lat: -22.955, lng: -43.398 },
     "jacarepagua": { lat: -22.956, lng: -43.364 },
-    "jacarepaguá": { lat: -22.956, lng: -43.364 },
+    "jacarepaguÃ¡": { lat: -22.956, lng: -43.364 },
     "barra da tijuca": { lat: -23.000, lng: -43.366 },
     "recreio": { lat: -23.018, lng: -43.468 },
     "recreio dos bandeirantes": { lat: -23.018, lng: -43.468 },
@@ -9520,7 +9586,7 @@ const BAIRROS_COORDS = {
 
     // ZONA SUL
     "jardim botanico": { lat: -22.967, lng: -43.228 },
-    "jardim botânico": { lat: -22.967, lng: -43.228 },
+    "jardim botÃ¢nico": { lat: -22.967, lng: -43.228 },
     "leblon": { lat: -22.984, lng: -43.223 },
     "ipanema": { lat: -22.984, lng: -43.204 },
     "copacabana": { lat: -22.971, lng: -43.182 },
@@ -9529,11 +9595,11 @@ const BAIRROS_COORDS = {
     "laranjeiras": { lat: -22.933, lng: -43.186 },
     "catete": { lat: -22.926, lng: -43.176 },
     "gloria": { lat: -22.919, lng: -43.173 },
-    "glória": { lat: -22.919, lng: -43.173 },
+    "glÃ³ria": { lat: -22.919, lng: -43.173 },
     "leme": { lat: -22.962, lng: -43.166 },
     "urca": { lat: -22.953, lng: -43.162 },
     "sao conrado": { lat: -22.993, lng: -43.253 },
-    "são conrado": { lat: -22.993, lng: -43.253 },
+    "sÃ£o conrado": { lat: -22.993, lng: -43.253 },
     "rocinha": { lat: -22.988, lng: -43.249 },
 
     // ZONA NORTE & CENTRO
@@ -9541,75 +9607,75 @@ const BAIRROS_COORDS = {
     "lapa": { lat: -22.913, lng: -43.180 },
     "mangueira": { lat: -22.903, lng: -43.235 },
     "sao cristovao": { lat: -22.899, lng: -43.222 },
-    "são cristóvão": { lat: -22.899, lng: -43.222 },
+    "sÃ£o cristÃ³vÃ£o": { lat: -22.899, lng: -43.222 },
     "benfica": { lat: -22.892, lng: -43.243 },
     "tijuca": { lat: -22.933, lng: -43.238 },
     "vila isabel": { lat: -22.914, lng: -43.245 },
     "maracana": { lat: -22.912, lng: -43.230 },
-    "maracanã": { lat: -22.912, lng: -43.230 },
+    "maracanÃ£": { lat: -22.912, lng: -43.230 },
     "meier": { lat: -22.901, lng: -43.280 },
-    "méier": { lat: -22.901, lng: -43.280 },
+    "mÃ©ier": { lat: -22.901, lng: -43.280 },
     "engenho de dentro": { lat: -22.894, lng: -43.294 },
     "madureira": { lat: -22.871, lng: -43.336 },
     "cascadura": { lat: -22.878, lng: -43.324 },
     "piedade": { lat: -22.890, lng: -43.308 },
     "ilha do governador": { lat: -22.809, lng: -43.208 },
     "galeao": { lat: -22.812, lng: -43.243 },
-    "galeão": { lat: -22.812, lng: -43.243 },
+    "galeÃ£o": { lat: -22.812, lng: -43.243 },
     "penha": { lat: -22.834, lng: -43.276 },
     "olaria": { lat: -22.844, lng: -43.262 },
     "bonsucesso": { lat: -22.862, lng: -43.250 },
 
-    // OUTROS MUNICÍPIOS / LOCALIDADES
+    // OUTROS MUNICÃPIOS / LOCALIDADES
     "niteroi": { lat: -22.883, lng: -43.103 },
-    "niterói": { lat: -22.883, lng: -43.103 },
-    "são gonçalo": { lat: -22.826, lng: -43.053 },
+    "niterÃ³i": { lat: -22.883, lng: -43.103 },
+    "sÃ£o gonÃ§alo": { lat: -22.826, lng: -43.053 },
     "duque de caxias": { lat: -22.785, lng: -43.311 },
-    "nova iguaçu": { lat: -22.757, lng: -43.460 },
+    "nova iguaÃ§u": { lat: -22.757, lng: -43.460 },
     "alto da boa vista": { lat: -22.965, lng: -43.250 }
 };
 
-// Dicionário local para geocodificação de bases principais
+// DicionÃ¡rio local para geocodificaÃ§Ã£o de bases principais
 const LOCAL_GEO_DICT = {
-    'estúdios globo': [-22.9754, -43.4162],
+    'estÃºdios globo': [-22.9754, -43.4162],
     'estudios globo': [-22.9754, -43.4162],
     'projac': [-22.9754, -43.4162],
     'eg': [-22.9754, -43.4162],
-    'jardim botânico': [-22.9691, -43.2244],
+    'jardim botÃ¢nico': [-22.9691, -43.2244],
     'jardim botanico': [-22.9691, -43.2244],
     'jb': [-22.9691, -43.2244],
-    'íon': [-23.0039, -43.3242],
-    'íon barra': [-23.0039, -43.3242],
+    'Ã­on': [-23.0039, -43.3242],
+    'Ã­on barra': [-23.0039, -43.3242],
     'ion': [-23.0039, -43.3242],
     'ion barra': [-23.0039, -43.3242],
-    'sambódromo': [-22.9119, -43.1970],
+    'sambÃ³dromo': [-22.9119, -43.1970],
     'sambodromo': [-22.9119, -43.1970],
-    'galeão': [-22.8134, -43.2494],
+    'galeÃ£o': [-22.8134, -43.2494],
     'galeao': [-22.8134, -43.2494],
     'santos dumont': [-22.9111, -43.1627],
     'copacabana': [-22.9698, -43.1840],
     'barra': [-23.0068, -43.3115],
     'recreio': [-23.0189, -43.4682],
     'vargem grande': [-22.9934, -43.4939],
-    'jacarepaguá': [-22.9304, -43.3368],
+    'jacarepaguÃ¡': [-22.9304, -43.3368],
     'jacarepagua': [-22.9304, -43.3368],
     'barra da tijuca': [-23.0068, -43.3115]
 };
 
-// Helper para extrair o Bairro a partir do endereço estruturado
+// Helper para extrair o Bairro a partir do endereÃ§o estruturado
 function extrairBairro(v) {
     if (!v) return "";
     const partes = String(v).split(",").map(p => p.trim()).filter(Boolean);
     return partes[partes.length - 1] || "";
 }
 
-// Geocodificação inteligente com dicionário local, georreferenciamento por bairro e API Nominatim (OSM)
+// GeocodificaÃ§Ã£o inteligente com dicionÃ¡rio local, georreferenciamento por bairro e API Nominatim (OSM)
 async function geocodeAddress(address) {
-    if (!address) return [-22.9068, -43.1729]; // Centro do Rio como padrão
+    if (!address) return [-22.9068, -43.1729]; // Centro do Rio como padrÃ£o
     
     const clean = String(address).toLowerCase().trim();
     
-    // 1. Tentar dicionário local de bases Globo/destinos
+    // 1. Tentar dicionÃ¡rio local de bases Globo/destinos
     for (const key of Object.keys(LOCAL_GEO_DICT)) {
         if (clean.includes(key) || key.includes(clean)) {
             return LOCAL_GEO_DICT[key];
@@ -9617,15 +9683,15 @@ async function geocodeAddress(address) {
     }
     
     // 2. Tentar georreferenciamento de fidelidade por Bairro (Portado do Agente RIG)
-    const bairro = extrairBairro(address).toLowerCase().replace(/['"´`]/g, "").trim();
+    const bairro = extrairBairro(address).toLowerCase().replace(/['"Â´`]/g, "").trim();
     if (BAIRROS_COORDS[bairro]) {
-        // Jitter muito pequeno (~200m) para dispersar marcadores mas evitar cair na água
+        // Jitter muito pequeno (~200m) para dispersar marcadores mas evitar cair na Ã¡gua
         const lat = BAIRROS_COORDS[bairro].lat + (Math.random() - 0.5) * 0.002;
         const lng = BAIRROS_COORDS[bairro].lng + (Math.random() - 0.5) * 0.002;
         return [lat, lng];
     }
     
-    // 3. Fallback: Consulta assíncrona Nominatim OpenStreetMap (restrita ao Rio de Janeiro)
+    // 3. Fallback: Consulta assÃ­ncrona Nominatim OpenStreetMap (restrita ao Rio de Janeiro)
     try {
         const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address + ', Rio de Janeiro, Brasil')}`;
         const res = await fetch(url, { headers: { 'User-Agent': 'ConexaoTransportesCCO/1.0' } });
@@ -9643,17 +9709,17 @@ async function geocodeAddress(address) {
     return [-22.9068 + latOffset, -43.1729 + lngOffset];
 }
 
-// Importação do Excel da Escala de Motoristas (Mapa de Transporte) com Geocodificação Assíncrona e Colunas Alinhadas
+// ImportaÃ§Ã£o do Excel da Escala de Motoristas (Mapa de Transporte) com GeocodificaÃ§Ã£o AssÃ­ncrona e Colunas Alinhadas
 function importDriverScheduleMap(event) {
     const file = event.target.files[0];
     if (!file) return;
     
     if (typeof XLSX === 'undefined') {
-        showToast("XLSX Indisponível", "A biblioteca de leitura de planilhas não foi carregada no navegador.", "danger");
+        showToast("XLSX IndisponÃ­vel", "A biblioteca de leitura de planilhas nÃ£o foi carregada no navegador.", "danger");
         return;
     }
     
-    showToast("Processando Escala", "Lendo arquivo e buscando coordenadas dos endereços de saída...", "info");
+    showToast("Processando Escala", "Lendo arquivo e buscando coordenadas dos endereÃ§os de saÃ­da...", "info");
     
     const reader = new FileReader();
     reader.onload = async function(e) {
@@ -9667,26 +9733,26 @@ function importDriverScheduleMap(event) {
             
             const importedDrivers = [];
             
-            // Loop sequencial assíncrono para geocodificação
+            // Loop sequencial assÃ­ncrono para geocodificaÃ§Ã£o
             for (let index = 0; index < rows.length; index++) {
                 const row = rows[index];
                 const name = String(row['F'] || '').trim(); // F = Motorista
-                const plate = String(row['I'] || '').trim(); // I = Placa Veículo
+                const plate = String(row['I'] || '').trim(); // I = Placa VeÃ­culo
                 
-                // Pular se for cabeçalho ou escalas sem motorista / serviços administrativos
-                if (!name || name.toLowerCase() === 'motorista' || name.includes('LOGÍSTICA') || name.toLowerCase().includes('sem motorista')) {
+                // Pular se for cabeÃ§alho ou escalas sem motorista / serviÃ§os administrativos
+                if (!name || name.toLowerCase() === 'motorista' || name.includes('LOGÃSTICA') || name.toLowerCase().includes('sem motorista')) {
                     continue;
                 }
                 
                 const startTime = parseExcelDate(row['M']);
                 const endTime = parseExcelDate(row['O']);
-                const origin = String(row['L'] || 'Estúdios Globo').trim();
+                const origin = String(row['L'] || 'EstÃºdios Globo').trim();
                 const destination = String(row['N'] || 'Sambodromo').trim();
                 
-                // Geocodificação da localidade de saída
+                // GeocodificaÃ§Ã£o da localidade de saÃ­da
                 const originCoords = await geocodeAddress(origin);
                 
-                // Gerar CPF numérico fictício baseado no nome do motorista para login
+                // Gerar CPF numÃ©rico fictÃ­cio baseado no nome do motorista para login
                 let cpf = '00000000000';
                 let hash = 0;
                 for (let i = 0; i < name.length; i++) {
@@ -9698,9 +9764,9 @@ function importDriverScheduleMap(event) {
                     id: 'map_' + Date.now() + '_' + index,
                     nome: name,
                     cpf: cpf,
-                    empresa: String(row['D'] || 'Prestador CCO').trim(), // D = Prestador do veículo!
+                    empresa: String(row['D'] || 'Prestador CCO').trim(), // D = Prestador do veÃ­culo!
                     telefone: String(row['G'] || '(21) 99999-9999').trim(), // G = Telefone Motorista!
-                    tipo_veiculo: String(row['H'] || 'Van Executiva').trim(), // H = Tipo de Veículo!
+                    tipo_veiculo: String(row['H'] || 'Van Executiva').trim(), // H = Tipo de VeÃ­culo!
                     placa_veiculo: plate.toUpperCase() || 'SEM PLACA',
                     service: mapExcelServiceGroup(row['P']), // P = Programa!
                     origin: origin,
@@ -9714,33 +9780,33 @@ function importDriverScheduleMap(event) {
             }
             
             if (importedDrivers.length === 0) {
-                showToast("Erro na Importação", "Nenhum motorista válido encontrado. Verifique se as colunas estão no formato correto.", "danger");
+                showToast("Erro na ImportaÃ§Ã£o", "Nenhum motorista vÃ¡lido encontrado. Verifique se as colunas estÃ£o no formato correto.", "danger");
                 return;
             }
             
             db.drivers_map = importedDrivers;
             saveDatabase();
             
-            // Forçar atualização do CCO e do Mapa
+            // ForÃ§ar atualizaÃ§Ã£o do CCO e do Mapa
             updateAccessManagement();
             if (typeof updateLiveMapMarkers === 'function') {
                 updateLiveMapMarkers();
             }
             
-            showToast("Importação Concluída", `${importedDrivers.length} motoristas e pontos de início importados com sucesso!`, "success");
+            showToast("ImportaÃ§Ã£o ConcluÃ­da", `${importedDrivers.length} motoristas e pontos de inÃ­cio importados com sucesso!`, "success");
         } catch(err) {
             console.error(err);
-            showToast("Erro na Importação", "Falha ao processar planilha: " + err.message, "danger");
+            showToast("Erro na ImportaÃ§Ã£o", "Falha ao processar planilha: " + err.message, "danger");
         }
     };
     reader.readAsArrayBuffer(file);
 }
 
-// Mapeamento dos grupos de serviço da planilha para o sistema local
+// Mapeamento dos grupos de serviÃ§o da planilha para o sistema local
 function mapExcelServiceGroup(val) {
     if (!val) return 'Vai e Vem';
     const s = String(val).toLowerCase();
-    if (s.includes('produção') || s.includes('producao')) {
+    if (s.includes('produÃ§Ã£o') || s.includes('producao')) {
         return 'Carros de producao';
     } else if (s.includes('executivo') || s.includes('executiva')) {
         return 'Veiculos Executivos';
@@ -9751,7 +9817,7 @@ function mapExcelServiceGroup(val) {
     }
 }
 
-// Conversão inteligente de datas do Excel serial para strings
+// ConversÃ£o inteligente de datas do Excel serial para strings
 function parseExcelDate(val) {
     if (!val) return '';
     if (typeof val === 'number') {
@@ -9766,7 +9832,7 @@ function parseExcelDate(val) {
     return String(val).trim();
 }
 
-// Abrir modal de edição antes de gerar link do WhatsApp
+// Abrir modal de ediÃ§Ã£o antes de gerar link do WhatsApp
 function openDriverLinkEditor(nome, cpf) {
     if (!db.drivers_map) return;
     const d = db.drivers_map.find(x => x.nome === nome && String(x.cpf) === String(cpf));
@@ -9802,7 +9868,7 @@ function formatCpfString(val) {
     return s;
 }
 
-// Salva modificações do CCO e copia link parametrizado para o clipboard
+// Salva modificaÃ§Ãµes do CCO e copia link parametrizado para o clipboard
 function confirmAndCopyDriverLink() {
     const id = document.getElementById('drv-link-edit-id').value;
     if (!db.drivers_map) return;
@@ -9838,7 +9904,7 @@ function confirmAndCopyDriverLink() {
             showToast("Link Copiado!", `Os dados de ${updated.nome} foram salvos e o link do WhatsApp foi copiado com sucesso!`, "success");
         })
         .catch(err => {
-            // Fallback de cópia manual
+            // Fallback de cÃ³pia manual
             const el = document.createElement('textarea');
             el.value = finalUrl;
             document.body.appendChild(el);
@@ -9870,7 +9936,7 @@ function getDriverUrl(driver) {
     return `${originUrl}?${queryParams.toString()}`;
 }
 
-// Cópia rápida do link do WhatsApp direto do marcador do mapa CCO
+// CÃ³pia rÃ¡pida do link do WhatsApp direto do marcador do mapa CCO
 function copyDriverLinkFromMap(nome, cpf) {
     if (!db.drivers_map) return;
     const driver = db.drivers_map.find(d => d.nome === nome && String(d.cpf) === String(cpf));
@@ -9892,7 +9958,7 @@ function copyDriverLinkFromMap(nome, cpf) {
         });
 }
 
-// Solicitar posição enviando link de login direto por WhatsApp
+// Solicitar posiÃ§Ã£o enviando link de login direto por WhatsApp
 function requestPositionByWhatsapp(nome, telefone, cpf) {
     if (!db.drivers_map) return;
     const driver = db.drivers_map.find(d => d.nome === nome && String(d.cpf) === String(cpf));
@@ -9900,12 +9966,12 @@ function requestPositionByWhatsapp(nome, telefone, cpf) {
     
     const finalUrl = getDriverUrl(driver);
     const cleanPhone = String(telefone || '').replace(/\D/g, '');
-    const message = `Olá ${driver.nome}, por favor clique no link abaixo para compartilhar sua posição no mapa de transporte do evento:\n\n${finalUrl}\n\nObrigado!`;
+    const message = `OlÃ¡ ${driver.nome}, por favor clique no link abaixo para compartilhar sua posiÃ§Ã£o no mapa de transporte do evento:\n\n${finalUrl}\n\nObrigado!`;
     const whatsappUrl = `https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
 }
 
-// Alternar visualização de mapa CCO em tela cheia (expandir/recolher sidebar)
+// Alternar visualizaÃ§Ã£o de mapa CCO em tela cheia (expandir/recolher sidebar)
 let isCcoMapFullscreen = false;
 function toggleCcoMapFullscreen() {
     const sidebar = document.getElementById('cco-tracking-sidebar');
@@ -9968,14 +10034,14 @@ function recalculateVanSimulation() {
     // Filtrar agendamentos ativos na data selecionada
     let eventBookings = db.bookings.filter(b => b.data === dateVal && b.status !== 'Cancelado');
     
-    // Filtrar por direção/escopo
+    // Filtrar por direÃ§Ã£o/escopo
     if (direction === 'VAI') {
         eventBookings = eventBookings.filter(b => b.destino === 'Sambodromo');
     } else if (direction === 'VEM') {
         eventBookings = eventBookings.filter(b => b.origem === 'Sambodromo');
     }
     
-    // Agrupar passageiros por horário de viagem
+    // Agrupar passageiros por horÃ¡rio de viagem
     const timeGroups = {};
     eventBookings.forEach(b => {
         const time = String(b.hora || '00:00').substring(0, 5).trim();
@@ -9987,7 +10053,7 @@ function recalculateVanSimulation() {
         timeGroups[time]++;
     });
     
-    // Ordenar horários de forma cronológica
+    // Ordenar horÃ¡rios de forma cronolÃ³gica
     const sortedTimes = Object.keys(timeGroups).sort((a, b) => {
         return a.localeCompare(b);
     });
@@ -9998,7 +10064,7 @@ function recalculateVanSimulation() {
     const chartDataVans = [];
     
     if (sortedTimes.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-gray-500 font-semibold">Nenhum agendamento ativo encontrado para esta combinação de filtros.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-gray-500 font-semibold">Nenhum agendamento ativo encontrado para esta combinaÃ§Ã£o de filtros.</td></tr>`;
         if (lblTotalVans) lblTotalVans.textContent = '0';
         updateVanDemandChart([], [], []);
         return;
@@ -10013,12 +10079,12 @@ function recalculateVanSimulation() {
         
         grandTotalVans += vehicles;
         
-        // Dados do gráfico
+        // Dados do grÃ¡fico
         chartLabels.push(time);
         chartDataPassengers.push(agendados);
         chartDataVans.push(vehicles);
         
-        // Cores e badges baseados em eficiência
+        // Cores e badges baseados em eficiÃªncia
         let effClass = 'text-emerald-400 font-bold';
         if (parseFloat(efficiency) < 50) {
             effClass = 'text-red-400 font-bold';
@@ -10069,7 +10135,7 @@ function updateVanDemandChart(labels, passengerData, vanData) {
                     yAxisID: 'y'
                 },
                 {
-                    label: 'Veículos Necessários',
+                    label: 'VeÃ­culos NecessÃ¡rios',
                     data: vanData,
                     type: 'line',
                     borderColor: 'rgb(249, 115, 22)', // Orange-500
@@ -10123,7 +10189,7 @@ function updateVanDemandChart(labels, passengerData, vanData) {
                     ticks: { color: '#f97316', font: { size: 10, weight: 'bold' }, stepSize: 1 },
                     title: {
                         display: true,
-                        text: 'Quantidade de Veículos',
+                        text: 'Quantidade de VeÃ­culos',
                         color: '#f97316',
                         font: { size: 10, weight: 'bold' }
                     }
@@ -10133,7 +10199,7 @@ function updateVanDemandChart(labels, passengerData, vanData) {
     });
 }
 
-// --- SISTEMA DE APRESENTAÇÃO DE SLIDES INTERATIVO ---
+// --- SISTEMA DE APRESENTAÃ‡ÃƒO DE SLIDES INTERATIVO ---
 const presentationData = {
     passenger: {
         title: "Passageiro",
@@ -10143,19 +10209,19 @@ const presentationData = {
         borderColor: "border-blue-500/30",
         slides: [
             {
-                title: "📅 Agendamento Individual",
-                desc: "Acesse a aba <strong>'Portal de Pré-Agendamento'</strong>. Selecione se o agendamento é para <strong>'Mim mesmo'</strong> ou para <strong>'Outro Colaborador'</strong>. Ao agendar para terceiros, informe também o seu CPF/Matrícula como solicitante para validação e auditoria.",
+                title: "ðŸ“… Agendamento Individual",
+                desc: "Acesse a aba <strong>'Portal de PrÃ©-Agendamento'</strong>. Selecione se o agendamento Ã© para <strong>'Mim mesmo'</strong> ou para <strong>'Outro Colaborador'</strong>. Ao agendar para terceiros, informe tambÃ©m o seu CPF/MatrÃ­cula como solicitante para validaÃ§Ã£o e auditoria.",
                 badge: "Etapa 1",
                 mockup: `
                     <div class="bg-gray-900/60 border border-blue-500/20 rounded-xl p-3 space-y-1.5 text-left text-[11px] font-sans">
-                        <div class="text-[10px] text-blue-400 font-bold uppercase tracking-wider">Formulário de Pré-Agendamento</div>
+                        <div class="text-[10px] text-blue-400 font-bold uppercase tracking-wider">FormulÃ¡rio de PrÃ©-Agendamento</div>
                         <div class="grid grid-cols-2 gap-2 mt-1">
                             <div class="bg-gray-950 p-1.5 rounded border border-gray-800">
-                                <span class="text-gray-500 block text-[8px] uppercase">Passageiro (CPF/Matrícula)</span>
+                                <span class="text-gray-500 block text-[8px] uppercase">Passageiro (CPF/MatrÃ­cula)</span>
                                 <span class="text-white font-semibold">123.456.789-00</span>
                             </div>
                             <div class="bg-gray-950 p-1.5 rounded border border-gray-850">
-                                <span class="text-indigo-400 block text-[8px] uppercase font-bold">Solicitante (Matrícula)</span>
+                                <span class="text-indigo-400 block text-[8px] uppercase font-bold">Solicitante (MatrÃ­cula)</span>
                                 <span class="text-white font-semibold">82093 (Ponto Focal)</span>
                             </div>
                         </div>
@@ -10166,33 +10232,33 @@ const presentationData = {
                 `
             },
             {
-                title: "🔁 Multiplicação para Vários Dias",
-                desc: "Se você precisar de transporte para múltiplos dias do evento, o sistema permite <strong>replicar o agendamento</strong> em massa. Basta marcar os dias desejados no calendário e clicar em gerar agendamento.",
+                title: "ðŸ” MultiplicaÃ§Ã£o para VÃ¡rios Dias",
+                desc: "Se vocÃª precisar de transporte para mÃºltiplos dias do evento, o sistema permite <strong>replicar o agendamento</strong> em massa. Basta marcar os dias desejados no calendÃ¡rio e clicar em gerar agendamento.",
                 badge: "Etapa 2",
                 mockup: `
                     <div class="bg-gray-900/60 border border-blue-500/20 rounded-xl p-3 text-left text-[11px] space-y-2">
-                        <div class="text-[10px] text-blue-400 font-bold uppercase tracking-wider">Replicação de Datas</div>
+                        <div class="text-[10px] text-blue-400 font-bold uppercase tracking-wider">ReplicaÃ§Ã£o de Datas</div>
                         <div class="flex items-center space-x-2">
-                            <span class="bg-blue-600 text-white font-bold px-2 py-0.5 rounded text-[9px]">✔ 12/Set</span>
-                            <span class="bg-blue-600 text-white font-bold px-2 py-0.5 rounded text-[9px]">✔ 13/Set</span>
-                            <span class="bg-blue-600 text-white font-bold px-2 py-0.5 rounded text-[9px]">✔ 14/Set</span>
+                            <span class="bg-blue-600 text-white font-bold px-2 py-0.5 rounded text-[9px]">âœ” 12/Set</span>
+                            <span class="bg-blue-600 text-white font-bold px-2 py-0.5 rounded text-[9px]">âœ” 13/Set</span>
+                            <span class="bg-blue-600 text-white font-bold px-2 py-0.5 rounded text-[9px]">âœ” 14/Set</span>
                             <span class="bg-gray-800 text-gray-500 font-bold px-2 py-0.5 rounded text-[9px]">15/Set</span>
                         </div>
-                        <p class="text-[10px] text-gray-400">O sistema criará reservas individuais para cada um dos dias selecionados de uma só vez.</p>
+                        <p class="text-[10px] text-gray-400">O sistema criarÃ¡ reservas individuais para cada um dos dias selecionados de uma sÃ³ vez.</p>
                     </div>
                 `
             },
             {
-                title: "🎟️ Cartão de Embarque Digital",
-                desc: "Após a confirmação, o sistema gera o seu <strong>Cartão de Embarque Digital com QR Code</strong>. Salve o comprovante em PDF ou envie os dados de reserva diretamente para seu celular via WhatsApp para agilizar o embarque no evento.",
+                title: "ðŸŽŸï¸ CartÃ£o de Embarque Digital",
+                desc: "ApÃ³s a confirmaÃ§Ã£o, o sistema gera o seu <strong>CartÃ£o de Embarque Digital com QR Code</strong>. Salve o comprovante em PDF ou envie os dados de reserva diretamente para seu celular via WhatsApp para agilizar o embarque no evento.",
                 badge: "Etapa 3",
                 mockup: `
                     <div class="bg-gray-950 border border-blue-500/30 rounded-xl p-3 flex items-center justify-between text-left">
                         <div class="space-y-1 text-[10px]">
                             <div class="text-[8px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold uppercase w-max">RESERVA CONFIRMADA</div>
                             <div class="text-white font-bold">BILHETE DE EMBARQUE</div>
-                            <div class="text-gray-400">Saída: Jardim Botânico</div>
-                            <div class="text-gray-400">Destino: Estúdios Globo</div>
+                            <div class="text-gray-400">SaÃ­da: Jardim BotÃ¢nico</div>
+                            <div class="text-gray-400">Destino: EstÃºdios Globo</div>
                         </div>
                         <div class="bg-white p-1 rounded-lg">
                             <i class="fa-solid fa-qrcode text-gray-950 text-2xl"></i>
@@ -10201,14 +10267,14 @@ const presentationData = {
                 `
             },
             {
-                title: "📱 Check-in Presencial (Totem)",
-                desc: "Se você não fez o pré-agendamento, pode utilizar o <strong>Totem de Check-in Presencial</strong> na base física de embarque. Digite seu CPF/Matrícula na tela e seu bilhete com o QR Code será impresso ou gerado digitalmente de imediato.",
+                title: "ðŸ“± Check-in Presencial (Totem)",
+                desc: "Se vocÃª nÃ£o fez o prÃ©-agendamento, pode utilizar o <strong>Totem de Check-in Presencial</strong> na base fÃ­sica de embarque. Digite seu CPF/MatrÃ­cula na tela e seu bilhete com o QR Code serÃ¡ impresso ou gerado digitalmente de imediato.",
                 badge: "Etapa 4",
                 mockup: `
                     <div class="bg-gray-900/60 border border-blue-500/20 rounded-xl p-3 text-left space-y-2 text-[11px]">
                         <div class="text-[10px] text-blue-400 font-bold uppercase tracking-wider">Totem Digital Local</div>
                         <div class="bg-gray-950 p-2 rounded border border-gray-800 text-center font-bold text-gray-400 text-xs">
-                            [ Digite sua Matrícula ou CPF ]
+                            [ Digite sua MatrÃ­cula ou CPF ]
                         </div>
                         <div class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1 rounded text-center text-[10px]">
                             Check-in Imediato
@@ -10219,15 +10285,15 @@ const presentationData = {
         ]
     },
     representative: {
-        title: "Representante de Área",
+        title: "Representante de Ãrea",
         colorClass: "indigo",
         bgClass: "bg-indigo-600",
         icon: "fa-users-cog",
         borderColor: "border-indigo-500/30",
         slides: [
             {
-                title: "👥 Credenciamento Coletivo",
-                desc: "Como representante, você pode carregar uma base em massa de colaboradores no sistema. Vá até a aba <strong>'Importar Base'</strong> e faça o upload de uma lista de Excel/CSV para autorizar o credenciamento de toda a sua equipe.",
+                title: "ðŸ‘¥ Credenciamento Coletivo",
+                desc: "Como representante, vocÃª pode carregar uma base em massa de colaboradores no sistema. VÃ¡ atÃ© a aba <strong>'Importar Base'</strong> e faÃ§a o upload de uma lista de Excel/CSV para autorizar o credenciamento de toda a sua equipe.",
                 badge: "Etapa 1",
                 mockup: `
                     <div class="bg-gray-900/60 border border-indigo-500/20 rounded-xl p-3 text-left text-[11px] space-y-1.5">
@@ -10240,8 +10306,8 @@ const presentationData = {
                 `
             },
             {
-                title: "📥 Planilha de Modelo Oficial",
-                desc: "Para agendar transporte em lote, utilize nossa <strong>Planilha Modelo CSV</strong>. Faça o download direto no portal de agendamento em lote, preencha os CPFs, datas e horários dos seus colaboradores nos campos corretos.",
+                title: "ðŸ“¥ Planilha de Modelo Oficial",
+                desc: "Para agendar transporte em lote, utilize nossa <strong>Planilha Modelo CSV</strong>. FaÃ§a o download direto no portal de agendamento em lote, preencha os CPFs, datas e horÃ¡rios dos seus colaboradores nos campos corretos.",
                 badge: "Etapa 2",
                 mockup: `
                     <div class="bg-gray-900/60 border border-indigo-500/20 rounded-xl p-3 text-left text-[11px] space-y-2">
@@ -10254,8 +10320,8 @@ const presentationData = {
                 `
             },
             {
-                title: "📦 Agendamento em Lote (Em Massa)",
-                desc: "Arraste o arquivo CSV preenchido de volta para a aba <strong>'Agendamento em Lote'</strong>. O sistema lerá e validará as matrículas com a base cadastrada, criará agendamentos duplicados ou atualizações, e gerará os bilhetes de transporte em lote sem burocracia.",
+                title: "ðŸ“¦ Agendamento em Lote (Em Massa)",
+                desc: "Arraste o arquivo CSV preenchido de volta para a aba <strong>'Agendamento em Lote'</strong>. O sistema lerÃ¡ e validarÃ¡ as matrÃ­culas com a base cadastrada, criarÃ¡ agendamentos duplicados ou atualizaÃ§Ãµes, e gerarÃ¡ os bilhetes de transporte em lote sem burocracia.",
                 badge: "Etapa 3",
                 mockup: `
                     <div class="bg-gray-955 border border-indigo-500/30 rounded-xl p-3 text-left space-y-2">
@@ -10282,16 +10348,16 @@ const presentationData = {
         borderColor: "border-teal-500/30",
         slides: [
             {
-                title: "📋 Gestão de Fila de Despacho",
-                desc: "Na aba <strong>'Operação (Despacho)'</strong>, você monitora a fila em tempo real. Veja a quantidade de pessoas agendadas para cada horário e base física de partida, organizando o fluxo de forma integrada.",
+                title: "ðŸ“‹ GestÃ£o de Fila de Despacho",
+                desc: "Na aba <strong>'OperaÃ§Ã£o (Despacho)'</strong>, vocÃª monitora a fila em tempo real. Veja a quantidade de pessoas agendadas para cada horÃ¡rio e base fÃ­sica de partida, organizando o fluxo de forma integrada.",
                 badge: "Etapa 1",
                 mockup: `
                     <div class="bg-gray-900/60 border border-teal-500/20 rounded-xl p-3 text-left text-[11px] space-y-2">
-                        <div class="text-[10px] text-teal-400 font-bold uppercase tracking-wider">Fila da Base: Jardim Botânico</div>
+                        <div class="text-[10px] text-teal-400 font-bold uppercase tracking-wider">Fila da Base: Jardim BotÃ¢nico</div>
                         <div class="bg-gray-950 p-2 rounded border border-gray-800 flex justify-between items-center">
                             <div>
                                 <span class="text-white font-bold">Van (08:30)</span>
-                                <span class="text-gray-500 block text-[9px]">Destino: Estúdios Globo</span>
+                                <span class="text-gray-500 block text-[9px]">Destino: EstÃºdios Globo</span>
                             </div>
                             <span class="bg-teal-500/20 text-teal-400 font-bold px-2 py-0.5 rounded text-[10px]">12/15 Assentos</span>
                         </div>
@@ -10299,13 +10365,13 @@ const presentationData = {
                 `
             },
             {
-                title: "⚡ Registrar Embarque e Tratar No-show",
-                desc: "Quando o passageiro se apresenta no veículo, clique no botão azul <strong>'Embarcar'</strong> para confirmar a presença dele. Caso o passageiro não apareça, marque como <strong>'No-show'</strong>. O assento no veículo é liberado automaticamente e recalculado no painel global.",
+                title: "âš¡ Registrar Embarque e Tratar No-show",
+                desc: "Quando o passageiro se apresenta no veÃ­culo, clique no botÃ£o azul <strong>'Embarcar'</strong> para confirmar a presenÃ§a dele. Caso o passageiro nÃ£o apareÃ§a, marque como <strong>'No-show'</strong>. O assento no veÃ­culo Ã© liberado automaticamente e recalculado no painel global.",
                 badge: "Etapa 2",
                 mockup: `
                     <div class="bg-gray-900/60 border border-teal-500/20 rounded-xl p-3 text-left text-[11px] space-y-1.5">
                         <div class="flex justify-between items-center text-[10px] text-white">
-                            <span class="font-bold">Colaborador: João Silva</span>
+                            <span class="font-bold">Colaborador: JoÃ£o Silva</span>
                             <span class="text-gray-500">Agendamento: 08:30</span>
                         </div>
                         <div class="grid grid-cols-2 gap-2 mt-1">
@@ -10316,18 +10382,18 @@ const presentationData = {
                 `
             },
             {
-                title: "🚐 Acionamento de Carros Extras",
-                desc: "Em caso de lotação de passageiros sem agendamento ou emergência de produção, você pode criar viagens com <strong>'Carro Extra'</strong> clicando no botão no painel operacional. Preencha os dados e libere a saída da van ou veículo de imediato.",
+                title: "ðŸš Acionamento de Carros Extras",
+                desc: "Em caso de lotaÃ§Ã£o de passageiros sem agendamento ou emergÃªncia de produÃ§Ã£o, vocÃª pode criar viagens com <strong>'Carro Extra'</strong> clicando no botÃ£o no painel operacional. Preencha os dados e libere a saÃ­da da van ou veÃ­culo de imediato.",
                 badge: "Etapa 3",
                 mockup: `
                     <div class="bg-gray-955 border border-teal-500/30 rounded-xl p-3 text-left space-y-2 text-[11px]">
                         <div class="text-[10px] text-teal-400 font-bold uppercase tracking-wider">Acionar Viagem Extra</div>
                         <div class="grid grid-cols-2 gap-2">
-                            <div class="bg-gray-900 p-1 rounded border border-gray-800 text-gray-400 text-[9px]">Veículo: Van (15 lug)</div>
+                            <div class="bg-gray-900 p-1 rounded border border-gray-800 text-gray-400 text-[9px]">VeÃ­culo: Van (15 lug)</div>
                             <div class="bg-gray-900 p-1 rounded border border-gray-800 text-gray-400 text-[9px]">Placa: XYZ9A99</div>
                         </div>
                         <div class="bg-teal-600 text-white font-bold py-1 rounded text-center text-[10px]">
-                            Confirmar Saída
+                            Confirmar SaÃ­da
                         </div>
                     </div>
                 `
@@ -10342,8 +10408,8 @@ const presentationData = {
         borderColor: "border-emerald-500/30",
         slides: [
             {
-                title: "🔑 Login Simplificado por CPF",
-                desc: "No portal inicial do Conexão Transportes, acesse a aba <strong>'Motorista'</strong>. Digite o seu CPF. Se os dados constarem no credenciamento do CCO, o sistema abrirá o seu portal de controle imediatamente.",
+                title: "ðŸ”‘ Login Simplificado por CPF",
+                desc: "No portal inicial do ConexÃ£o Transportes, acesse a aba <strong>'Motorista'</strong>. Digite o seu CPF. Se os dados constarem no credenciamento do CCO, o sistema abrirÃ¡ o seu portal de controle imediatamente.",
                 badge: "Etapa 1",
                 mockup: `
                     <div class="bg-gray-900/60 border border-emerald-500/20 rounded-xl p-3 text-left text-[11px] space-y-2">
@@ -10356,20 +10422,20 @@ const presentationData = {
                 `
             },
             {
-                title: "🚐 Confirmação dos Dados do Veículo",
-                desc: "Confirme a placa do seu veículo, empresa contratada (ex: Coopertramo) e tipo de veículo. Digite e confirme essas informações básicas para inicializar o seu rastreamento operacional no evento.",
+                title: "ðŸš ConfirmaÃ§Ã£o dos Dados do VeÃ­culo",
+                desc: "Confirme a placa do seu veÃ­culo, empresa contratada (ex: Coopertramo) e tipo de veÃ­culo. Digite e confirme essas informaÃ§Ãµes bÃ¡sicas para inicializar o seu rastreamento operacional no evento.",
                 badge: "Etapa 2",
                 mockup: `
                     <div class="bg-gray-900/60 border border-emerald-500/20 rounded-xl p-3 text-left text-[11px] space-y-1">
-                        <div class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Veículo do Motorista</div>
+                        <div class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">VeÃ­culo do Motorista</div>
                         <div class="text-white font-semibold">Placa: RIR2D45 (Coopertramo)</div>
                         <div class="text-gray-400 text-[9px]">Tipo: Van Executiva (15 Assentos)</div>
                     </div>
                 `
             },
             {
-                title: "📡 Conectar GPS e Enviar Sinal",
-                desc: "Clique no botão verde <strong>'Conectar GPS'</strong> e permita o acesso à geolocalização no navegador do celular. A partir de então, o sistema passará a <strong>transmitir sua posição física em tempo real</strong> para o CCO.",
+                title: "ðŸ“¡ Conectar GPS e Enviar Sinal",
+                desc: "Clique no botÃ£o verde <strong>'Conectar GPS'</strong> e permita o acesso Ã  geolocalizaÃ§Ã£o no navegador do celular. A partir de entÃ£o, o sistema passarÃ¡ a <strong>transmitir sua posiÃ§Ã£o fÃ­sica em tempo real</strong> para o CCO.",
                 badge: "Etapa 3",
                 mockup: `
                     <div class="bg-gray-955 border border-emerald-500/30 rounded-xl p-3 flex items-center justify-between text-[11px]">
@@ -10384,17 +10450,17 @@ const presentationData = {
                 `
             },
             {
-                title: "⏱️ Iniciar e Encerrar Corridas",
-                desc: "Quando der a partida física no veículo com passageiros, clique em <strong>'Início Corrida'</strong> para disparar o relógio de trajeto. Ao desembarcar os passageiros, clique em <strong>'Término Corrida'</strong> para registrar a viagem.",
+                title: "â±ï¸ Iniciar e Encerrar Corridas",
+                desc: "Quando der a partida fÃ­sica no veÃ­culo com passageiros, clique em <strong>'InÃ­cio Corrida'</strong> para disparar o relÃ³gio de trajeto. Ao desembarcar os passageiros, clique em <strong>'TÃ©rmino Corrida'</strong> para registrar a viagem.",
                 badge: "Etapa 4",
                 mockup: `
                     <div class="bg-gray-900/60 border border-emerald-500/20 rounded-xl p-3 text-left text-[11px] space-y-2">
                         <div class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Controle do Trajeto</div>
                         <div class="grid grid-cols-2 gap-2">
-                            <button class="bg-emerald-600 text-white font-bold py-1.5 rounded text-[10px]">Início Corrida</button>
-                            <button class="bg-rose-600/30 text-rose-400 font-bold py-1.5 rounded text-[10px]" disabled>Término Corrida</button>
+                            <button class="bg-emerald-600 text-white font-bold py-1.5 rounded text-[10px]">InÃ­cio Corrida</button>
+                            <button class="bg-rose-600/30 text-rose-400 font-bold py-1.5 rounded text-[10px]" disabled>TÃ©rmino Corrida</button>
                         </div>
-                        <p class="text-[9px] text-gray-500">Mantenha a tela do seu celular ligada durante as corridas para evitar suspensão do sinal de GPS pelo celular.</p>
+                        <p class="text-[9px] text-gray-500">Mantenha a tela do seu celular ligada durante as corridas para evitar suspensÃ£o do sinal de GPS pelo celular.</p>
                     </div>
                 `
             }
@@ -10408,8 +10474,8 @@ const presentationData = {
         borderColor: "border-amber-500/30",
         slides: [
             {
-                title: "📊 Gráficos Operacionais e Financeiros",
-                desc: "Como Master, acesse a aba <strong>'Gestão & Analytics'</strong>. Avalie os gráficos de ocupação da frota, controle de aderência dos agendamentos e o **Simulador de Perdas Financeiras** geradas por no-show.",
+                title: "ðŸ“Š GrÃ¡ficos Operacionais e Financeiros",
+                desc: "Como Master, acesse a aba <strong>'GestÃ£o & Analytics'</strong>. Avalie os grÃ¡ficos de ocupaÃ§Ã£o da frota, controle de aderÃªncia dos agendamentos e o **Simulador de Perdas Financeiras** geradas por no-show.",
                 badge: "Etapa 1",
                 mockup: `
                     <div class="bg-gray-900/60 border border-amber-500/20 rounded-xl p-3 text-left text-[11px] space-y-1.5">
@@ -10428,8 +10494,8 @@ const presentationData = {
                 `
             },
             {
-                title: "🗺️ Rastreamento Live e Filtros de Serviço",
-                desc: "Monitore a localização em tempo real da frota de motoristas ativos no **mapa Leaflet**. Filtre a exibição de acordo com o tipo de serviço contratado (Vans de Produção, Vai e Vem Geral ou Carros Especiais).",
+                title: "ðŸ—ºï¸ Rastreamento Live e Filtros de ServiÃ§o",
+                desc: "Monitore a localizaÃ§Ã£o em tempo real da frota de motoristas ativos no **mapa Leaflet**. Filtre a exibiÃ§Ã£o de acordo com o tipo de serviÃ§o contratado (Vans de ProduÃ§Ã£o, Vai e Vem Geral ou Carros Especiais).",
                 badge: "Etapa 2",
                 mockup: `
                     <div class="bg-gray-900/60 border border-amber-500/20 rounded-xl p-3 text-left text-[11px] space-y-1.5">
@@ -10441,26 +10507,26 @@ const presentationData = {
                 `
             },
             {
-                title: "🔐 Auditoria, Sessões Ativas e Segurança",
-                desc: "Na aba <strong>'Administração de Acessos'</strong>, você audita sessões ativas e acompanha o **Log de Auditoria de Agendamentos** em tempo real (quem agendou quem e quando). Gerencie também os **Pontos Focais Autorizados** para agendamento de terceiros e derrube sessões suspeitas.",
+                title: "ðŸ” Auditoria, SessÃµes Ativas e SeguranÃ§a",
+                desc: "Na aba <strong>'AdministraÃ§Ã£o de Acessos'</strong>, vocÃª audita sessÃµes ativas e acompanha o **Log de Auditoria de Agendamentos** em tempo real (quem agendou quem e quando). Gerencie tambÃ©m os **Pontos Focais Autorizados** para agendamento de terceiros e derrube sessÃµes suspeitas.",
                 badge: "Etapa 3",
                 mockup: `
                     <div class="bg-gray-900/60 border border-amber-500/20 rounded-xl p-3 text-left text-[11px] space-y-2">
                         <div class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Log de Auditoria de Agendamento</div>
                         <div class="bg-gray-950 p-2 rounded border border-gray-800 space-y-1 text-[9px]">
                             <div class="flex justify-between font-bold text-white">
-                                <span>Ação: Agendou (Site)</span>
+                                <span>AÃ§Ã£o: Agendou (Site)</span>
                                 <span class="text-green-400">Autorizado</span>
                             </div>
-                            <div class="text-gray-400">Passageiro: João Silva (Matrícula: 5543)</div>
-                            <div class="text-gray-500">Solicitante: Admin Master (Matrícula: 123456)</div>
+                            <div class="text-gray-400">Passageiro: JoÃ£o Silva (MatrÃ­cula: 5543)</div>
+                            <div class="text-gray-500">Solicitante: Admin Master (MatrÃ­cula: 123456)</div>
                         </div>
                     </div>
                 `
             },
             {
-                title: "📧 Integração e Status SMTP",
-                desc: "Configure as conexões de e-mail conectando a aplicação ao servidor SMTP (através do servidor Python local na porta 8000). Isso permite que o sistema envie e-mails reais de confirmação de agendamentos e alertas automáticos de embarque aos colaboradores.",
+                title: "ðŸ“§ IntegraÃ§Ã£o e Status SMTP",
+                desc: "Configure as conexÃµes de e-mail conectando a aplicaÃ§Ã£o ao servidor SMTP (atravÃ©s do servidor Python local na porta 8000). Isso permite que o sistema envie e-mails reais de confirmaÃ§Ã£o de agendamentos e alertas automÃ¡ticos de embarque aos colaboradores.",
                 badge: "Etapa 4",
                 mockup: `
                     <div class="bg-gray-955 border border-amber-500/30 rounded-xl p-3 text-left text-[11px] space-y-2">
@@ -10530,7 +10596,7 @@ function renderPresentationSlides() {
     const data = presentationData[currentPresRole];
     const slide = data.slides[currentPresSlide];
     
-    // Atualizar ícone do cabeçalho
+    // Atualizar Ã­cone do cabeÃ§alho
     const headerIconContainer = document.getElementById("pres-header-icon-container");
     const headerIcon = document.getElementById("pres-header-icon");
     
@@ -10562,7 +10628,7 @@ function renderPresentationSlides() {
                 </p>
             </div>
             
-            <!-- Mockup Visual Dinâmico -->
+            <!-- Mockup Visual DinÃ¢mico -->
             <div class="pt-2">
                 ${slide.mockup}
             </div>
@@ -10584,7 +10650,7 @@ function renderPresentationSlides() {
         });
     }
     
-    // Ajustar botões Anterior / Próximo
+    // Ajustar botÃµes Anterior / PrÃ³ximo
     const btnPrev = document.getElementById("pres-btn-prev");
     if (btnPrev) {
         btnPrev.disabled = currentPresSlide === 0;
@@ -10603,7 +10669,7 @@ function renderPresentationSlides() {
             btnNextText.textContent = "Concluir";
             btnNextIcon.className = "fa-solid fa-check";
         } else {
-            btnNextText.textContent = "Próximo";
+            btnNextText.textContent = "PrÃ³ximo";
             btnNextIcon.className = "fa-solid fa-arrow-right";
         }
     }
@@ -10645,19 +10711,162 @@ async function refreshLiveDbViewer() {
             return;
         }
         
-        // Renderizar os últimos 50 do mais recente para o mais antigo
+        // Renderizar os Ãºltimos 50 do mais recente para o mais antigo
         tbody.innerHTML = data.slice(-50).reverse().map(b => `
         <tr>
             <td class="p-3 text-xs text-gray-400 border-b border-gray-800/50 font-mono">${b.id || '-'}</td>
             <td class="p-3 text-xs text-white border-b border-gray-800/50 font-bold">${b.passageiro_nome} <span class="text-[9px] text-gray-500 font-normal block">CPF: ${b.passageiro_matricula}</span></td>
-            <td class="p-3 text-xs text-gray-300 border-b border-gray-800/50">${b.base_saida} <i class="fa-solid fa-arrow-right text-[8px] mx-1 text-gray-600"></i> ${b.base_destino}<br><span class="text-[9px] text-indigo-400">${b.data_viagem} às ${b.horario_saida}</span></td>
-            <td class="p-3 border-b border-gray-800/50"><span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded text-[9px] font-bold uppercase">${b.status}</span></td>
+            <td class="p-3 text-xs text-gray-300 border-b border-gray-800/50">${b.base_saida} <i class="fa-solid fa-arrow-right text-[8px] mx-1 text-gray-600"></i> ${b.base_destino}<br><span class="text-[9px] text-indigo-400">${b.data_viagem} Ã s ${b.horario_saida}</span></td>
+            <td class="p-3 border-b border-gray-800/50"><span class="status-pill text-emerald-400 px-2 py-1 rounded text-[9px] font-bold uppercase">${b.status}</span></td>
         </tr>
         `).join('');
         
     } catch(err) {
         console.error("Erro Live DB:", err);
-        document.getElementById('db-live-status').innerHTML = '<i class="fa-solid fa-circle-xmark mr-1 text-rose-500"></i> Erro de Conexão';
-        tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-xs text-rose-500">Erro ao acessar banco de dados. A API está online?</td></tr>';
+        document.getElementById('db-live-status').innerHTML = '<i class="fa-solid fa-circle-xmark mr-1 text-rose-500"></i> Erro de ConexÃ£o';
+        tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-xs text-rose-500">Erro ao acessar banco de dados. A API estÃ¡ online?</td></tr>';
     }
+}
+
+// =========================================================================
+// WEBSOCKETS (REAL-TIME CHECK-IN)
+// =========================================================================
+if (typeof io !== 'undefined') {
+    const socket = io(getApiUrl().replace('/api', ''));
+    
+    socket.on('booking_checked_in', (updatedBooking) => {
+        const localBooking = db.bookings.find(b => b.id === updatedBooking.id);
+        if (localBooking) {
+            localBooking.status = 'Embarcado';
+            localBooking.status_checkin = updatedBooking.status_checkin || 'Sincronizado';
+            
+            // Atualiza a UI se o gestor/motorista estiver na tela de operação
+            if (typeof refreshOperationList === 'function' && currentTab === 'operation') {
+                refreshOperationList();
+            }
+        }
+    });
+}
+
+
+
+
+
+
+// --- DRILL-DOWN ANALITICO ---
+window.currentDrillDownData = [];
+
+window.openDrillDownModal = function(areaName, statusType) {
+    const titleEl = document.getElementById('drilldown-title');
+    const subtitleEl = document.getElementById('drilldown-subtitle');
+    const tbody = document.getElementById('drilldown-tbody');
+    const countEl = document.getElementById('drilldown-count');
+    
+    if(!titleEl || !tbody) return;
+
+    // Traduzir o status
+    let typeName = '';
+    let bookingsFiltro = [];
+    const activeDates = getEventDates();
+    let allValidBookings = db.bookings.filter(b => activeDates.includes(b.data) && isValidBookingForReports(b));
+
+    // Se for 'OUTROS', filtra aqueles cujo N1 = OUTROS
+    // Se for nome exato, filtra por N1 == areaName
+    const areaBookings = allValidBookings.filter(b => {
+        const p = findPerson(b.matricula || b.cpf) || b;
+        const n1 = getN1Area(p);
+        return areaName === 'OUTROS' ? (n1 === 'OUTROS' || !n1) : (n1 === areaName);
+    });
+
+    if (statusType === 'planejado') {
+        typeName = 'Agendados (Planejado)';
+        bookingsFiltro = areaBookings.filter(b => b.status === 'Agendado' || b.status === 'No-Show' || b.status === 'Embarcado');
+    } else if (statusType === 'boarded') {
+        typeName = 'Embarques no Horário (OK)';
+        bookingsFiltro = areaBookings.filter(b => b.status === 'Embarcado' && b.status_checkin === 'No Horário');
+    } else if (statusType === 'boarded_offtime') {
+        typeName = 'Embarques Fora de Horário';
+        bookingsFiltro = areaBookings.filter(b => b.status === 'Embarcado' && (b.status_checkin === 'Adiantado' || b.status_checkin === 'Atrasado'));
+    } else if (statusType === 'encaixe') {
+        typeName = 'Encaixes (Sem Agendamento Inicial)';
+        bookingsFiltro = areaBookings.filter(b => b.status === 'Embarcado' && b.status_checkin === 'Encaixe');
+    } else if (statusType === 'noshow') {
+        typeName = 'No-Show (Faltantes)';
+        bookingsFiltro = areaBookings.filter(b => b.status === 'No-Show');
+    } else if (statusType === 'naoutilizou') {
+        typeName = 'Não Utilizou';
+        bookingsFiltro = areaBookings.filter(b => b.status === 'Agendado' && isPastTrip(b.data, b.hora));
+    }
+    
+    // Sort por data/hora
+    bookingsFiltro.sort((a, b) => {
+        const d1 = new Date(a.data + 'T' + a.hora);
+        const d2 = new Date(b.data + 'T' + b.hora);
+        return d1 - d2;
+    });
+
+    window.currentDrillDownData = bookingsFiltro;
+
+    titleEl.textContent = areaName;
+    subtitleEl.textContent = typeName;
+    countEl.textContent = bookingsFiltro.length + " registro(s)";
+    tbody.innerHTML = '';
+
+    if (bookingsFiltro.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-gray-500 text-xs">Nenhum registro encontrado.</td></tr>';
+    } else {
+        bookingsFiltro.forEach(b => {
+            const passId = (b.matricula || b.cpf || '-').replace(/\D/g, '');
+            const maskedId = passId.length === 11 ? ***. + passId.substring(3,6) + . + passId.substring(6,9) + -** : passId;
+            const pNome = b.nome || 'Não identificado';
+            
+            let statusPill = <span class="status-pill text-emerald-400 border-emerald-500/20 px-2 py-0.5 text-[9px] uppercase">+b.status+</span>;
+            if (b.status === 'Agendado') statusPill = <span class="status-pill text-blue-400 border-blue-500/20 px-2 py-0.5 text-[9px] uppercase">Agendado</span>;
+            if (b.status === 'No-Show') statusPill = <span class="status-pill text-red-400 border-red-500/20 px-2 py-0.5 text-[9px] uppercase">No-Show</span>;
+            
+            if (b.status_checkin) {
+                statusPill += <br><span class="text-[8px] text-gray-400 mt-0.5 block">+b.status_checkin+</span>;
+            }
+
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-gray-800/30 transition border-b border-gray-800/30";
+            tr.innerHTML = `
+                <td class="py-2.5 px-4">
+                    <div class="font-bold text-white text-xs">$</div>
+                    <div class="text-[9px] text-gray-500 font-mono">$</div>
+                </td>
+                <td class="py-2.5 px-4">$</td>
+                <td class="py-2.5 px-4 text-xs text-gray-300">
+                    $ <i class="fa-solid fa-arrow-right text-[8px] mx-1 text-gray-600"></i> $
+                </td>
+                <td class="py-2.5 px-4 text-xs font-mono text-indigo-300">$ as $</td>
+                <td class="py-2.5 px-4 text-right text-[10px] text-gray-400">$</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    document.getElementById('drilldown-modal').classList.remove('hidden');
+}
+
+window.closeDrillDownModal = function() {
+    document.getElementById('drilldown-modal').classList.add('hidden');
+}
+
+window.exportDrillDownCSV = function() {
+    if(!window.currentDrillDownData || window.currentDrillDownData.length === 0) return;
+    
+    let csv = "NOME,IDENTIFICADOR,STATUS,DETALHE_CHECKIN,ORIGEM,DESTINO,DATA,HORA,SOLICITANTE\n";
+    window.currentDrillDownData.forEach(b => {
+        csv += "$",$,$,$,$,$,$,$,$\n;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", nalitico_drilldown.csv);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
