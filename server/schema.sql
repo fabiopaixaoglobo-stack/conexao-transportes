@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS collaborators (
     cpf VARCHAR(20) UNIQUE,
     nome VARCHAR(255) NOT NULL,
     cargo TEXT,
+    gerencia TEXT,
     departamento TEXT,
     diretoria TEXT,
     email VARCHAR(255),

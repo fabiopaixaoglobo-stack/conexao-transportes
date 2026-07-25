@@ -37,21 +37,25 @@ async function runSeed() {
             console.log(`Inserindo ${rows.length} colaboradores...`);
             for (let r of rows) {
                 const query = `
-                    INSERT INTO collaborators (matricula, cpf, nome, cargo, departamento, diretoria, email)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7)
+                    INSERT INTO collaborators (matricula, cpf, nome, cargo, gerencia, departamento, diretoria, email, tipo_vinculo, empresa)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'GLOBO', 'Globo')
                     ON CONFLICT (matricula) DO UPDATE SET 
                         email = EXCLUDED.email,
                         nome = EXCLUDED.nome,
                         cargo = EXCLUDED.cargo,
+                        gerencia = EXCLUDED.gerencia,
                         departamento = EXCLUDED.departamento,
-                        diretoria = EXCLUDED.diretoria
+                        diretoria = EXCLUDED.diretoria,
+                        tipo_vinculo = 'GLOBO',
+                        empresa = 'Globo'
                 `;
                 const values = [
                     String(r['Matricula'] || ''),
                     String(r['CPF'] || '').replace(/\D/g, ''),
                     r['Nome Funcionário'] || '',
                     r['Cargo'] || '',
-                    r['Departamento'] || r['Gerência'] || '',
+                    r['Gerência'] || '', // Coluna G: Gerência (ex: LOGISTICA E TRANSPORTE)
+                    r['Departamento'] || '',
                     r['N1'] || r['Diretoria Executiva'] || '',
                     String(r['E-mail'] || r['email'] || '').toLowerCase().trim()
                 ];

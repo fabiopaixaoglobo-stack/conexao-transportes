@@ -160,7 +160,7 @@ app.get('/api/collaborators/search', async (req, res) => {
     
     try {
         const query = `
-            SELECT matricula, nome, cargo, departamento, diretoria 
+            SELECT matricula, nome, cargo, gerencia, departamento, diretoria, tipo_vinculo, empresa 
             FROM collaborators 
             WHERE cpf = $1 OR matricula = $1 OR nome ILIKE $2
             LIMIT 5

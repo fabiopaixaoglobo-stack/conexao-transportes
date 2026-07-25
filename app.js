@@ -271,13 +271,11 @@ function findPerson(id) {
 
 function getN1Area(person) {
     if (!person) return 'OUTROS';
-    let raw = String(person.n1 || person.diretoria || person.departamento || person.tipo_vinculo || 'OUTROS').toUpperCase().trim();
-    if (raw.includes('LOGÍSTICA') || raw.includes('LOGISTICA')) {
-        if (raw.includes('TRANSPORTE')) return 'LOGÍSTICA E TRANSPORTES';
-    }
-    if (raw.includes('FINAN�!AS') || raw.includes('FINANCAS') || raw.includes('FINANCA')) {
+    let val = person.gerencia || person.departamento || person.n1 || person.diretoria || person.area || 'OUTROS';
+    let raw = String(val).toUpperCase().trim();
+    if (raw.includes('FINANCAS') || raw.includes('FINANÇAS')) {
         if (raw.includes('JURIDICO') || raw.includes('JURÍDICO') || raw.includes('INFRA')) {
-            return 'FINAN�!AS, JURÍDICO E INFRAESTRUTURA';
+            return 'FINANÇAS, JURÍDICO E INFRAESTRUTURA';
         }
     }
     return raw;
@@ -338,20 +336,27 @@ async function initDatabase() {
     const fabioExists = db.users.some(u => u.email === 'fabio.paixao@g.globo' || u.email === 'fabio.paixao@globo.com' || u.matricula === '68808');
     if (!fabioExists) {
         db.users.push({
-            nome: 'F�bio', sobrenome: 'Paix�o dos Santos', matricula: '68808', email: 'fabio.paixao@g.globo', senha: '123', perfil: 'manager'
+            nome: 'Fábio', sobrenome: 'Paixão dos Santos', matricula: '68808', email: 'fabio.paixao@g.globo', senha: '123', perfil: 'manager'
         });
     }
     if (!db.collaborators) db.collaborators = [];
-    if (!db.collaborators.some(c => String(c.matricula).trim() === '68808')) {
-        db.collaborators.push({
-            matricula: '68808',
-            nome: 'F�BIO PAIX�O DOS SANTOS',
-            cargo: 'GESTOR / ADMINISTRADOR',
-            departamento: 'TECNOLOGIA E SERVI�OS',
-            diretoria: 'SUPRIMENTOS, SERVI�OS E LOG�STICA',
-            email: 'fabio.paixao@g.globo'
-        });
+    let fabioCollab = db.collaborators.find(c => String(c.matricula).trim() === '68808');
+    if (!fabioCollab) {
+        fabioCollab = { matricula: '68808' };
+        db.collaborators.push(fabioCollab);
     }
+    Object.assign(fabioCollab, {
+        matricula: '68808',
+        nome: 'FABIO PAIXAO DOS SANTOS',
+        cargo: 'COORD OPERACAO TRANSPORTES',
+        gerencia: 'LOGISTICA E TRANSPORTE',
+        departamento: 'TRANSPORTES RJ',
+        n1: 'FINANCAS JURIDICO E INFRAESTRUTURA',
+        diretoria: 'SUPRIMENTOS SERVICOS E LOGISTICA',
+        email: 'fabio.paixao@g.globo',
+        tipo_vinculo: 'GLOBO',
+        empresa: 'Globo'
+    });
 
     if (!db.authorized_solicitants) db.authorized_solicitants = [];
     if (!db.booking_logs) db.booking_logs = [];
@@ -932,7 +937,7 @@ async function lookupPreBookingCollaborator(idVal) {
     if (person) {
         msg.classList.remove('hidden');
         msg.className = "text-[10px] mt-1 text-emerald-400 font-semibold";
-        msg.textContent = "�S Colaborador ativo encontrado";
+        msg.textContent = "Colaborador ativo encontrado";
         
         fields.classList.remove('hidden');
         document.getElementById('lbl-pre-name').textContent = person.nome;
@@ -941,14 +946,15 @@ async function lookupPreBookingCollaborator(idVal) {
         
         const companyLabel = document.getElementById('lbl-pre-company');
         if (companyLabel) {
-            companyLabel.textContent = person.empresa || (person.tipo_vinculo === 'GLOBO' ? 'Globo' : 'Terceiro');
+            const isTerceiro = person.tipo_vinculo === 'TERCEIRO' || person.empresa === 'Terceiro' || person.is_accredited;
+            companyLabel.textContent = isTerceiro ? 'Terceiro' : 'Globo';
         }
         
         updatePreBookingSavedList(person);
     } else {
         msg.classList.remove('hidden');
         msg.className = "text-[10px] mt-1 text-red-400 font-bold";
-        msg.textContent = "�S Acesso Negado: Colaborador não encontrado na base de colaboradores ou terceiros";
+        msg.textContent = "Acesso Negado: Colaborador não encontrado na base de colaboradores ou terceiros";
         fields.classList.add('hidden');
     }
 }
