@@ -5028,6 +5028,15 @@ function applyRoleConfiguration(role) {
             }
         }
     });
+
+    const bulkPanel = document.getElementById('pre-booking-bulk-panel');
+    if (bulkPanel) {
+        if (role === 'representative' || role === 'manager') {
+            bulkPanel.classList.remove('hidden');
+        } else {
+            bulkPanel.classList.add('hidden');
+        }
+    }
     
     // Standalone direct kiosk mode check
     const urlParams = new URLSearchParams(window.location.search);
