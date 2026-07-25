@@ -4938,6 +4938,16 @@ function doRecuperacaoSegura() {
 // Seletor de PapÃ©is / InterceptaÃ§Ã£o por Senha
 function selectRole(role) {
     if (role === 'manager') {
+        const token = safeStorage.local.getItem('rig_token');
+        const userJson = safeStorage.local.getItem('rig_user');
+        if (token && userJson) {
+            currentRole = role;
+            safeStorage.session.setItem('conexao_role', role);
+            const welcome = document.getElementById('welcome-portal');
+            if (welcome) welcome.classList.add('hidden');
+            applyRoleConfiguration(role);
+            return;
+        }
         openLoginSeguroModal('manager');
         return;
     }
