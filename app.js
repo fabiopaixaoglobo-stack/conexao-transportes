@@ -2836,12 +2836,12 @@ function renderAdherenceReport() {
         tr.className = "hover:bg-gray-900/20 transition-colors";
         tr.innerHTML = `
             <td class="py-3 px-4">${nameCell}</td>
-            <td class="py-3 px-4 text-center text-white font-mono">${g.planejado}</td>
-            <td class="py-3 px-4 text-center text-emerald-400 font-mono">${g.boarded}</td>
-            <td class="py-3 px-4 text-center text-indigo-400 font-mono">${g.boarded_offtime}</td>
-            <td class="py-3 px-4 text-center text-teal-400 font-mono">${g.encaixe}</td>
-            <td class="py-3 px-4 text-center text-red-400 font-mono">${g.noshow}</td>
-            <td class="py-3 px-4 text-center text-gray-500 font-mono">${g.naoutilizou}</td>
+            <td class="py-3 px-4 text-center"><a href="javascript:void(0)" onclick="openDrillDownModal('${safeEscapeAttr(g.name)}', 'planejado')" class="text-white hover:text-blue-400 font-mono underline decoration-dotted underline-offset-2">${g.planejado}</a></td>
+            <td class="py-3 px-4 text-center"><a href="javascript:void(0)" onclick="openDrillDownModal('${safeEscapeAttr(g.name)}', 'boarded')" class="text-emerald-400 hover:text-emerald-300 font-mono underline decoration-dotted underline-offset-2">${g.boarded}</a></td>
+            <td class="py-3 px-4 text-center"><a href="javascript:void(0)" onclick="openDrillDownModal('${safeEscapeAttr(g.name)}', 'boarded_offtime')" class="text-indigo-400 hover:text-indigo-300 font-mono underline decoration-dotted underline-offset-2">${g.boarded_offtime}</a></td>
+            <td class="py-3 px-4 text-center"><a href="javascript:void(0)" onclick="openDrillDownModal('${safeEscapeAttr(g.name)}', 'encaixe')" class="text-teal-400 hover:text-teal-300 font-mono underline decoration-dotted underline-offset-2">${g.encaixe}</a></td>
+            <td class="py-3 px-4 text-center"><a href="javascript:void(0)" onclick="openDrillDownModal('${safeEscapeAttr(g.name)}', 'noshow')" class="text-red-400 hover:text-red-300 font-mono underline decoration-dotted underline-offset-2">${g.noshow}</a></td>
+            <td class="py-3 px-4 text-center"><a href="javascript:void(0)" onclick="openDrillDownModal('${safeEscapeAttr(g.name)}', 'naoutilizou')" class="text-gray-500 hover:text-gray-400 font-mono underline decoration-dotted underline-offset-2">${g.naoutilizou}</a></td>
             <td class="py-3 px-4 text-right font-bold font-mono ${rateClass}">${rate}%</td>
         `;
         tbody.appendChild(tr);
@@ -10763,7 +10763,7 @@ window.openDrillDownModal = function(areaName, statusType) {
         bookingsFiltro = areaBookings.filter(b => b.status === 'No-Show');
     } else if (statusType === 'naoutilizou') {
         typeName = 'Não Utilizou';
-        bookingsFiltro = areaBookings.filter(b => b.status === 'Agendado' && isPastTrip(b.data, b.hora));
+        bookingsFiltro = areaBookings.filter(b => b.status === 'Agendado' && (new Date(b.data + 'T' + b.hora) < new Date()));
     }
     
     // Sort por data/hora
