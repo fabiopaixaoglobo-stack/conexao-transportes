@@ -587,32 +587,55 @@ function saveDatabase() {
     }
 }
 
-function resetDatabase() {
-    if (confirm("Deseja realmente restaurar o banco de dados original? Todas as alterações, check-ins e agendamentos recentes serão perdidos.")) {
-        safeStorage.local.removeItem('conexao_transportes_db');
-        initDatabase();
-        
-        // Reset inputs
-        resetPassengerForm();
-        resetPreBookingForm();
-        
-        // Reset Event & Date dropdowns
-        document.getElementById('event-selector').value = 'RIR';
-        currentEvent = 'RIR';
-        populateDateSelectors();
-        updateEventLabels();
-        renderReplicationCheckboxes();
-        updatePreBookingTimes();
-        updateAvailableTimes();
-        
-        if (currentTab === 'operation') {
-            refreshOperationList();
-        } else if (currentTab === 'management') {
-            updateDashboard();
-        }
-        
-        showToast("Banco de dados restaurado", "O banco de dados do Carnaval 2026 e credenciais do RIR 26 foram reiniciados.", "info");
+window.goHome = function() {
+    switchTab('booking-portal');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (typeof showToast === 'function') {
+        showToast("Tela Inicial", "Você retornou à página inicial do sistema.", "info");
     }
+};
+
+window.resetDatabaseWithProtection = function() {
+    const p1 = confirm("⚠️ ATENÇÃO EXTREMA: Deseja realmente restaurar o banco de dados original?\n\nEsta é uma ação de ÚLTIMO CASO. O histórico de agendamentos e check-ins recentes será permanentemente perdido.");
+    if (!p1) return;
+
+    const input = prompt("Para confirmar a restauração completa do banco, digite a palavra RESTAURAR em maiúsculas:");
+    if (input === "RESTAURAR") {
+        resetDatabase(true);
+    } else {
+        alert("Ação cancelada. A palavra de confirmação digitada foi incorreta.");
+    }
+};
+
+function resetDatabase(force = false) {
+    if (!force) {
+        console.warn("Restauração de banco bloqueada por segurança. Utilize o menu de Administração de Acessos.");
+        return;
+    }
+    
+    safeStorage.local.removeItem('conexao_transportes_db');
+    initDatabase();
+    
+    // Reset inputs
+    resetPassengerForm();
+    resetPreBookingForm();
+    
+    // Reset Event & Date dropdowns
+    document.getElementById('event-selector').value = 'RIR';
+    currentEvent = 'RIR';
+    populateDateSelectors();
+    updateEventLabels();
+    renderReplicationCheckboxes();
+    updatePreBookingTimes();
+    updateAvailableTimes();
+    
+    if (currentTab === 'operation') {
+        refreshOperationList();
+    } else if (currentTab === 'management') {
+        updateDashboard();
+    }
+    
+    showToast("Banco de dados restaurado", "O banco de dados do Carnaval 2026 e credenciais do RIR 26 foram reiniciados.", "info");
 }
 
 // Garante que o banco de dados local contenha registros equivalentes para o Rock in Rio 2026
@@ -721,8 +744,9 @@ function setupEventHandlers() {
         if (currentTab === 'management') updateDashboard();
     });
 
-    // Reset DB button
-    document.getElementById('btn-reset-db').addEventListener('click', resetDatabase);
+    // Reset DB button (se houver)
+    const btnReset = document.getElementById('btn-reset-db');
+    if (btnReset) btnReset.addEventListener('click', resetDatabaseWithProtection);
 
     // Listeners de mudança de base nos formulários para atualizar os horários
     const pvo = document.getElementById('pre-vai-origin');

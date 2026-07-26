@@ -337,9 +337,9 @@
                 </select>
             </div>
 
-            <!-- Database Reset Button -->
-            <button id="btn-reset-db" title="Restaurar Banco de Dados Original" class="bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-3 py-2 rounded-xl border border-gray-700 transition duration-200">
-                <i class="fa-solid fa-arrow-rotate-left"></i>
+            <!-- Home / Tela Inicial Button -->
+            <button onclick="goHome()" title="Voltar para a Tela Inicial (Home)" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-1.5 rounded-xl border border-indigo-500/30 transition duration-200 flex items-center gap-1.5 font-bold text-xs cursor-pointer shadow-md shadow-indigo-500/20">
+                <i class="fa-solid fa-house"></i> Home
             </button>
             
             <!-- Active Profile Indicator / Switcher -->
@@ -3141,7 +3141,18 @@
                                 <!-- Injetado dinamicamente -->
                             </tbody>
                         </table>
+            <!-- Bloco 5: Zona de Perigo - Manutenção Crítica de Banco (Recurso de Último Caso) -->
+            <div class="glass p-5 rounded-2xl border border-rose-500/30 bg-rose-950/10 space-y-3">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div>
+                        <h4 class="text-xs font-bold text-rose-400 uppercase flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Manutenção Crítica de Banco (Recurso de Último Caso)
+                        </h4>
+                        <p class="text-[11px] text-gray-400 mt-1">Atenção: O histórico de agendamentos e check-ins é a essência do sistema. Utilize esta opção apenas em emergências técnicas extremas.</p>
                     </div>
+                    <button onclick="resetDatabaseWithProtection()" class="bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white px-4 py-2 rounded-xl border border-rose-500/40 text-xs font-bold transition duration-200 flex items-center gap-2 cursor-pointer shrink-0">
+                        <i class="fa-solid fa-trash-can"></i> Restaurar Banco Original
+                    </button>
                 </div>
             </div>
 
