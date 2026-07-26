@@ -384,19 +384,45 @@ async function initDatabase() {
         db.accredited = []; // Autocomplete para credenciados
         rebuildDatabaseMaps();
 
-        const bookRes = await fetch(`${API_URL}/bookings`, { headers });
-        if (bookRes.ok) {
-            db.bookings = await bookRes.json();
-        } else {
-            console.warn("Sem token ou erro ao buscar bookings.");
-            db.bookings = [];
+        // 1. Carrega do localStorage primeiro (segurança instantânea)
+        let localBookings = [];
+        try {
+            const savedStr = safeStorage.local.getItem('rig_bookings');
+            if (savedStr) localBookings = JSON.parse(savedStr);
+        } catch(e) {}
+        if (!Array.isArray(localBookings)) localBookings = [];
+
+        // 2. Tenta buscar do backend e mescla
+        try {
+            const bookRes = await fetch(`${API_URL}/bookings`, { headers });
+            if (bookRes.ok) {
+                const remoteBookings = await bookRes.json();
+                const bMap = new Map();
+                localBookings.forEach(b => { if (b && b.id) bMap.set(b.id, b); });
+                if (Array.isArray(remoteBookings)) {
+                    remoteBookings.forEach(b => { if (b && b.id) bMap.set(b.id, b); });
+                }
+                db.bookings = Array.from(bMap.values());
+            } else {
+                db.bookings = localBookings;
+            }
+        } catch (err) {
+            console.warn("Backend unreachable, using local storage cache", err);
+            db.bookings = localBookings;
         }
+        saveBookingsLocal();
         
     } catch (err) {
-        console.error("Backend unreachable, using empty arrays fallback", err);
-        db.collaborators = [];
-        db.accredited = [];
-        db.bookings = [];
+        console.error("Backend unreachable, keeping local storage fallback", err);
+        if (!db.collaborators) db.collaborators = [fabioCollab];
+        if (!db.accredited) db.accredited = [];
+        if (!db.bookings || db.bookings.length === 0) {
+            try {
+                const savedStr = safeStorage.local.getItem('rig_bookings');
+                if (savedStr) db.bookings = JSON.parse(savedStr);
+            } catch(e) {}
+        }
+        if (!db.bookings) db.bookings = [];
     }
 
     // Adicionar por padrão o administrador e colaboradores de tecnologia como autorizados
