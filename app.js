@@ -1,3 +1,12 @@
+
+function saveBookingsLocal() {
+    try {
+        if (db && db.bookings) {
+            safeStorage.local.setItem('rig_bookings', JSON.stringify(db.bookings));
+        }
+    } catch(e) { console.error('Error saving bookings to localStorage:', e); }
+}
+
 // Conexão Transportes - Application Engine
 // Lógica do Front-end e Gerenciamento de Estado (Persistência via localStorage)
 
@@ -945,6 +954,12 @@ async function lookupPreBookingCollaborator(idVal) {
         document.getElementById('lbl-pre-cargo').textContent = person.cargo || "Funcionário";
         document.getElementById('lbl-pre-dept').textContent = getN1Area(person);
         
+        const existingBookings = getCollaboratorEventBookings(person.matricula, person.cpf);
+        if (existingBookings.length > 0) {
+            msg.className = "text-[10px] mt-1 text-amber-400 font-bold";
+            msg.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-1"></i> Atenção: Colaborador já possui agendamento ativo neste evento. Veja abaixo:';
+        }
+        
         const companyLabel = document.getElementById('lbl-pre-company');
         if (companyLabel) {
             const isTerceiro = person.tipo_vinculo === 'TERCEIRO' || person.empresa === 'Terceiro' || person.is_accredited;
@@ -1231,6 +1246,7 @@ function createBooking(person, origin, dest, serviceType, accompany, date, time,
     };
     
     db.bookings.push(newBooking);
+    saveBookingsLocal();
     syncBookingCreate(newBooking);
     trip.planejado += 1;
 
@@ -1450,7 +1466,7 @@ function downloadAgendamentoModelCSV() {
 
 function simulateBulkBookingUpload() {
     const allDates = getEventDates();
-    const masterList = currentEvent === 'RIR' ? db.accredited : db.collaborators;
+    const masterList = [...(db.collaborators || []), ...(db.accredited || [])];
     const candidates = masterList.filter(ac => !db.bookings.some(b => (b.matricula === ac.matricula || b.cpf === ac.cpf) && b.status !== 'Cancelado')).slice(0, 5);
     
     if (candidates.length === 0) {
