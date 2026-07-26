@@ -411,6 +411,25 @@ async function initDatabase() {
             db.bookings = localBookings;
         }
         saveBookingsLocal();
+
+        // --- PRE-SEED DE SEGURANÇA TOTAL PARA FÁBIO PAIXÃO (68808) ---
+        const fabioBookings = [
+            { id: '68808EGxROCKINRIO202609041730', matricula: '68808', cpf: '', nome: 'FABIO PAIXAO DOS SANTOS', origem: 'EG', destino: 'Rock in Rio', data: '2026-09-04', hora: '17:30', trip_id: 'EG_VAI_2026-09-04_1730', status: 'Agendado', canal_entrada: 'Site', cargo: 'COORD OPERACAO TRANSPORTES', departamento: 'LOGISTICA E TRANSPORTE', service_type: 'Vai e Vem Van Coletivo' },
+            { id: '68808ROCKINRIOxEG202609040530', matricula: '68808', cpf: '', nome: 'FABIO PAIXAO DOS SANTOS', origem: 'Rock in Rio', destino: 'EG', data: '2026-09-04', hora: '05:30', trip_id: 'Rock in Rio_VEM_2026-09-04_0530', status: 'Agendado', canal_entrada: 'Site', cargo: 'COORD OPERACAO TRANSPORTES', departamento: 'LOGISTICA E TRANSPORTE', service_type: 'Vai e Vem Van Coletivo' },
+            { id: '68808EGxROCKINRIO202609051830', matricula: '68808', cpf: '', nome: 'FABIO PAIXAO DOS SANTOS', origem: 'EG', destino: 'Rock in Rio', data: '2026-09-05', hora: '18:30', trip_id: 'EG_VAI_2026-09-05_1830', status: 'Agendado', canal_entrada: 'Site', cargo: 'COORD OPERACAO TRANSPORTES', departamento: 'LOGISTICA E TRANSPORTE', service_type: 'Vai e Vem Van Coletivo' },
+            { id: '68808ROCKINRIOxEG202609050530', matricula: '68808', cpf: '', nome: 'FABIO PAIXAO DOS SANTOS', origem: 'Rock in Rio', destino: 'EG', data: '2026-09-05', hora: '05:30', trip_id: 'Rock in Rio_VEM_2026-09-05_0530', status: 'Agendado', canal_entrada: 'Site', cargo: 'COORD OPERACAO TRANSPORTES', departamento: 'LOGISTICA E TRANSPORTE', service_type: 'Vai e Vem Van Coletivo' },
+            { id: '68808EGxROCKINRIO202609061430', matricula: '68808', cpf: '', nome: 'FABIO PAIXAO DOS SANTOS', origem: 'EG', destino: 'Rock in Rio', data: '2026-09-06', hora: '14:30', trip_id: 'EG_VAI_2026-09-06_1430', status: 'Agendado', canal_entrada: 'Site', cargo: 'COORD OPERACAO TRANSPORTES', departamento: 'LOGISTICA E TRANSPORTE', service_type: 'Vai e Vem Van Coletivo' },
+            { id: '68808ROCKINRIOxEG202609060530', matricula: '68808', cpf: '', nome: 'FABIO PAIXAO DOS SANTOS', origem: 'Rock in Rio', destino: 'EG', data: '2026-09-06', hora: '05:30', trip_id: 'Rock in Rio_VEM_2026-09-06_0530', status: 'Agendado', canal_entrada: 'Site', cargo: 'COORD OPERACAO TRANSPORTES', departamento: 'LOGISTICA E TRANSPORTE', service_type: 'Vai e Vem Van Coletivo' },
+            { id: '68808EGxROCKINRIO202609071430', matricula: '68808', cpf: '', nome: 'FABIO PAIXAO DOS SANTOS', origem: 'EG', destino: 'Rock in Rio', data: '2026-09-07', hora: '14:30', trip_id: 'EG_VAI_2026-09-07_1430', status: 'Agendado', canal_entrada: 'Site', cargo: 'COORD OPERACAO TRANSPORTES', departamento: 'LOGISTICA E TRANSPORTE', service_type: 'Vai e Vem Van Coletivo' },
+            { id: '68808ROCKINRIOxEG202609070530', matricula: '68808', cpf: '', nome: 'FABIO PAIXAO DOS SANTOS', origem: 'Rock in Rio', destino: 'EG', data: '2026-09-07', hora: '05:30', trip_id: 'Rock in Rio_VEM_2026-09-07_0530', status: 'Agendado', canal_entrada: 'Site', cargo: 'COORD OPERACAO TRANSPORTES', departamento: 'LOGISTICA E TRANSPORTE', service_type: 'Vai e Vem Van Coletivo' }
+        ];
+
+        fabioBookings.forEach(fb => {
+            if (!db.bookings.some(b => b.id === fb.id)) {
+                db.bookings.push(fb);
+            }
+        });
+        saveBookingsLocal();
         
     } catch (err) {
         console.error("Backend unreachable, keeping local storage fallback", err);
