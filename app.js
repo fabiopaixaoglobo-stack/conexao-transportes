@@ -371,8 +371,9 @@ async function initDatabase() {
         const token = safeStorage.local.getItem('rig_token');
         const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-        db.collaborators = []; // Não carregamos mais tudo, LGPD! Usaremos autocomplete
-        db.accredited = []; // Não carregamos mais tudo, LGPD! Usaremos autocomplete
+        db.collaborators = [fabioCollab]; // Preserva cadastro Master local (Fábio Paixão)
+        db.accredited = []; // Autocomplete para credenciados
+        rebuildDatabaseMaps();
 
         const bookRes = await fetch(`${API_URL}/bookings`, { headers });
         if (bookRes.ok) {
