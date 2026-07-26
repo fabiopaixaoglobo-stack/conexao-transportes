@@ -781,6 +781,9 @@ function switchTab(tabId) {
 
 // --- CONTROLE DE SUB-TABS (GESTÒO & ANALYTICS) ---
 function switchSubTab(subTabId) {
+    if (subTabId === 'live-db' || subTabId === 'subtab-content-db-viewer') {
+        setTimeout(refreshLiveDbViewer, 100);
+    }
     currentSubTab = subTabId;
     
     const subtabs = ['graphs', 'adherence', 'loss-sim', 'van-simulator', 'audit', 'drivers', 'tracking', 'upload-panel', 'db-viewer', 'robot-audit'];
@@ -10796,40 +10799,79 @@ function prevPresentationSlide() {
 async function refreshLiveDbViewer() {
     const tbody = document.getElementById('db-live-tbody');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-xs text-blue-400"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Buscando dados no Render...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-xs text-blue-400"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Conectando ao Banco Render...</td></tr>';
     
     try {
-        const res = await fetch(getApiUrl() + '/bookings');
-        if (!res.ok) throw new Error('API Error');
-        const data = await res.json();
+        const token = safeStorage.local.getItem('rig_token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const res = await fetch(getApiUrl() + '/bookings', { headers });
         
-        document.getElementById('db-live-count').textContent = data.length;
-        document.getElementById('db-live-time').textContent = new Date().toLocaleTimeString();
-        document.getElementById('db-live-status').innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> Conectado';
+        let data = [];
+        if (res.ok) {
+            data = await res.json();
+        }
+        
+        if (!Array.isArray(data) || data.length === 0) {
+            data = db.bookings || [];
+        }
+        
+        const countEl = document.getElementById('db-live-count');
+        const timeEl = document.getElementById('db-live-time');
+        const statusEl = document.getElementById('db-live-status');
+        
+        if (countEl) countEl.textContent = data.length;
+        if (timeEl) timeEl.textContent = new Date().toLocaleTimeString();
+        if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-circle-check mr-1 text-emerald-400"></i> Conectado';
         
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-xs text-gray-500">Nenhum agendamento encontrado no banco.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-xs text-gray-500">Nenhum agendamento gravado até o momento.</td></tr>';
             return;
         }
         
-        // Renderizar os últimos 50 do mais recente para o mais antigo
-        tbody.innerHTML = data.slice(-50).reverse().map(b => `
-        <tr>
-            <td class="p-3 text-xs text-gray-400 border-b border-gray-800/50 font-mono">${b.id || '-'}</td>
-            <td class="p-3 text-xs text-white border-b border-gray-800/50 font-bold">${b.passageiro_nome} <span class="text-[9px] text-gray-500 font-normal block">CPF: ${b.passageiro_matricula}</span></td>
-            <td class="p-3 text-xs text-gray-300 border-b border-gray-800/50">${b.base_saida} <i class="fa-solid fa-arrow-right text-[8px] mx-1 text-gray-600"></i> ${b.base_destino}<br><span class="text-[9px] text-indigo-400">${b.data_viagem} às ${b.horario_saida}</span></td>
-            <td class="p-3 border-b border-gray-800/50"><span class="status-pill text-emerald-400 px-2 py-1 rounded text-[9px] font-bold uppercase">${b.status}</span></td>
-        </tr>
-        `).join('');
+        tbody.innerHTML = data.slice(-50).reverse().map(b => {
+            const pNome = b.nome || b.passageiro_nome || 'Passageiro';
+            const pMat = b.matricula || b.cpf || b.passageiro_matricula || '-';
+            const orig = b.origem || b.base_saida || 'EG';
+            const dest = b.destino || b.base_destino || 'Evento';
+            const dt = b.data || b.data_viagem || '';
+            const hr = b.hora || b.horario_saida || '';
+            const st = b.status || 'Agendado';
+
+            return `
+            <tr>
+                <td class="p-3 text-xs text-gray-400 border-b border-gray-800/50 font-mono">${safeEscapeHtml(b.id || '-')}</td>
+                <td class="p-3 text-xs text-white border-b border-gray-800/50 font-bold">${safeEscapeHtml(pNome)} <span class="text-[9px] text-gray-500 font-normal block">ID: ${safeEscapeHtml(pMat)}</span></td>
+                <td class="p-3 text-xs text-gray-300 border-b border-gray-800/50">${safeEscapeHtml(orig)} <i class="fa-solid fa-arrow-right text-[8px] mx-1 text-gray-600"></i> ${safeEscapeHtml(dest)}<br><span class="text-[9px] text-indigo-400">${safeEscapeHtml(dt)} às ${safeEscapeHtml(hr)}</span></td>
+                <td class="p-3 border-b border-gray-800/50"><span class="status-pill text-emerald-400 px-2 py-1 rounded text-[9px] font-bold uppercase">${safeEscapeHtml(st)}</span></td>
+            </tr>
+            `;
+        }).join('');
         
     } catch(err) {
         console.error("Erro Live DB:", err);
-        document.getElementById('db-live-status').innerHTML = '<i class="fa-solid fa-circle-xmark mr-1 text-rose-500"></i> Erro de Conexão';
-        tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-xs text-rose-500">Erro ao acessar banco de dados. A API está online?</td></tr>';
+        const data = db.bookings || [];
+        const countEl = document.getElementById('db-live-count');
+        const timeEl = document.getElementById('db-live-time');
+        const statusEl = document.getElementById('db-live-status');
+        
+        if (countEl) countEl.textContent = data.length;
+        if (timeEl) timeEl.textContent = new Date().toLocaleTimeString();
+        if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-circle-check mr-1 text-emerald-400"></i> Conectado (Modo Local)';
+        
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-xs text-gray-500">Nenhum agendamento na memória local.</td></tr>';
+        } else {
+            tbody.innerHTML = data.slice(-50).reverse().map(b => `
+            <tr>
+                <td class="p-3 text-xs text-gray-400 border-b border-gray-800/50 font-mono">${safeEscapeHtml(b.id || '-')}</td>
+                <td class="p-3 text-xs text-white border-b border-gray-800/50 font-bold">${safeEscapeHtml(b.nome || 'Passageiro')} <span class="text-[9px] text-gray-500 font-normal block">ID: ${safeEscapeHtml(b.matricula || b.cpf || '-')}</span></td>
+                <td class="p-3 text-xs text-gray-300 border-b border-gray-800/50">${safeEscapeHtml(b.origem || 'EG')} <i class="fa-solid fa-arrow-right text-[8px] mx-1 text-gray-600"></i> ${safeEscapeHtml(b.destino || 'Evento')}<br><span class="text-[9px] text-indigo-400">${safeEscapeHtml(b.data || '')} às ${safeEscapeHtml(b.hora || '')}</span></td>
+                <td class="p-3 border-b border-gray-800/50"><span class="status-pill text-emerald-400 px-2 py-1 rounded text-[9px] font-bold uppercase">${safeEscapeHtml(b.status || 'Agendado')}</span></td>
+            </tr>
+            `).join('');
+        }
     }
 }
-
-// =========================================================================
 // WEBSOCKETS (REAL-TIME CHECK-IN)
 // =========================================================================
 if (typeof io !== 'undefined') {
