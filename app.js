@@ -1233,7 +1233,7 @@ function createBooking(person, origin, dest, serviceType, accompany, date, time,
             if (savedUser) {
                 try {
                     const uObj = JSON.parse(savedUser);
-                    return `${uObj.nome} ${uObj.sobrenome} (Matrícula: ${uObj.matricula})`;
+                    return `${uObj.nome} ${(uObj.sobrenome && uObj.sobrenome !== 'undefined' ? uObj.sobrenome : '')} (Matrícula: ${uObj.matricula})`;
                 } catch(e) {}
             }
             if (typeof representativeFixedArea !== 'undefined' && representativeFixedArea) {
@@ -10959,4 +10959,192 @@ window.runRobotAudit = async function() {
             </div>
         `).join('');
     }
+};
+
+
+// --- RELATÓRIO DE ADERÊNCIA: VISUALIZAÇÃO NOMINAL POR NOME ---
+function renderAdherenceNominalReport() {
+    const tbody = document.getElementById('adh-nominal-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const filterVal = (document.getElementById('adh-nominal-search')?.value || '').toLowerCase().trim();
+    const activeDates = getEventDates();
+    const eventBookings = (db.bookings || []).filter(b => activeDates.includes(b.data) && b.status !== 'Cancelado');
+
+    // Agrupa por colaborador
+    const personMap = new Map();
+
+    eventBookings.forEach(b => {
+        const idKey = String(b.matricula || b.cpf || b.nome).trim();
+        if (!personMap.has(idKey)) {
+            const p = findPerson(b.matricula || b.cpf) || b;
+            personMap.set(idKey, {
+                id: idKey,
+                matricula: b.matricula || '',
+                cpf: b.cpf || '',
+                nome: p.nome || b.nome || 'Não identificado',
+                cargo: p.cargo || b.cargo || 'Funcionário',
+                area: getN1Area(p),
+                empresa: p.empresa || (p.tipo_vinculo === 'TERCEIRO' ? 'Terceiro' : 'Globo'),
+                bookings: []
+            });
+        }
+        personMap.get(idKey).bookings.push(b);
+    });
+
+    let personList = Array.from(personMap.values());
+
+    if (filterVal) {
+        personList = personList.filter(p => 
+            p.nome.toLowerCase().includes(filterVal) ||
+            p.matricula.toLowerCase().includes(filterVal) ||
+            p.cpf.toLowerCase().includes(filterVal) ||
+            p.area.toLowerCase().includes(filterVal)
+        );
+    }
+
+    // Ordena por nome
+    personList.sort((a, b) => a.nome.localeCompare(b.nome));
+
+    if (personList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-4 text-center text-gray-500 font-semibold">Nenhum agendamento encontrado para o filtro informado.</td></tr>';
+        return;
+    }
+
+    personList.forEach(p => {
+        const uniqueDates = [...new Set(p.bookings.map(b => b.data))].sort();
+        const formattedDates = uniqueDates.map(d => {
+            const parts = d.split('-');
+            return parts.length === 3 ? `${parts[2]}/${parts[1]}` : d;
+        }).join(', ');
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-gray-900/30 transition-colors";
+        tr.innerHTML = `
+            <td class="py-3 px-4">
+                <a href="javascript:void(0)" onclick="openPersonDatesModal('${safeEscapeAttr(p.id)}')" class="font-bold text-white hover:text-indigo-400 transition cursor-pointer flex items-center gap-1.5">
+                    <i class="fa-solid fa-user text-indigo-400 text-xs"></i> ${safeEscapeHtml(p.nome)}
+                </a>
+                <span class="text-[10px] text-gray-500 font-mono block">${safeEscapeHtml(p.cargo)}</span>
+            </td>
+            <td class="py-3 px-4 font-semibold text-gray-300">${safeEscapeHtml(p.area)}</td>
+            <td class="py-3 px-4 text-gray-300 font-mono text-xs">${safeEscapeHtml(formattedDates)}</td>
+            <td class="py-3 px-4 text-center font-bold text-indigo-300 font-mono">${uniqueDates.length} dia(s)</td>
+            <td class="py-3 px-4 text-right">
+                <button onclick="openPersonDatesModal('${safeEscapeAttr(p.id)}')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3 py-1.5 rounded-xl text-[10px] shadow transition cursor-pointer inline-flex items-center gap-1.5">
+                    <i class="fa-solid fa-calendar-days"></i> Ver Dias (${uniqueDates.length})
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+window.openPersonDatesModal = function(personId) {
+    const activeDates = getEventDates();
+    const bookings = (db.bookings || []).filter(b => 
+        (String(b.matricula).trim() === String(personId).trim() || String(b.cpf).trim() === String(personId).trim() || String(b.nome).trim() === String(personId).trim()) &&
+        activeDates.includes(b.data) &&
+        b.status !== 'Cancelado'
+    );
+
+    if (bookings.length === 0) return;
+
+    const first = bookings[0];
+    const p = findPerson(personId) || first;
+
+    document.getElementById('pmodal-name').textContent = p.nome || first.nome || 'Passageiro';
+    document.getElementById('pmodal-id').textContent = p.matricula || p.cpf || personId;
+    document.getElementById('pmodal-area').textContent = getN1Area(p);
+    document.getElementById('pmodal-company').textContent = p.empresa || (p.tipo_vinculo === 'TERCEIRO' ? 'Terceiro' : 'Globo');
+
+    // Agrupa por data
+    const dateMap = new Map();
+    bookings.forEach(b => {
+        if (!dateMap.has(b.data)) {
+            dateMap.set(b.data, { date: b.data, vai: null, vem: null, bookingObj: b });
+        }
+        if (b.destino.includes('Rio') || b.destino.includes('Sambodromo') || b.destino.includes('Event')) {
+            dateMap.get(b.data).vai = b;
+        } else {
+            dateMap.get(b.data).vem = b;
+        }
+    });
+
+    const datesList = Array.from(dateMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+    const tbody = document.getElementById('pmodal-tbody');
+    tbody.innerHTML = '';
+
+    datesList.forEach(item => {
+        const parts = item.date.split('-');
+        const dateFmt = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : item.date;
+        
+        const vaiStr = item.vai ? `${item.vai.origem} ➔ ${item.vai.destino} (${item.vai.hora})` : '-';
+        const vemStr = item.vem ? `${item.vem.origem} ➔ ${item.vem.destino} (${item.vem.hora})` : '-';
+        const bObj = item.vai || item.vem || item.bookingObj;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-gray-900/40 transition";
+        tr.innerHTML = `
+            <td class="p-3 font-mono font-bold text-white">${dateFmt}</td>
+            <td class="p-3 text-gray-300 text-xs">${vaiStr}</td>
+            <td class="p-3 text-gray-300 text-xs">${vemStr}</td>
+            <td class="p-3 text-center"><span class="status-pill text-emerald-400 px-2 py-0.5 rounded text-[9px] font-bold uppercase">${bObj.status || 'Agendado'}</span></td>
+            <td class="p-3 text-right">
+                <button onclick="closePersonDatesModal(); switchTab('booking-portal'); showPreBookingInstructionsById('${safeEscapeAttr(bObj.id)}')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-2.5 py-1 rounded-lg text-[9px] transition cursor-pointer">
+                    <i class="fa-solid fa-ticket mr-1"></i> Bilhete
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    document.getElementById('person-dates-modal').classList.remove('hidden');
+};
+
+window.closePersonDatesModal = function() {
+    document.getElementById('person-dates-modal').classList.add('hidden');
+};
+
+window.exportAdherenceNominalCSV = function() {
+    const activeDates = getEventDates();
+    const eventBookings = (db.bookings || []).filter(b => activeDates.includes(b.data) && b.status !== 'Cancelado');
+
+    let csv = "NOME,MATRICULA_CPF,CARGO,AREA_N1,EMPRESA,DATAS_AGENDADAS,TOTAL_DIAS\n";
+    
+    const personMap = new Map();
+    eventBookings.forEach(b => {
+        const idKey = String(b.matricula || b.cpf || b.nome).trim();
+        if (!personMap.has(idKey)) {
+            const p = findPerson(b.matricula || b.cpf) || b;
+            personMap.set(idKey, {
+                nome: p.nome || b.nome || 'Não identificado',
+                id: idKey,
+                cargo: p.cargo || b.cargo || 'Funcionário',
+                area: getN1Area(p),
+                empresa: p.empresa || 'Globo',
+                dates: new Set()
+            });
+        }
+        personMap.get(idKey).dates.add(b.data);
+    });
+
+    personMap.forEach(p => {
+        const datesStr = Array.from(p.dates).sort().join(' ; ');
+        csv += `"${p.nome}","${p.id}","${p.cargo}","${p.area}","${p.empresa}","${datesStr}","${p.dates.size}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Aderencia_Nominal_${currentEvent}_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+};
+
+// Chama a renderização nominal ao carregar o relatório de aderência
+const oldRenderAdherenceReport = renderAdherenceReport;
+renderAdherenceReport = function() {
+    oldRenderAdherenceReport();
+    renderAdherenceNominalReport();
 };
