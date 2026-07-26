@@ -10826,15 +10826,15 @@ window.openDrillDownModal = function(areaName, statusType) {
             tr.className = "hover:bg-gray-800/30 transition border-b border-gray-800/30";
             tr.innerHTML = `
                 <td class="py-2.5 px-4">
-                    <div class="font-bold text-white text-xs">$</div>
-                    <div class="text-[9px] text-gray-500 font-mono">$</div>
+                    <div class="font-bold text-white text-xs">${safeEscapeHtml(pNome)}</div>
+                    <div class="text-[9px] text-gray-500 font-mono">${safeEscapeHtml(maskedId)}</div>
                 </td>
-                <td class="py-2.5 px-4">$</td>
+                <td class="py-2.5 px-4">${statusPill}</td>
                 <td class="py-2.5 px-4 text-xs text-gray-300">
-                    $ <i class="fa-solid fa-arrow-right text-[8px] mx-1 text-gray-600"></i> $
+                    ${safeEscapeHtml(b.origem || 'EG')} <i class="fa-solid fa-arrow-right text-[8px] mx-1 text-gray-600"></i> ${safeEscapeHtml(b.destino || 'Local Evento')}
                 </td>
-                <td class="py-2.5 px-4 text-xs font-mono text-indigo-300">$ as $</td>
-                <td class="py-2.5 px-4 text-right text-[10px] text-gray-400">$</td>
+                <td class="py-2.5 px-4 text-xs font-mono text-indigo-300">${safeEscapeHtml(b.data || '')} às ${safeEscapeHtml(b.hora || '')}</td>
+                <td class="py-2.5 px-4 text-right text-[10px] text-gray-400">${safeEscapeHtml(b.solicitante_nome || b.solicitante || b.solicitante_id || '-')}</td>
             `;
             tbody.appendChild(tr);
         });
