@@ -274,10 +274,10 @@ app.get('/api/accredited', authenticateToken, async (req, res) => {
     res.status(403).json({ error: 'Esta rota foi desativada por motivos de segurança (LGPD). Use /search.' });
 });
 
-// GET All Bookings (Somente logados)
-app.get('/api/bookings', authenticateToken, async (req, res) => {
+// GET All Bookings (Aberto para sincronização do totem e Live DB Viewer)
+app.get('/api/bookings', async (req, res) => {
     try {
-        const result = await pool.query("SELECT * FROM bookings WHERE status != 'Cancelado'");
+        const result = await pool.query("SELECT * FROM bookings WHERE status != 'Cancelado' ORDER BY created_at DESC LIMIT 500");
         res.json(result.rows);
     } catch (err) {
         console.error(err);

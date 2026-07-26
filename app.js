@@ -1125,7 +1125,7 @@ function updatePreBookingSavedList(person) {
             if (!grouped[b.data]) {
                 grouped[b.data] = { vai: null, vem: null };
             }
-            if (b.destino === 'Sambodromo') {
+            if (b.destino === getEventLocationName()) {
                 grouped[b.data].vai = b;
             } else {
                 grouped[b.data].vem = b;
@@ -1162,7 +1162,7 @@ function updatePreBookingSavedList(person) {
 
 // Cria agendamento individual e garante a estrutura no banco
 function createBooking(person, origin, dest, serviceType, accompany, date, time, canal_entrada, solicitantPerson = null) {
-    const escopo = (dest === 'Sambodromo') ? 'VAI' : 'VEM';
+    const escopo = (dest === getEventLocationName()) ? 'VAI' : 'VEM';
     const trip_id = `${origin}_${escopo}_${date}_${time.replace(':', '')}`;
     const idBooking = `${person.matricula || person.cpf}${origin}x${dest}${date.replace(/-/g, '')}${time.replace(':', '')}`;
     
@@ -1348,13 +1348,13 @@ function handlePreBookingSubmit() {
         const hasConflictingVai = enableVai && db.bookings.some(b => 
             ((b.matricula && b.matricula === person.matricula) || (person.cpf && b.cpf === person.cpf)) && 
             b.data === d && 
-            b.destino === 'Sambodromo' && 
+            b.destino === getEventLocationName() && 
             b.status !== 'Cancelado'
         );
         const hasConflictingVem = enableVem && db.bookings.some(b => 
             ((b.matricula && b.matricula === person.matricula) || (person.cpf && b.cpf === person.cpf)) && 
             b.data === d && 
-            b.origem === 'Sambodromo' && 
+            b.origem === getEventLocationName() && 
             b.status !== 'Cancelado'
         );
         if (hasConflictingVai || hasConflictingVem) {
@@ -1680,8 +1680,8 @@ function updatePassengerFormForSelectedDate() {
         b.data === date
     );
     
-    const hasVai = bookings.some(b => b.origem !== 'Sambodromo');
-    const hasVem = bookings.some(b => b.origem === 'Sambodromo');
+    const hasVai = bookings.some(b => b.origem !== getEventLocationName());
+    const hasVem = bookings.some(b => b.origem === getEventLocationName());
     
     const chkVai = document.getElementById('pass-enable-vai');
     const chkVem = document.getElementById('pass-enable-vem');
@@ -1693,14 +1693,14 @@ function updatePassengerFormForSelectedDate() {
     toggleLegInputs('pass', 'vem');
     
     if (hasVai) {
-        const vaiBooking = bookings.find(b => b.origem !== 'Sambodromo');
+        const vaiBooking = bookings.find(b => b.origem !== getEventLocationName());
         document.getElementById('pass-vai-origin').value = vaiBooking.origem;
         updateAvailableTimes();
         document.getElementById('pass-time').value = vaiBooking.hora;
     }
     
     if (hasVem) {
-        const vemBooking = bookings.find(b => b.origem === 'Sambodromo');
+        const vemBooking = bookings.find(b => b.origem === getEventLocationName());
         document.getElementById('pass-vem-destination').value = vemBooking.destino;
         updateAvailableTimes();
         const vemTimeSelect = document.getElementById('pass-vem-time');
@@ -1781,7 +1781,7 @@ function handlePassengerSubmit() {
     // Validações
     if (enableVai) {
         const origin = document.getElementById('pass-vai-origin').value;
-        const dest = 'Sambodromo';
+        const dest = getEventLocationName();
         let booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === passId || b.cpf === passId) && b.data === date && b.origem === origin && b.destino === dest);
         if (!booking) {
             document.getElementById('pass-lookup-msg').classList.remove('hidden');
@@ -1794,7 +1794,7 @@ function handlePassengerSubmit() {
 
     if (enableVem && !enableVai) {
         const dest = document.getElementById('pass-vem-destination').value;
-        const origin = 'Sambodromo';
+        const origin = getEventLocationName();
         let booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === passId || b.cpf === passId) && b.data === date && b.origem === origin && b.destino === dest);
         if (!booking) {
             document.getElementById('pass-lookup-msg').classList.remove('hidden');
@@ -1869,7 +1869,7 @@ function renderDatesList(containerId, listId, bookings) {
         if (!groups[b.data]) {
             groups[b.data] = { vai: null, vem: null, vaiOrigem: '', vemDestino: '' };
         }
-        if (b.origem === 'Sambodromo') {
+        if (b.origem === getEventLocationName()) {
             groups[b.data].vem = b.hora;
             groups[b.data].vemDestino = b.destino;
         } else {
@@ -1913,11 +1913,11 @@ function renderTicket(booking) {
 
     const eventLoc = getEventLocationNameFromDate(booking.data);
 
-    document.getElementById('ticket-route-from-sig').textContent = booking.origem === 'Sambodromo' ? (eventLoc === 'Rock in Rio' ? 'RIR' : 'SAMB') : booking.origem;
+    document.getElementById('ticket-route-from-sig').textContent = booking.origem === getEventLocationName() ? (eventLoc === 'Rock in Rio' ? 'RIR' : 'SAMB') : booking.origem;
     document.getElementById('ticket-route-from').textContent = booking.origem === 'EG' ? 'Estúdios Globo' : (booking.origem === 'JB' ? 'Jardim Botânico' : (booking.origem === 'ION' ? 'Íon (Barra)' : eventLoc));
     
-    document.getElementById('ticket-route-to-sig').textContent = booking.destino === 'Sambodromo' ? (eventLoc === 'Rock in Rio' ? 'RIR' : 'SAMB') : booking.destino;
-    document.getElementById('ticket-route-to').textContent = booking.destino === 'Sambodromo' ? eventLoc : (booking.destino === 'EG' ? 'Estúdios Globo' : (booking.destino === 'JB' ? 'Jardim Botânico' : 'Íon (Barra)'));
+    document.getElementById('ticket-route-to-sig').textContent = booking.destino === getEventLocationName() ? (eventLoc === 'Rock in Rio' ? 'RIR' : 'SAMB') : booking.destino;
+    document.getElementById('ticket-route-to').textContent = booking.destino === getEventLocationName() ? eventLoc : (booking.destino === 'EG' ? 'Estúdios Globo' : (booking.destino === 'JB' ? 'Jardim Botânico' : 'Íon (Barra)'));
 
     const svcBadge = document.getElementById('ticket-service-badge');
     svcBadge.textContent = booking.service_type || 'Van';
@@ -1977,11 +1977,11 @@ function renderPreTicket(booking) {
 
     const eventLoc = getEventLocationNameFromDate(booking.data);
 
-    document.getElementById('pre-ticket-route-from-sig').textContent = booking.origem === 'Sambodromo' ? (eventLoc === 'Rock in Rio' ? 'RIR' : 'SAMB') : booking.origem;
+    document.getElementById('pre-ticket-route-from-sig').textContent = booking.origem === getEventLocationName() ? (eventLoc === 'Rock in Rio' ? 'RIR' : 'SAMB') : booking.origem;
     document.getElementById('pre-ticket-route-from').textContent = booking.origem === 'EG' ? 'Estúdios Globo' : (booking.origem === 'JB' ? 'Jardim Botânico' : (booking.origem === 'ION' ? 'Íon (Barra)' : eventLoc));
     
-    document.getElementById('pre-ticket-route-to-sig').textContent = booking.destino === 'Sambodromo' ? (eventLoc === 'Rock in Rio' ? 'RIR' : 'SAMB') : booking.destino;
-    document.getElementById('pre-ticket-route-to').textContent = booking.destino === 'Sambodromo' ? eventLoc : (booking.destino === 'EG' ? 'Estúdios Globo' : (booking.destino === 'JB' ? 'Jardim Botânico' : 'Íon (Barra)'));
+    document.getElementById('pre-ticket-route-to-sig').textContent = booking.destino === getEventLocationName() ? (eventLoc === 'Rock in Rio' ? 'RIR' : 'SAMB') : booking.destino;
+    document.getElementById('pre-ticket-route-to').textContent = booking.destino === getEventLocationName() ? eventLoc : (booking.destino === 'EG' ? 'Estúdios Globo' : (booking.destino === 'JB' ? 'Jardim Botânico' : 'Íon (Barra)'));
 
     const svcBadge = document.getElementById('pre-ticket-service-badge');
     svcBadge.textContent = booking.service_type || 'Van';
@@ -2056,8 +2056,8 @@ function editCurrentPreBooking() {
     document.getElementById('pre-id').value = id;
     lookupPreBookingCollaborator(id);
     
-    const vaiB = bookings.find(b => b.destino === 'Sambodromo');
-    const vemB = bookings.find(b => b.origem === 'Sambodromo');
+    const vaiB = bookings.find(b => b.destino === getEventLocationName());
+    const vemB = bookings.find(b => b.origem === getEventLocationName());
     const firstB = bookings[0];
     
     if (vaiB) {
@@ -2161,7 +2161,7 @@ function populateOperationFilters() {
     const route = document.getElementById('op-route').value;
     const routeParts = route.split(' x ');
     const dest = routeParts[1];
-    const direction = (dest === 'Sambodromo') ? 'VAI' : 'VEM';
+    const direction = (dest === getEventLocationName()) ? 'VAI' : 'VEM';
     const base = direction === 'VAI' ? routeParts[0] : routeParts[1];
     const activeTimes = getAvailableHours(direction, currentEvent, base);
     
@@ -2194,7 +2194,7 @@ function refreshOperationList() {
 
     const orig = route.split(' x ')[0];
     const dest = route.split(' x ')[1];
-    const escopo = (dest === 'Sambodromo') ? 'VAI' : 'VEM';
+    const escopo = (dest === getEventLocationName()) ? 'VAI' : 'VEM';
 
     const trip_id = `${orig}_${escopo}_${date}_${time ? time.replace(':', '') : ''}`;
     const trip = db.trips.find(t => t.id === trip_id);
@@ -2357,7 +2357,7 @@ function simulateBipCheckin() {
     const time = document.getElementById('op-time').value;
     const orig = route.split(' x ')[0];
     const dest = route.split(' x ')[1];
-    const escopo = (dest === 'Sambodromo') ? 'VAI' : 'VEM';
+    const escopo = (dest === getEventLocationName()) ? 'VAI' : 'VEM';
     const trip_id = `${orig}_${escopo}_${date}_${time.replace(':', '')}`;
 
     // 1. Procurar agendamento exato para a viagem ativa
@@ -2495,7 +2495,7 @@ function handleEncaixeSubmit() {
     const time = document.getElementById('op-time').value;
     const orig = route.split(' x ')[0];
     const dest = route.split(' x ')[1];
-    const escopo = (dest === 'Sambodromo') ? 'VAI' : 'VEM';
+    const escopo = (dest === getEventLocationName()) ? 'VAI' : 'VEM';
     const trip_id = `${orig}_${escopo}_${date}_${time.replace(':', '')}`;
     const service = document.getElementById('op-service-type').value !== 'ALL' ? document.getElementById('op-service-type').value : 'Vai e Vem Van';
 
@@ -2557,7 +2557,7 @@ function openRescheduleModal(bookingId) {
     const timeSelect = document.getElementById('resch-time-select');
     timeSelect.innerHTML = '';
     
-    const escopo = (booking.destino === 'Sambodromo') ? 'VAI' : 'VEM';
+    const escopo = (booking.destino === getEventLocationName()) ? 'VAI' : 'VEM';
     const base = (escopo === 'VAI') ? booking.origem : booking.destino;
     const times = getAvailableHours(escopo, currentEvent, base);
 
@@ -2586,7 +2586,7 @@ function handleRescheduleSubmit() {
     if (!booking) return;
 
     const oldTripId = booking.trip_id;
-    const newTripId = `${booking.origem}_${(booking.destino==='Sambodromo'?'VAI':'VEM')}_${booking.data}_${newTime.replace(':','')}`;
+    const newTripId = `${booking.origem}_${(booking.destino===getEventLocationName()?'VAI':'VEM')}_${booking.data}_${newTime.replace(':','')}`;
     
     booking.hora = newTime;
     booking.trip_id = newTripId;
@@ -2603,7 +2603,7 @@ function handleRescheduleSubmit() {
         newTrip = {
             id: newTripId,
             site: booking.origem,
-            escopo: booking.destino === 'Sambodromo' ? 'VAI' : 'VEM',
+            escopo: booking.destino === getEventLocationName() ? 'VAI' : 'VEM',
             hora: newTime,
             data: booking.data,
             capacidade: (booking.service_type === 'Vai e Vem Van') ? 15 : 4,
@@ -2665,9 +2665,9 @@ function renderMirroredCharts() {
         let directionBookings = [];
         
         if (currentDirection === 'VAI') {
-            directionBookings = db.bookings.filter(b => b.origem === site && b.destino === 'Sambodromo' && activeDates.includes(b.data) && b.status !== 'Cancelado');
+            directionBookings = db.bookings.filter(b => b.origem === site && b.destino === getEventLocationName() && activeDates.includes(b.data) && b.status !== 'Cancelado');
         } else {
-            directionBookings = db.bookings.filter(b => b.origem === 'Sambodromo' && b.destino === site && activeDates.includes(b.data) && b.status !== 'Cancelado');
+            directionBookings = db.bookings.filter(b => b.origem === getEventLocationName() && b.destino === site && activeDates.includes(b.data) && b.status !== 'Cancelado');
         }
 
         const booked = directionBookings.length;
@@ -3143,8 +3143,8 @@ window.renderScheduledPassengersReport = function() {
             entry.daysMap[b.data] = { ida: [], volta: [] };
         }
 
-        const isVAI = b.destino === 'Sambodromo' || b.destino === 'Cidade do Rock' || (b.trip_id && b.trip_id.includes('VAI'));
-        const isVEM = b.origem === 'Sambodromo' || b.origem === 'Cidade do Rock' || (b.trip_id && b.trip_id.includes('VEM'));
+        const isVAI = b.destino === getEventLocationName() || b.destino === 'Cidade do Rock' || (b.trip_id && b.trip_id.includes('VAI'));
+        const isVEM = b.origem === getEventLocationName() || b.origem === 'Cidade do Rock' || (b.trip_id && b.trip_id.includes('VEM'));
 
         const mapToSite = (site) => {
             if(!site) return '';
@@ -3311,8 +3311,8 @@ window.exportScheduledPassengersCSV = function() {
         const p = personMap.get(key);
         if (!p.daysMap[b.data]) p.daysMap[b.data] = { ida: [], volta: [] };
         
-        const isVAI = b.destino === 'Sambodromo' || b.destino === 'Cidade do Rock' || (b.trip_id && b.trip_id.includes('VAI'));
-        const isVEM = b.origem === 'Sambodromo' || b.origem === 'Cidade do Rock' || (b.trip_id && b.trip_id.includes('VEM'));
+        const isVAI = b.destino === getEventLocationName() || b.destino === 'Cidade do Rock' || (b.trip_id && b.trip_id.includes('VAI'));
+        const isVEM = b.origem === getEventLocationName() || b.origem === 'Cidade do Rock' || (b.trip_id && b.trip_id.includes('VEM'));
 
         const mapToSite = (site) => {
             if(!site) return '';
@@ -3453,8 +3453,8 @@ window.renderVanSizingConsolidated = function() {
 
     const slots = {};
     activeBookings.forEach(b => {
-        const isVAI = b.destino === 'Sambodromo' || b.destino === 'Cidade do Rock' || (b.trip_id && b.trip_id.includes('VAI'));
-        const isVEM = b.origem === 'Sambodromo' || b.origem === 'Cidade do Rock' || (b.trip_id && b.trip_id.includes('VEM'));
+        const isVAI = b.destino === getEventLocationName() || b.destino === 'Cidade do Rock' || (b.trip_id && b.trip_id.includes('VAI'));
+        const isVEM = b.origem === getEventLocationName() || b.origem === 'Cidade do Rock' || (b.trip_id && b.trip_id.includes('VEM'));
         const dir = isVAI ? 'VAI' : (isVEM ? 'VEM' : 'IDA');
 
         if (directionFilter !== 'ALL' && dir !== directionFilter) return;
@@ -3552,8 +3552,8 @@ window.exportVanSizingCSV = function() {
 
     const slots = {};
     activeBookings.forEach(b => {
-        const isVAI = b.destino === 'Sambodromo' || b.destino === 'Cidade do Rock' || (b.trip_id && b.trip_id.includes('VAI'));
-        const isVEM = b.origem === 'Sambodromo' || b.origem === 'Cidade do Rock' || (b.trip_id && b.trip_id.includes('VEM'));
+        const isVAI = b.destino === getEventLocationName() || b.destino === 'Cidade do Rock' || (b.trip_id && b.trip_id.includes('VAI'));
+        const isVEM = b.origem === getEventLocationName() || b.origem === 'Cidade do Rock' || (b.trip_id && b.trip_id.includes('VEM'));
         const dir = isVAI ? 'VAI' : (isVEM ? 'VEM' : 'IDA');
 
         const key = `${b.data}_${dir}_${b.hora || '00:00'}`;
@@ -4305,7 +4305,7 @@ function commitPendingBookings() {
             const existingVais = db.bookings.filter(b => 
                 (b.matricula === pb.person.matricula || (pb.person.cpf && b.cpf === pb.person.cpf)) && 
                 b.data === pb.date && 
-                b.destino === 'Sambodromo' && 
+                b.destino === getEventLocationName() && 
                 b.status !== 'Cancelado'
             );
             if (pb.enableVai) {
@@ -4324,7 +4324,7 @@ function commitPendingBookings() {
             const existingVems = db.bookings.filter(b => 
                 (b.matricula === pb.person.matricula || (pb.person.cpf && b.cpf === pb.person.cpf)) && 
                 b.data === pb.date && 
-                b.origem === 'Sambodromo' && 
+                b.origem === getEventLocationName() && 
                 b.status !== 'Cancelado'
             );
             if (pb.enableVem) {
@@ -4341,27 +4341,27 @@ function commitPendingBookings() {
             }
 
             if (pb.enableVai) {
-                let booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === pb.person.matricula || b.cpf === pb.person.cpf) && b.data === pb.date && b.origem === pb.vaiOrigin && b.destino === 'Sambodromo');
+                let booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === pb.person.matricula || b.cpf === pb.person.cpf) && b.data === pb.date && b.origem === pb.vaiOrigin && b.destino === getEventLocationName());
                 if (!booking) {
-                    const ok = createBooking(pb.person, pb.vaiOrigin, 'Sambodromo', pb.serviceType, pb.accompany, pb.date, pb.vaiTime, pb.canal, pb.solicitant);
+                    const ok = createBooking(pb.person, pb.vaiOrigin, getEventLocationName(), pb.serviceType, pb.accompany, pb.date, pb.vaiTime, pb.canal, pb.solicitant);
                     if (ok) bookedCount++;
                 } else {
                     bookedCount++;
                 }
                 if (!ticketBooking) {
-                    ticketBooking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === pb.person.matricula || b.cpf === pb.person.cpf) && b.data === pb.date && b.origem === pb.vaiOrigin && b.destino === 'Sambodromo');
+                    ticketBooking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === pb.person.matricula || b.cpf === pb.person.cpf) && b.data === pb.date && b.origem === pb.vaiOrigin && b.destino === getEventLocationName());
                 }
             }
             if (pb.enableVem) {
-                let booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === pb.person.matricula || b.cpf === pb.person.cpf) && b.data === pb.date && b.origem === 'Sambodromo' && b.destino === pb.vemDest);
+                let booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === pb.person.matricula || b.cpf === pb.person.cpf) && b.data === pb.date && b.origem === getEventLocationName() && b.destino === pb.vemDest);
                 if (!booking) {
-                    const ok = createBooking(pb.person, 'Sambodromo', pb.vemDest, pb.serviceType, pb.accompany, pb.date, pb.vemTime, pb.canal, pb.solicitant);
+                    const ok = createBooking(pb.person, getEventLocationName(), pb.vemDest, pb.serviceType, pb.accompany, pb.date, pb.vemTime, pb.canal, pb.solicitant);
                     if (ok) bookedCount++;
                 } else {
                     bookedCount++;
                 }
                 if (!ticketBooking) {
-                    ticketBooking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === pb.person.matricula || b.cpf === pb.person.cpf) && b.data === pb.date && b.origem === 'Sambodromo' && b.destino === pb.vemDest);
+                    ticketBooking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === pb.person.matricula || b.cpf === pb.person.cpf) && b.data === pb.date && b.origem === getEventLocationName() && b.destino === pb.vemDest);
                 }
             }
         });
@@ -4391,7 +4391,7 @@ function commitPendingBookings() {
         const existingVai = db.bookings.filter(b => 
             (b.matricula === primary.person.matricula || (primary.person.cpf && b.cpf === primary.person.cpf)) && 
             b.data === primary.date && 
-            b.destino === 'Sambodromo' && 
+            b.destino === getEventLocationName() && 
             b.status !== 'Cancelado'
         );
         if (primary.enableVai) {
@@ -4410,7 +4410,7 @@ function commitPendingBookings() {
         const existingVem = db.bookings.filter(b => 
             (b.matricula === primary.person.matricula || (primary.person.cpf && b.cpf === primary.person.cpf)) && 
             b.data === primary.date && 
-            b.origem === 'Sambodromo' && 
+            b.origem === getEventLocationName() && 
             b.status !== 'Cancelado'
         );
         if (primary.enableVem) {
@@ -4427,11 +4427,11 @@ function commitPendingBookings() {
         }
 
         if (primary.enableVai) {
-            let booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === primary.person.matricula || b.cpf === primary.person.cpf) && b.data === primary.date && b.origem === primary.vaiOrigin && b.destino === 'Sambodromo');
+            let booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === primary.person.matricula || b.cpf === primary.person.cpf) && b.data === primary.date && b.origem === primary.vaiOrigin && b.destino === getEventLocationName());
             
             if (!booking) {
-                createBooking(primary.person, primary.vaiOrigin, 'Sambodromo', primary.serviceType, primary.accompany, primary.date, primary.vaiTime, primary.canal);
-                booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === primary.person.matricula || b.cpf === primary.person.cpf) && b.data === primary.date && b.origem === primary.vaiOrigin && b.destino === 'Sambodromo');
+                createBooking(primary.person, primary.vaiOrigin, getEventLocationName(), primary.serviceType, primary.accompany, primary.date, primary.vaiTime, primary.canal);
+                booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === primary.person.matricula || b.cpf === primary.person.cpf) && b.data === primary.date && b.origem === primary.vaiOrigin && b.destino === getEventLocationName());
             }
             
             if (booking) {
@@ -4448,10 +4448,10 @@ function commitPendingBookings() {
             const mustBoardVem = !primary.enableVai;
             
             if (mustBoardVem) {
-                let booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === primary.person.matricula || b.cpf === primary.person.cpf) && b.data === primary.date && b.origem === 'Sambodromo' && b.destino === primary.vemDest);
+                let booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === primary.person.matricula || b.cpf === primary.person.cpf) && b.data === primary.date && b.origem === getEventLocationName() && b.destino === primary.vemDest);
                 if (!booking) {
-                    createBooking(primary.person, 'Sambodromo', primary.vemDest, primary.serviceType, primary.accompany, primary.date, primary.vemTime, primary.canal);
-                    booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === primary.person.matricula || b.cpf === primary.person.cpf) && b.data === primary.date && b.origem === 'Sambodromo' && b.destino === primary.vemDest);
+                    createBooking(primary.person, getEventLocationName(), primary.vemDest, primary.serviceType, primary.accompany, primary.date, primary.vemTime, primary.canal);
+                    booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === primary.person.matricula || b.cpf === primary.person.cpf) && b.data === primary.date && b.origem === getEventLocationName() && b.destino === primary.vemDest);
                 }
                 if (booking) {
                     booking.status = 'Embarcado';
@@ -4462,9 +4462,9 @@ function commitPendingBookings() {
                     ticketBooking = booking;
                 }
             } else {
-                let booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === primary.person.matricula || b.cpf === primary.person.cpf) && b.data === primary.date && b.origem === 'Sambodromo' && b.destino === primary.vemDest);
+                let booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === primary.person.matricula || b.cpf === primary.person.cpf) && b.data === primary.date && b.origem === getEventLocationName() && b.destino === primary.vemDest);
                 if (!booking) {
-                    createBooking(primary.person, 'Sambodromo', primary.vemDest, primary.serviceType, primary.accompany, primary.date, primary.vemTime, primary.canal);
+                    createBooking(primary.person, getEventLocationName(), primary.vemDest, primary.serviceType, primary.accompany, primary.date, primary.vemTime, primary.canal);
                 }
             }
         }
@@ -4475,7 +4475,7 @@ function commitPendingBookings() {
             const existingPBVai = db.bookings.filter(b => 
                 (b.matricula === pb.person.matricula || (pb.person.cpf && b.cpf === pb.person.cpf)) && 
                 b.data === pb.date && 
-                b.destino === 'Sambodromo' && 
+                b.destino === getEventLocationName() && 
                 b.status !== 'Cancelado'
             );
             if (pb.enableVai) {
@@ -4494,7 +4494,7 @@ function commitPendingBookings() {
             const existingPBVem = db.bookings.filter(b => 
                 (b.matricula === pb.person.matricula || (pb.person.cpf && b.cpf === pb.person.cpf)) && 
                 b.data === pb.date && 
-                b.origem === 'Sambodromo' && 
+                b.origem === getEventLocationName() && 
                 b.status !== 'Cancelado'
             );
             if (pb.enableVem) {
@@ -4511,15 +4511,15 @@ function commitPendingBookings() {
             }
 
             if (pb.enableVai) {
-                let booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === pb.person.matricula || b.cpf === pb.person.cpf) && b.data === pb.date && b.origem === pb.vaiOrigin && b.destino === 'Sambodromo');
+                let booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === pb.person.matricula || b.cpf === pb.person.cpf) && b.data === pb.date && b.origem === pb.vaiOrigin && b.destino === getEventLocationName());
                 if (!booking) {
-                    createBooking(pb.person, pb.vaiOrigin, 'Sambodromo', pb.serviceType, pb.accompany, pb.date, pb.vaiTime, pb.canal);
+                    createBooking(pb.person, pb.vaiOrigin, getEventLocationName(), pb.serviceType, pb.accompany, pb.date, pb.vaiTime, pb.canal);
                 }
             }
             if (pb.enableVem) {
-                let booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === pb.person.matricula || b.cpf === pb.person.cpf) && b.data === pb.date && b.origem === 'Sambodromo' && b.destino === pb.vemDest);
+                let booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === pb.person.matricula || b.cpf === pb.person.cpf) && b.data === pb.date && b.origem === getEventLocationName() && b.destino === pb.vemDest);
                 if (!booking) {
-                    createBooking(pb.person, 'Sambodromo', pb.vemDest, pb.serviceType, pb.accompany, pb.date, pb.vemTime, pb.canal);
+                    createBooking(pb.person, getEventLocationName(), pb.vemDest, pb.serviceType, pb.accompany, pb.date, pb.vemTime, pb.canal);
                 }
             }
         }
@@ -4530,7 +4530,7 @@ function commitPendingBookings() {
         if (ticketBooking) {
             renderTicket(ticketBooking);
         } else {
-            const bookingVem = db.bookings.find(b => (b.matricula === primary.person.matricula || b.cpf === primary.person.cpf) && b.data === primary.date && b.origem === 'Sambodromo' && b.destino === primary.vemDest);
+            const bookingVem = db.bookings.find(b => (b.matricula === primary.person.matricula || b.cpf === primary.person.cpf) && b.data === primary.date && b.origem === getEventLocationName() && b.destino === primary.vemDest);
             if (bookingVem) renderTicket(bookingVem);
         }
         
@@ -4542,7 +4542,7 @@ function commitPendingBookings() {
             const existingVai = db.bookings.filter(b => 
                 (b.matricula === pb.person.matricula || (pb.person.cpf && b.cpf === pb.person.cpf)) && 
                 b.data === pb.date && 
-                b.destino === 'Sambodromo' && 
+                b.destino === getEventLocationName() && 
                 b.status !== 'Cancelado'
             );
             if (pb.enableVai) {
@@ -4561,7 +4561,7 @@ function commitPendingBookings() {
             const existingVem = db.bookings.filter(b => 
                 (b.matricula === pb.person.matricula || (pb.person.cpf && b.cpf === pb.person.cpf)) && 
                 b.data === pb.date && 
-                b.origem === 'Sambodromo' && 
+                b.origem === getEventLocationName() && 
                 b.status !== 'Cancelado'
             );
             if (pb.enableVem) {
@@ -4578,18 +4578,18 @@ function commitPendingBookings() {
             }
 
             if (pb.enableVai) {
-                let booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === pb.person.matricula || b.cpf === pb.person.cpf) && b.data === pb.date && b.origem === pb.vaiOrigin && b.destino === 'Sambodromo');
+                let booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === pb.person.matricula || b.cpf === pb.person.cpf) && b.data === pb.date && b.origem === pb.vaiOrigin && b.destino === getEventLocationName());
                 if (!booking) {
-                    const ok = createBooking(pb.person, pb.vaiOrigin, 'Sambodromo', pb.serviceType, pb.accompany, pb.date, pb.vaiTime, pb.canal);
+                    const ok = createBooking(pb.person, pb.vaiOrigin, getEventLocationName(), pb.serviceType, pb.accompany, pb.date, pb.vaiTime, pb.canal);
                     if (ok) bulkCount++;
                 } else {
                     bulkCount++;
                 }
             }
             if (pb.enableVem) {
-                let booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === pb.person.matricula || b.cpf === pb.person.cpf) && b.data === pb.date && b.origem === 'Sambodromo' && b.destino === pb.vemDest);
+                let booking = db.bookings.find(b => b.status === 'Agendado' && (b.matricula === pb.person.matricula || b.cpf === pb.person.cpf) && b.data === pb.date && b.origem === getEventLocationName() && b.destino === pb.vemDest);
                 if (!booking) {
-                    const ok = createBooking(pb.person, 'Sambodromo', pb.vemDest, pb.serviceType, pb.accompany, pb.date, pb.vemTime, pb.canal);
+                    const ok = createBooking(pb.person, getEventLocationName(), pb.vemDest, pb.serviceType, pb.accompany, pb.date, pb.vemTime, pb.canal);
                     if (ok) bulkCount++;
                 } else {
                     bulkCount++;
@@ -5611,7 +5611,7 @@ function generateConfirmationEmailHTML(person, bookings) {
         rowsHtml += `
             <tr style="border-bottom: 1px solid #e5e7eb;">
                 <td style="padding: 10px; font-size: 13px; color: #374151;">${b.data}</td>
-                <td style="padding: 10px; font-size: 13px; color: #374151;">${b.origem === 'Sambodromo' || b.origem === 'Cidade do Rock' ? 'Retorno (Vem)' : 'Ida (Vai)'}</td>
+                <td style="padding: 10px; font-size: 13px; color: #374151;">${b.origem === getEventLocationName() || b.origem === 'Cidade do Rock' ? 'Retorno (Vem)' : 'Ida (Vai)'}</td>
                 <td style="padding: 10px; font-size: 13px; color: #374151;">${b.origem}</td>
                 <td style="padding: 10px; font-size: 13px; color: #374151;">${b.destino}</td>
                 <td style="padding: 10px; font-size: 13px; color: #1d4ed8; font-weight: bold;">${b.hora}</td>
@@ -7039,11 +7039,11 @@ function handleQuickCheckinUrl(bookingId) {
         
         if (match) {
             origin = match[2];
-            dest = 'Sambodromo';
+            dest = getEventLocationName();
         } else {
             match = bookingId.match(regexVem);
             if (match) {
-                origin = 'Sambodromo';
+                origin = getEventLocationName();
                 dest = match[2];
             }
         }
@@ -7079,7 +7079,7 @@ function handleQuickCheckinUrl(bookingId) {
     
     const eventLoc = getEventLocationNameFromDate(booking.data);
     const fromStr = booking.origem === 'EG' ? 'Estúdios Globo' : (booking.origem === 'JB' ? 'Jardim Botânico' : (booking.origem === 'ION' ? 'Íon (Barra)' : eventLoc));
-    const toStr = booking.destino === 'Sambodromo' ? eventLoc : (booking.destino === 'EG' ? 'Estúdios Globo' : (booking.destino === 'JB' ? 'Jardim Botânico' : 'Íon (Barra)'));
+    const toStr = booking.destino === getEventLocationName() ? eventLoc : (booking.destino === 'EG' ? 'Estúdios Globo' : (booking.destino === 'JB' ? 'Jardim Botânico' : 'Íon (Barra)'));
     document.getElementById('qb-route').textContent = `${fromStr} �~ ${toStr}`;
     
     const parts = booking.data.split('-');
@@ -7157,11 +7157,11 @@ function showTicketFromUrl(ticketId) {
         
         if (match) {
             origin = match[2];
-            dest = 'Sambodromo';
+            dest = getEventLocationName();
         } else {
             match = ticketId.match(regexVem);
             if (match) {
-                origin = 'Sambodromo';
+                origin = getEventLocationName();
                 dest = match[2];
             }
         }
@@ -8035,7 +8035,7 @@ function updateLiveMapMarkers() {
     
     // Renderizar veículos ativos no Leaflet
     Object.values(filteredTrackers).forEach(tracker => {
-        const destCoords = tracker.route.includes('Sambodromo') ? BASE_COORDINATES.Sambodromo : (tracker.route.includes('EG') ? BASE_COORDINATES.EG : (tracker.route.includes('JB') ? BASE_COORDINATES.JB : BASE_COORDINATES.ION));
+        const destCoords = tracker.route.includes(getEventLocationName()) ? BASE_COORDINATES.Sambodromo : (tracker.route.includes('EG') ? BASE_COORDINATES.EG : (tracker.route.includes('JB') ? BASE_COORDINATES.JB : BASE_COORDINATES.ION));
         const distanceRemaining = calculateHaversineDistance(tracker.lat, tracker.lng, destCoords[0], destCoords[1]);
         const speed = tracker.speed || 45;
         const etaMin = distanceRemaining === 0 ? 0 : Math.round((distanceRemaining / speed) * 60);
@@ -9741,7 +9741,7 @@ function importDriverScheduleMap(event) {
                 const startTime = parseExcelDate(row['M']);
                 const endTime = parseExcelDate(row['O']);
                 const origin = String(row['L'] || 'Estúdios Globo').trim();
-                const destination = String(row['N'] || 'Sambodromo').trim();
+                const destination = String(row['N'] || getEventLocationName()).trim();
                 
                 // Geocodificação da localidade de saída
                 const originCoords = await geocodeAddress(origin);
@@ -10030,9 +10030,9 @@ function recalculateVanSimulation() {
     
     // Filtrar por direção/escopo
     if (direction === 'VAI') {
-        eventBookings = eventBookings.filter(b => b.destino === 'Sambodromo');
+        eventBookings = eventBookings.filter(b => b.destino === getEventLocationName());
     } else if (direction === 'VEM') {
-        eventBookings = eventBookings.filter(b => b.origem === 'Sambodromo');
+        eventBookings = eventBookings.filter(b => b.origem === getEventLocationName());
     }
     
     // Agrupar passageiros por horário de viagem
@@ -10864,3 +10864,83 @@ window.exportDrillDownCSV = function() {
     link.click();
     document.body.removeChild(link);
 }
+
+
+window.runRobotAudit = async function() {
+    const loading = document.getElementById('robot-audit-loading');
+    const results = document.getElementById('robot-audit-results');
+    const empty = document.getElementById('robot-audit-empty');
+    if (!results) return;
+    
+    if (loading) loading.classList.remove('hidden');
+    results.classList.add('hidden');
+    if (empty) empty.classList.add('hidden');
+    
+    let issues = [];
+    
+    const activeBookings = (db.bookings || []).filter(b => b.status !== 'Cancelado');
+    
+    // Verifica duplicidades
+    const seen = new Map();
+    activeBookings.forEach(b => {
+        const key = `${b.matricula || b.cpf}_${b.data}_${b.origem}_${b.destino}_${b.hora}`;
+        if (seen.has(key)) {
+            issues.push({
+                type: 'Agendamento Duplicado',
+                severity: 'Alta',
+                title: `Duplicidade: ${b.nome || 'Passageiro'}`,
+                desc: `Múltiplos agendamentos ativos identificados para o mesmo dia e horário (${b.data} às ${b.hora}).`
+            });
+        } else {
+            seen.set(key, true);
+        }
+    });
+    
+    // Verifica agendamentos sem nome
+    activeBookings.forEach(b => {
+        if (!b.nome || b.nome.trim() === '' || b.nome === 'Não identificado') {
+            issues.push({
+                type: 'Cadastro Incompleto',
+                severity: 'Média',
+                title: `Passageiro sem Nome (ID: ${b.id})`,
+                desc: `O agendamento na data ${b.data} ${b.hora} não possui nome completo associado.`
+            });
+        }
+    });
+    
+    // Consulta diagnóstico do servidor se disponível
+    try {
+        const res = await fetch(`${getApiUrl()}/system-health`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data.issues && data.issues.length > 0) {
+                data.issues.forEach(i => {
+                    issues.push({
+                        type: i.type || 'Anomalia Detectada',
+                        severity: 'Alta',
+                        title: i.error || 'Alerta no Banco',
+                        desc: i.cause || i.resolution || ''
+                    });
+                });
+            }
+        }
+    } catch(e) {}
+    
+    if (loading) loading.classList.add('hidden');
+    
+    if (issues.length === 0) {
+        if (empty) empty.classList.remove('hidden');
+    } else {
+        results.classList.remove('hidden');
+        results.innerHTML = issues.map(i => `
+            <div class="bg-gray-900 border border-amber-500/30 p-4 rounded-xl space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-[10px] uppercase font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">${i.type}</span>
+                    <span class="text-[9px] font-bold text-rose-400 uppercase">${i.severity}</span>
+                </div>
+                <h5 class="text-xs font-bold text-white">${i.title}</h5>
+                <p class="text-[11px] text-gray-400 leading-normal">${i.desc}</p>
+            </div>
+        `).join('');
+    }
+};
