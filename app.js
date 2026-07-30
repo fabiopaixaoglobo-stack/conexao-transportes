@@ -5793,15 +5793,20 @@ let isBackendAvailable = false;
 
 async function checkBackendStatus() {
     try {
-        const res = await fetch('http://localhost:8000/api/ping');
-        const data = await res.json();
-        if (data.backend === 'python') {
-            isBackendAvailable = true;
-            console.log("Python server active. SMTP features enabled.");
+        const apiBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? 'http://localhost:8000/api' 
+            : '/api';
+        const res = await fetch(`${apiBase}/ping`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data.backend === 'python' || data.ok || data.status === 'online') {
+                isBackendAvailable = true;
+                console.log("[API] Server active. Backend features enabled.");
+            }
         }
     } catch (e) {
         isBackendAvailable = false;
-        console.log("Python server inactive. Client-side simulation active.");
+        console.log("[API] Server check finished (simulation mode).");
     }
 }
 
@@ -5892,7 +5897,10 @@ async function sendConfirmationEmail(person, bookings) {
 
     if (isBackendAvailable) {
         try {
-            const res = await fetch('http://localhost:8000/api/send-email', {
+            const apiBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+                ? 'http://localhost:8000/api' 
+                : '/api';
+            const res = await fetch(`${apiBase}/send-email`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -8250,8 +8258,8 @@ function updateLiveMapMarkers() {
                     let telClean = String(m.telefone).replace(/\D/g, '');
                     if (telClean.length === 10 || telClean.length === 11) {
                         telClean = '55' + telClean;
-                    }
-                    const msgText = `Prezado Sr. ${m.motorista},\n\nSolicitamos a ativação do acompanhamento de rota para o atendimento de contingência no Portal do Motorista - Conexão Transportes RJ / Agente RIT:\n\n• Produto/Programa: ${m.programa}\n• Passageiro: ${m.passageiro}\n• Veículo: ${m.tipoVeiculo || m.veiculo} (${m.placa})\n• Saída: ${m.origem}\n• Destino: ${m.destino}\n\nFavor compartilhar sua posição iniciando o rastreamento no link abaixo:\n🔗 ${window.location.origin}/motorista.html?id=${m.id}\n\nObrigado.`;
+                    const driverLink = `${window.location.origin}/motorista.html?id=${encodeURIComponent(m.id)}&nome=${encodeURIComponent(m.motorista)}&placa=${encodeURIComponent(m.placa)}&veiculo=${encodeURIComponent(m.tipoVeiculo||m.veiculo)}&passageiro=${encodeURIComponent(m.passageiro)}&programa=${encodeURIComponent(m.programa)}&destino=${encodeURIComponent(m.destino)}&saida=${encodeURIComponent(m.origem)}&inicio=${encodeURIComponent(m.dataHoraInicioRaw)}&fim=${encodeURIComponent(m.dataHoraFimRaw)}`;
+                    const msgText = `Prezado Sr. ${m.motorista},\n\nSolicitamos a ativação do acompanhamento de rota para o atendimento de contingência no Portal do Motorista - Conexão Transportes RJ / Agente RIT:\n\n• Produto/Programa: ${m.programa}\n• Passageiro: ${m.passageiro}\n• Veículo: ${m.tipoVeiculo || m.veiculo} (${m.placa})\n• Saída: ${m.origem}\n• Destino: ${m.destino}\n\nFavor compartilhar sua posição iniciando o rastreamento no link abaixo:\n🔗 ${driverLink}\n\nObrigado.`;
                     const waUrl = `https://wa.me/${telClean}?text=${encodeURIComponent(msgText)}`;
 
                     const card = document.createElement('div');
@@ -11787,7 +11795,8 @@ window.handleManualMonitoringSubmit = function(event) {
     if (telClean.length === 10 || telClean.length === 11) {
         telClean = '55' + telClean;
     }
-    const msgText = `Prezado Sr. ${item.motorista},\n\nSolicitamos a ativação do acompanhamento de rota para o atendimento de contingência no Portal do Motorista - Conexão Transportes RJ / Agente RIT:\n\n• Produto/Programa: ${item.programa}\n• Passageiro: ${item.passageiro}\n• Veículo: ${item.tipoVeiculo} (${item.placa})\n• Saída: ${item.origem}\n• Destino: ${item.destino}\n\nFavor compartilhar sua posição iniciando o rastreamento no link abaixo:\n🔗 ${window.location.origin}/motorista.html?id=${item.id}\n\nObrigado.`;
+    const driverLink = `${window.location.origin}/motorista.html?id=${encodeURIComponent(item.id)}&nome=${encodeURIComponent(item.motorista)}&placa=${encodeURIComponent(item.placa)}&veiculo=${encodeURIComponent(item.tipoVeiculo)}&passageiro=${encodeURIComponent(item.passageiro)}&programa=${encodeURIComponent(item.programa)}&destino=${encodeURIComponent(item.destino)}&saida=${encodeURIComponent(item.origem)}&inicio=${encodeURIComponent(item.dataHoraInicioRaw)}&fim=${encodeURIComponent(item.dataHoraFimRaw)}`;
+    const msgText = `Prezado Sr. ${item.motorista},\n\nSolicitamos a ativação do acompanhamento de rota para o atendimento de contingência no Portal do Motorista - Conexão Transportes RJ / Agente RIT:\n\n• Produto/Programa: ${item.programa}\n• Passageiro: ${item.passageiro}\n• Veículo: ${item.tipoVeiculo} (${item.placa})\n• Saída: ${item.origem}\n• Destino: ${item.destino}\n\nFavor compartilhar sua posição iniciando o rastreamento no link abaixo:\n🔗 ${driverLink}\n\nObrigado.`;
     const waUrl = `https://wa.me/${telClean}?text=${encodeURIComponent(msgText)}`;
     window.open(waUrl, '_blank');
 };

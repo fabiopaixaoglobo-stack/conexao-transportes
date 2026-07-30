@@ -3,6 +3,7 @@ const path = require('path');
 
 const filesToCopy = [
     'index.html',
+    'motorista.html',
     'app.js',
     'rit-monitoring.js',
     'rit-monitoring.css',

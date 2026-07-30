@@ -268,7 +268,7 @@
             try {
                 // Fetch from Backend
                 const host = window.location.hostname;
-                const apiBase = host === 'localhost' || host === '127.0.0.1' ? 'http://localhost:8000/api' : '/api';
+                const apiBase = (host === 'localhost' || host === '127.0.0.1') && window.location.port === '8000' ? 'http://localhost:8000/api' : '/api';
                 
                 let fetchedRotas = [];
                 try {
@@ -522,17 +522,28 @@
         }
 
         async reverseGeocode(lat, lng, elementId) {
+            const cacheKey = `${Number(lat).toFixed(3)},${Number(lng).toFixed(3)}`;
+            window._geoCache = window._geoCache || {};
+            if (window._geoCache[cacheKey]) {
+                const el = document.getElementById(elementId);
+                if (el) el.textContent = window._geoCache[cacheKey];
+                return;
+            }
             try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
-                if (res.ok) {
+                const res = await fetch(`/api/cor/reverse-geocode?lat=${lat}&lng=${lng}`).catch(() => null);
+                if (res && res.ok) {
                     const data = await res.json();
+                    const addr = data.display_name || data.address || 'Rio de Janeiro, RJ';
+                    window._geoCache[cacheKey] = addr;
                     const el = document.getElementById(elementId);
-                    if (el) el.textContent = data.display_name || 'Endereço não localizado';
+                    if (el) el.textContent = addr;
+                } else {
+                    const el = document.getElementById(elementId);
+                    if (el) el.textContent = 'Rio de Janeiro, RJ';
                 }
             } catch (e) {
-                console.error("[RIT-MONITORING] Error in reverse geocoding:", e);
                 const el = document.getElementById(elementId);
-                if (el) el.textContent = 'Erro ao buscar endereço';
+                if (el) el.textContent = 'Rio de Janeiro, RJ';
             }
         }
 
@@ -542,7 +553,7 @@
             
             try {
                 const host = window.location.hostname;
-                const apiBase = host === 'localhost' || host === '127.0.0.1' ? 'http://localhost:8000/api' : '/api';
+                const apiBase = (host === 'localhost' || host === '127.0.0.1') && window.location.port === '8000' ? 'http://localhost:8000/api' : '/api';
                 const res = await fetch(`${apiBase}/gps/desconectar`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

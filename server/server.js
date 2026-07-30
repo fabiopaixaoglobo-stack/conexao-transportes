@@ -448,6 +448,14 @@ app.post('/api/system-health/fix-duplicate', authenticateToken, requireRole('Mas
     }
 });
 
+app.get('/motorista.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../motorista.html'));
+});
+
+app.get('/motorista', (req, res) => {
+    res.sendFile(path.join(__dirname, '../motorista.html'));
+});
+
 app.use((req, res) => {
     res.sendFile(path.join(__dirname, '../index.html'));
 });

@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal do Motorista — Agente RIT</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --cyan: #00D1FF;
+      --gold: #FF8A00;
+      --dark: #050A0F;
+      --panel-bg: rgba(10, 18, 30, 0.7);
+      --glass-border: rgba(0, 209, 255, 0.15);
+      --text: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.6);
+      --good: #10B981;
+      --danger: #EF4444;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--dark);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    /* Ambient Background Glow */
+    .bg-glow {
+      position: fixed;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(0, 209, 255, 0.08) 0%, transparent 70%);
+      top: -100px;
+      left: -100px;
+      z-index: -1;
+    }
+    .bg-glow-right {
+      position: fixed;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(255, 138, 0, 0.06) 0%, transparent 70%);
+      bottom: -100px;
+      right: -100px;
+      z-index: -1;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      background: var(--panel-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
+      padding: 24px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+      margin-top: 10px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .header img {
+      height: 32px;
+      margin-bottom: 8px;
+    }
+
+    .header h1 {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--cyan);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .header p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--gold);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--glass-border);
+      padding-bottom: 4px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 20px;
+    }
+
+    .data-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .data-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .data-label {
+      color: var(--text-muted);
+    }
+
+    .data-val {
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      background: rgba(0, 209, 255, 0.15);
+      color: var(--cyan);
+    }
+
+    /* Status Indicator */
+    .status-panel {
+      text-align: center;
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .status-standby {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+    }
+    .status-active {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid var(--good);
+      color: var(--good);
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+    }
+    .status-active .pulse-dot {
+      background: var(--good);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      animation: pulseGlow 1.5s infinite;
+    }
+    @keyframes pulseGlow {
+      0% { transform: scale(0.9); opacity: 0.6; }
+      50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 10px var(--good); }
+      100% { transform: scale(0.9); opacity: 0.6; }
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, #00D1FF, #FF8A00);
+      color: #04111a;
+      box-shadow: 0 4px 15px rgba(0, 209, 255, 0.2);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 209, 255, 0.35);
+    }
+
+    .btn-success {
+      background: var(--good);
+      color: #04111a;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+    }
+    .btn-success:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+    }
+    .btn-danger:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.35);
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 24px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+  <div class="bg-glow-right"></div>
+
+  <div class="container">
+    <div class="header">
+      <img src="assets/rit-hero.png" alt="RIT">
+      <h1>Agente RIT</h1>
+      <p>CENTRO DE COMANDO & LOGÍSTICA GLOBO</p>
+    </div>
+
+    <!-- Status de Transmissão -->
+    <div id="status-box" class="status-panel status-standby">
+      <span id="status-text">AGUARDANDO INÍCIO</span>
+    </div>
+
+    <!-- Dados do Motorista -->
+    <div class="section-title">Confirmação de Dados do Motorista</div>
+    <div class="card">
+      <div class="data-row">
+        <span class="data-label">Nome:</span>
+        <span id="m-nome" class="data-val">—</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Placa:</span>
+        <span id="m-placa" class="data-val">—</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Veículo:</span>
+        <span id="m-veiculo" class="data-val">—</span>
+      </div>
+    </div>
+
+    <!-- Dados do Atendimento -->
+    <div class="section-title">Dados do Atendimento (Corrida)</div>
+    <div class="card">
+      <div class="data-row">
+        <span class="data-label">Passageiro:</span>
+        <span id="r-passageiro" class="data-val">—</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Programa:</span>
+        <span id="r-programa" class="data-val"><span class="badge">—</span></span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Destino:</span>
+        <span id="r-destino" class="data-val">—</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Início Sugerido:</span>
+        <span id="r-inicio" class="data-val">—</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Término Previsto:</span>
+        <span id="r-termino" class="data-val">—</span>
+      </div>
+    </div>
+
+    <!-- Controles -->
+    <div style="margin-top: 10px;">
+      <button id="btn-gps" class="btn btn-primary">🛰️ AUTORIZAR GPS & COMPARTILHAMENTO</button>
+      <button id="btn-start" class="btn btn-success" disabled>▶️ INICIAR ATENDIMENTO (EM VIAGEM)</button>
+      <button id="btn-pause" class="btn" style="background: var(--gold); color: #000; display: none;" disabled>⏸️ PAUSAR COMPARTILHAMENTO DE GPS</button>
+      <button id="btn-stop" class="btn btn-danger" disabled>⏹️ FINALIZAR ATENDIMENTO (CHEGADA)</button>
+    </div>
+
+    <div class="footer">
+      © 2026 GLOBO CCO — AGENTE RIT
+    </div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const idRota = urlParams.get('id');
+    
+    let trackerActive = false;
+    let gpsWatchId = null;
+    let currentCoords = null;
+    let rotaData = null;
+
+    // Silent audio to keep background tracking alive on mobile iOS/Android
+    const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+    silentAudio.loop = true;
+
+    // Elementos da tela
+    const btnGps = document.getElementById('btn-gps');
+    const btnStart = document.getElementById('btn-start');
+    const btnPause = document.getElementById('btn-pause');
+    const btnStop = document.getElementById('btn-stop');
+    const statusBox = document.getElementById('status-box');
+    const statusText = document.getElementById('status-text');
+
+    if (!idRota) {
+      alert("ID da rota não especificado na URL.");
+    } else {
+      carregarDetalhesRota();
+    }
+
+    async function carregarDetalhesRota() {
+      const urlNome = urlParams.get('nome');
+      const urlPlaca = urlParams.get('placa');
+      const urlVeiculo = urlParams.get('veiculo');
+      const urlPassageiro = urlParams.get('passageiro');
+      const urlPrograma = urlParams.get('programa');
+      const urlDestino = urlParams.get('destino');
+      const urlSaida = urlParams.get('saida');
+      const urlInicio = urlParams.get('inicio');
+      const urlFim = urlParams.get('fim');
+
+      // Check URL parameters first
+      if (urlNome || urlPlaca || urlPassageiro) {
+        rotaData = {
+          motorista_nome: urlNome || 'Motorista Contingência',
+          placa_veiculo: urlPlaca || 'SEM-PLACA',
+          tipo_veiculo: urlVeiculo || 'Veículo Executivo',
+          passageiro: urlPassageiro || 'Passageiro / Produtor',
+          programa: urlPrograma || 'CONTINGÊNCIA',
+          origem: urlSaida || 'Rio de Janeiro',
+          destino: urlDestino || 'Rio de Janeiro',
+          horario: urlInicio || '12:00',
+          horario_termino: urlFim || '18:00'
+        };
+        preencherCamposDOM(rotaData);
+        restaurarEstadoPersistido();
+        return;
+      }
+
+      // Check LocalStorage for manual monitorings
+      try {
+        const manuals = JSON.parse(localStorage.getItem('rit_manual_monitorings') || '[]');
+        const found = manuals.find(m => String(m.id) === String(idRota));
+        if (found) {
+          rotaData = {
+            motorista_nome: found.motorista,
+            placa_veiculo: found.placa,
+            tipo_veiculo: found.tipoVeiculo || found.veiculo,
+            passageiro: found.passageiro,
+            programa: found.programa,
+            origem: found.origem,
+            destino: found.destino,
+            horario: found.dataHoraInicioRaw,
+            horario_termino: found.dataHoraFimRaw
+          };
+          preencherCamposDOM(rotaData);
+          restaurarEstadoPersistido();
+          return;
+        }
+      } catch(e) {}
+
+      // Fallback: Fetch from server API
+      try {
+        const res = await fetch(`/api/rotas/detalhes/${idRota}`).catch(() => null);
+        if (res && res.ok) {
+          const data = await res.json();
+          if (data.ok && data.rota) {
+            rotaData = data.rota;
+            preencherCamposDOM(rotaData);
+            restaurarEstadoPersistido();
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch server route details, using fallback display:", err);
+      }
+
+      // If all fail, display fallback values without breaking
+      preencherCamposDOM({
+        motorista_nome: 'Motorista RIT',
+        placa_veiculo: 'ABC-1234',
+        tipo_veiculo: 'Van Executiva',
+        passageiro: 'Produção / Eventos',
+        programa: 'RIT',
+        destino: 'Rio de Janeiro',
+        horario: '12:00',
+        horario_termino: '18:00'
+      });
+      restaurarEstadoPersistido();
+    }
+
+    function preencherCamposDOM(d) {
+      const elNome = document.getElementById('m-nome');
+      const elPlaca = document.getElementById('m-placa');
+      const elVeiculo = document.getElementById('m-veiculo');
+      const elPassageiro = document.getElementById('r-passageiro');
+      const elPrograma = document.getElementById('r-programa');
+      const elDestino = document.getElementById('r-destino');
+      const elInicio = document.getElementById('r-inicio');
+      const elTermino = document.getElementById('r-termino');
+
+      if (elNome) elNome.textContent = d.motorista_nome || 'N/D';
+      if (elPlaca) elPlaca.textContent = d.placa_veiculo || 'N/D';
+      if (elVeiculo) elVeiculo.textContent = d.tipo_veiculo || 'N/D';
+      if (elPassageiro) elPassageiro.textContent = d.passageiro || d.nome_colaborador || 'N/D';
+      if (elPrograma) elPrograma.innerHTML = `<span class="badge">${d.programa || 'GERAL'}</span>`;
+      if (elDestino) elDestino.textContent = d.destino || 'N/D';
+      if (elInicio) elInicio.textContent = d.horario || 'N/D';
+      if (elTermino) elTermino.textContent = d.horario_termino || 'N/D';
+    }
+
+    function restaurarEstadoPersistido() {
+      if (!idRota) return;
+      
+      const gpsAuthorized = localStorage.getItem('gps_authorized_' + idRota) === 'true';
+      const tripActive = localStorage.getItem('trip_active_' + idRota) === 'true';
+
+      if (gpsAuthorized) {
+        btnStart.disabled = false;
+        btnGps.innerHTML = "🛰️ GPS AUTORIZADO";
+        btnGps.style.background = "rgba(16, 185, 129, 0.2)";
+        btnGps.style.border = "1px solid var(--good)";
+        btnGps.style.color = "var(--good)";
+        btnGps.disabled = true;
+      }
+
+      if (tripActive) {
+        iniciarRastreamento();
+      }
+    }
+
+    btnGps.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        alert("Geolocalização não é suportada por este navegador.");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          currentCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          alert("Autorização do GPS concedida com sucesso!");
+          btnStart.disabled = false;
+          btnGps.innerHTML = "🛰️ GPS AUTORIZADO";
+          btnGps.style.background = "rgba(16, 185, 129, 0.2)";
+          btnGps.style.border = "1px solid var(--good)";
+          btnGps.style.color = "var(--good)";
+          btnGps.disabled = true;
+
+          if (idRota) {
+            localStorage.setItem('gps_authorized_' + idRota, 'true');
+          }
+        },
+        (err) => {
+          console.error(err);
+          alert("Por favor, ative e autorize o compartilhamento de localização/GPS no seu dispositivo.");
+        },
+        { enableHighAccuracy: true }
+      );
+    });
+
+    btnStart.addEventListener('click', () => {
+      iniciarRastreamento();
+    });
+
+    function iniciarRastreamento() {
+      if (!rotaData) return;
+
+      trackerActive = true;
+      btnStart.style.display = "none";
+      btnPause.style.display = "inline-flex";
+      btnPause.disabled = false;
+      btnStop.disabled = false;
+
+      statusBox.className = "status-panel status-active";
+      statusBox.innerHTML = '<div class="pulse-dot"></div><span id="status-text">TRANSMITINDO GPS ONLINE</span>';
+
+      if (idRota) {
+        localStorage.setItem('trip_active_' + idRota, 'true');
+      }
+
+      // Play background keeping silent loop
+      try {
+        silentAudio.play().catch(e => console.log("Áudio pendente de interação:", e));
+      } catch(e) {}
+
+      // Get initial position immediately
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          currentCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          const speed = pos.coords.speed ? Math.round(pos.coords.speed * 3.6) : 0;
+          enviarPosicao('EM_TRANSITO', speed);
+        },
+        (err) => console.error(err),
+        { enableHighAccuracy: true }
+      );
+
+      // Continuous tracking
+      if (gpsWatchId) {
+        navigator.geolocation.clearWatch(gpsWatchId);
+      }
+      gpsWatchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          currentCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          const speed = pos.coords.speed ? Math.round(pos.coords.speed * 3.6) : 0;
+          enviarPosicao('EM_TRANSITO', speed);
+        },
+        (err) => {
+          console.error("Erro na leitura contínua do GPS:", err);
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+      );
+    }
+
+    // Attempt audio activation on touch to guarantee background loop works
+    document.body.addEventListener('click', () => {
+      if (trackerActive && silentAudio.paused) {
+        silentAudio.play().catch(e => {});
+      }
+    });
+
+    btnPause.addEventListener('click', async () => {
+      if (gpsWatchId) {
+        navigator.geolocation.clearWatch(gpsWatchId);
+        gpsWatchId = null;
+      }
+      try {
+        silentAudio.pause();
+      } catch(e) {}
+
+      trackerActive = false;
+      btnPause.style.display = "none";
+      btnStart.style.display = "inline-flex";
+      btnStart.disabled = false;
+      btnPause.disabled = true;
+
+      statusBox.className = "status-panel status-standby";
+      statusBox.innerHTML = '<span id="status-text">TRANSMISSÃO INTERROMPIDA</span>';
+
+      if (idRota) {
+        localStorage.removeItem('trip_active_' + idRota);
+      }
+
+      await enviarPosicao('PAUSADO');
+      alert("Transmissão de GPS interrompida temporariamente.");
+    });
+
+    btnStop.addEventListener('click', async () => {
+      if (confirm("Deseja realmente finalizar o atendimento?")) {
+        if (gpsWatchId) {
+          navigator.geolocation.clearWatch(gpsWatchId);
+          gpsWatchId = null;
+        }
+        try {
+          silentAudio.pause();
+        } catch(e) {}
+
+        trackerActive = false;
+        btnStart.style.display = "inline-flex";
+        btnStart.disabled = true;
+        btnPause.style.display = "none";
+        btnPause.disabled = true;
+        btnStop.disabled = true;
+        
+        statusBox.className = "status-panel status-standby";
+        statusBox.innerHTML = '<span id="status-text">ATENDIMENTO FINALIZADO</span>';
+
+        if (idRota) {
+          localStorage.removeItem('trip_active_' + idRota);
+          localStorage.removeItem('gps_authorized_' + idRota);
+        }
+
+        await enviarPosicao('FINALIZADO');
+        alert("Corrida finalizada com sucesso. Obrigado!");
+      }
+    });
+
+    async function enviarPosicao(statusAtendimento, speed = 0) {
+      if (!currentCoords || !rotaData) return;
+
+      const payload = {
+        motorista: rotaData.motorista_nome,
+        lat: currentCoords.lat,
+        lng: currentCoords.lng,
+        placa: rotaData.placa_veiculo,
+        tipo_veiculo: rotaData.tipo_veiculo,
+        programa: rotaData.programa,
+        speed: speed,
+        id_rota: rotaData.id,
+        status_atendimento: statusAtendimento
+      };
+
+      try {
+        await fetch('/api/gps/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (err) {
+        console.error("Erro ao enviar dados para a API:", err);
+      }
+    }
+  </script>
+</body>
+</html>
