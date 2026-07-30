@@ -5207,33 +5207,39 @@ function resetRole() {
 }
 
 function applyRoleConfiguration(role) {
+    if (!role) {
+        role = safeStorage.session.getItem('conexao_role') || 'manager';
+    }
+    currentRole = role;
+    safeStorage.session.setItem('conexao_role', role);
+
     const allTabs = ['booking-portal', 'passenger', 'operation', 'management', 'collaborators', 'bulk-booking', 'fleet', 'driver-portal', 'access-management', 'tutorials'];
     let visibleTabs = [];
     let defaultTab = '';
     
+    const profileEl = document.getElementById('active-profile-name');
+
     if (role === 'passenger') {
         visibleTabs = ['booking-portal', 'passenger', 'tutorials'];
         defaultTab = 'booking-portal';
-        document.getElementById('active-profile-name').textContent = 'Passageiro';
+        if (profileEl) profileEl.textContent = 'Passageiro';
     } else if (role === 'representative') {
         visibleTabs = ['bulk-booking', 'tutorials'];
         defaultTab = 'bulk-booking';
-        document.getElementById('active-profile-name').textContent = 'Representante de Área';
+        if (profileEl) profileEl.textContent = 'Representante de Área';
     } else if (role === 'operator') {
         visibleTabs = ['operation', 'management', 'fleet', 'tutorials'];
         defaultTab = 'operation';
-        document.getElementById('active-profile-name').textContent = 'Operador de Transportes';
+        if (profileEl) profileEl.textContent = 'Operador de Transportes';
     } else if (role === 'driver') {
         visibleTabs = ['driver-portal', 'tutorials'];
         defaultTab = 'driver-portal';
-        document.getElementById('active-profile-name').textContent = 'Motorista';
-    } else if (role === 'manager') {
+        if (profileEl) profileEl.textContent = 'Motorista';
+    } else {
+        // Default to Master / Manager
         visibleTabs = ['booking-portal', 'passenger', 'operation', 'management', 'bulk-booking', 'fleet', 'access-management', 'tutorials'];
         defaultTab = 'management';
-        document.getElementById('active-profile-name').textContent = 'Acesso Master';
-    } else {
-        visibleTabs = ['tutorials'];
-        defaultTab = 'tutorials';
+        if (profileEl) profileEl.textContent = 'Acesso Master';
     }
     
     allTabs.forEach(t => {
