@@ -1,0 +1,300 @@
+/* RIT Monitoring Tab Styles - Corporate Dashboard Design */
+
+:root {
+  --rit-bg-dark: #071018;
+  --rit-bg-panel: rgba(10, 15, 28, 0.95);
+  --rit-border-color: rgba(255, 255, 255, 0.08);
+  --rit-accent: #00d1ff;
+  --rit-good: #10B981;
+  --rit-warning: #f5a623;
+  --rit-danger: #EF4444;
+  --rit-text: #ffffff;
+  --rit-muted: #8a99a8;
+}
+
+#view-rit-monitoring {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 160px);
+  min-height: 600px;
+  background-color: var(--rit-bg-dark);
+  color: var(--rit-text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--rit-border-color);
+}
+
+.rit-layout-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  height: 100%;
+}
+
+/* Sidebar Styling */
+.rit-sidebar {
+  width: 320px;
+  background-color: rgba(7, 16, 24, 0.98);
+  border-right: 1px solid var(--rit-border-color);
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 16px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.rit-panel {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--rit-border-color);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rit-panel.grow {
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.rit-panel-title {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--rit-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 6px;
+  margin-bottom: 4px;
+}
+
+/* Map & Filtering Area */
+.rit-map-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  height: 100%;
+}
+
+.rit-filter-bar {
+  background: rgba(10, 15, 28, 0.98);
+  border-bottom: 1px solid var(--rit-border-color);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  z-index: 10;
+}
+
+.rit-select {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--rit-border-color);
+  color: var(--rit-text);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.rit-select:hover {
+  border-color: var(--rit-accent);
+}
+
+.rit-btn {
+  background: var(--rit-accent);
+  color: #071018;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.rit-btn:hover {
+  opacity: 0.9;
+  box-shadow: 0 0 10px rgba(0, 209, 255, 0.3);
+}
+
+.rit-btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  border: 1px solid var(--rit-border-color);
+}
+
+.rit-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.rit-btn-danger {
+  background: var(--rit-danger);
+  color: #fff;
+}
+
+/* Map Container */
+.rit-map-canvas {
+  flex: 1;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+/* Scrollable Fila/List Box */
+.rit-list-box {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 4px;
+}
+
+/* Custom Cards */
+.rit-card {
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid var(--rit-border-color);
+  border-radius: 10px;
+  padding: 12px;
+  transition: all 0.2s;
+}
+
+.rit-card:hover {
+  border-color: rgba(0, 209, 255, 0.25);
+  background: rgba(0, 209, 255, 0.01);
+}
+
+.rit-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.rit-badge {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.rit-badge-program {
+  background: rgba(0, 209, 255, 0.12);
+  color: var(--rit-accent);
+}
+
+.rit-badge-status-waiting {
+  background: rgba(245, 166, 35, 0.12);
+  color: var(--rit-warning);
+}
+
+.rit-badge-status-active {
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--rit-good);
+}
+
+.rit-text-bold {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Popup styling inside Leaflet map */
+.leaflet-popup-content-wrapper {
+  background: rgba(10, 15, 28, 0.98) !important;
+  color: #fff !important;
+  border: 1px solid var(--rit-border-color) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+  border-radius: 12px !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+.leaflet-popup-tip {
+  background: rgba(10, 15, 28, 0.98) !important;
+  border: 1px solid var(--rit-border-color) !important;
+}
+
+.leaflet-popup-close-button {
+  color: var(--rit-muted) !important;
+}
+
+/* Modal styling */
+.rit-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+  z-index: 99999;
+  justify-content: center;
+  align-items: center;
+}
+
+.rit-modal-content {
+  background: #0a0f1c;
+  border: 1px solid var(--rit-accent);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
+  padding: 24px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 0 25px rgba(0, 209, 255, 0.15);
+}
+
+.rit-form-grid {
+  display: grid;
+  grid-template-cols: 1fr 1fr;
+  gap: 12px;
+}
+
+.rit-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rit-form-group-full {
+  grid-column: span 2;
+}
+
+.rit-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--rit-muted);
+}
+
+.rit-input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--rit-border-color);
+  border-radius: 6px;
+  color: white;
+  padding: 8px 12px;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.rit-input:focus {
+  border-color: var(--rit-accent);
+}

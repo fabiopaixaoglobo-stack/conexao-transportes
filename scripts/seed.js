@@ -50,7 +50,7 @@ async function runSeed() {
                         empresa = 'Globo'
                 `;
                 const values = [
-                    String(r['Matricula'] || ''),
+                    String(r['Matricula'] || '').split('.')[0].trim(),
                     String(r['CPF'] || '').replace(/\D/g, ''),
                     r['Nome Funcionário'] || '',
                     r['Cargo'] || '',

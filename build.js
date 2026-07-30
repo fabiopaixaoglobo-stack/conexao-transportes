@@ -4,6 +4,8 @@ const path = require('path');
 const filesToCopy = [
     'index.html',
     'app.js',
+    'rit-monitoring.js',
+    'rit-monitoring.css',
     'database.js',
     'conexao_transporte.png',
     'driver_icon.png',

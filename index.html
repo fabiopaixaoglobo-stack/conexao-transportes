@@ -33,6 +33,7 @@
     
     <!-- Leaflet.js for Live GPS Tracking Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="rit-monitoring.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <!-- Chart.js for beautiful dashboards -->
@@ -399,6 +400,10 @@
         <button onclick="switchTab('access-management')" id="tab-access-management" data-tooltip="Acesso master para controle de sessões ativas, auditoria de check-ins e motoristas." class="tab-btn flex items-center space-x-2 px-4 py-2.5 rounded-xl border border-gray-800 bg-gray-900/50 hover:bg-gray-900 text-sm font-semibold transition-all duration-300 text-gray-300 hover:text-white" style="display: none;">
             <i class="fa-solid fa-user-shield text-rose-500 animate-pulse"></i>
             <span>Administração de Acessos</span>
+        </button>
+        <button onclick="switchTab('rit-monitoring')" id="tab-rit-monitoring" data-tooltip="Painel de monitoramento e compartilhamento de rotas em tempo real espelhado do Agente RIT." class="tab-btn flex items-center space-x-2 px-4 py-2.5 rounded-xl border border-gray-800 bg-gray-900/50 hover:bg-gray-900 text-sm font-semibold transition-all duration-300 text-gray-300 hover:text-white">
+            <i class="fa-solid fa-map-location-dot text-emerald-400"></i>
+            <span>Monitoramento RIT</span>
         </button>
         <button onclick="switchTab('tutorials')" id="tab-tutorials" data-tooltip="Central de tutoriais interativos contendo guias de uso para todos os perfis." class="tab-btn flex items-center space-x-2 px-4 py-2.5 rounded-xl border border-gray-800 bg-gray-900/50 hover:bg-gray-900 text-sm font-semibold transition-all duration-300 text-gray-300 hover:text-white">
             <i class="fa-solid fa-graduation-cap text-indigo-400"></i>
@@ -1351,6 +1356,9 @@
 
         </section>
 
+        <!-- ==================== RIT MONITORING ==================== -->
+        <section id="view-rit-monitoring" class="tab-content transition-opacity duration-300 hidden py-4"></section>
+
         <!-- ==================== 3. VIEW GESTÒO & ANALYTICS ==================== -->
         <section id="view-management" class="tab-content transition-opacity duration-300 hidden py-4 space-y-6">
             
@@ -1437,19 +1445,23 @@
                             <h3 class="text-sm font-extrabold text-white uppercase"><i class="fa-solid fa-tree mr-1.5 text-green-400"></i>Base Jardim Botânico (JB)</h3>
                             <span class="text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded font-bold uppercase" id="lbl-jb-direction-badge">Vai</span>
                         </div>
-                        <!-- KPI Row for JB -->
-                        <div class="grid grid-cols-3 gap-2 text-center text-xs">
-                            <div class="bg-gray-950 p-2.5 rounded-xl border border-gray-900">
-                                <span class="text-[9px] text-gray-500 uppercase block font-bold">Agendados</span>
-                                <strong id="jb-kpi-booked" class="text-base text-white">0</strong>
+                        <!-- KPI Row for JB (4 Indicadores: Passageiros, Agendamentos, Embarcados, No-show) -->
+                        <div class="grid grid-cols-4 gap-1.5 text-center text-xs">
+                            <div class="bg-gray-950 p-2 rounded-xl border border-indigo-500/30 hover:border-indigo-400 transition cursor-pointer group" onclick="openSitePassengersModal('JB')" title="Clique para ver a lista de passageiros por nome da Base JB">
+                                <span class="text-[8px] text-indigo-400 uppercase block font-bold flex items-center justify-center gap-1 group-hover:underline"><i class="fa-solid fa-users text-[8px]"></i> Passageiros</span>
+                                <strong id="jb-kpi-passengers" class="text-sm text-indigo-300 font-mono underline decoration-dotted">0</strong>
                             </div>
-                            <div class="bg-gray-950 p-2.5 rounded-xl border border-gray-900">
-                                <span class="text-[9px] text-gray-500 uppercase block font-bold">Embarcados</span>
-                                <strong id="jb-kpi-boarded" class="text-base text-emerald-400">0</strong>
+                            <div class="bg-gray-950 p-2 rounded-xl border border-gray-900">
+                                <span class="text-[8px] text-gray-400 uppercase block font-bold">Agendados</span>
+                                <strong id="jb-kpi-booked" class="text-sm text-white font-mono">0</strong>
                             </div>
-                            <div class="bg-gray-950 p-2.5 rounded-xl border border-gray-900">
-                                <span class="text-[9px] text-gray-500 uppercase block font-bold">No-show</span>
-                                <strong id="jb-kpi-noshow" class="text-base text-red-400">0</strong>
+                            <div class="bg-gray-950 p-2 rounded-xl border border-gray-900">
+                                <span class="text-[8px] text-gray-400 uppercase block font-bold">Embarcados</span>
+                                <strong id="jb-kpi-boarded" class="text-sm text-emerald-400 font-mono">0</strong>
+                            </div>
+                            <div class="bg-gray-950 p-2 rounded-xl border border-gray-900">
+                                <span class="text-[8px] text-gray-400 uppercase block font-bold">No-show</span>
+                                <strong id="jb-kpi-noshow" class="text-sm text-red-400 font-mono">0</strong>
                             </div>
                         </div>
                         <!-- Chart container -->
@@ -1464,19 +1476,23 @@
                             <h3 class="text-sm font-extrabold text-white uppercase"><i class="fa-solid fa-clapperboard mr-1.5 text-blue-400"></i>Base Estúdios Globo (EG)</h3>
                             <span class="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded font-bold uppercase" id="lbl-eg-direction-badge">Vai</span>
                         </div>
-                        <!-- KPI Row for EG -->
-                        <div class="grid grid-cols-3 gap-2 text-center text-xs">
-                            <div class="bg-gray-950 p-2.5 rounded-xl border border-gray-900">
-                                <span class="text-[9px] text-gray-500 uppercase block font-bold">Agendados</span>
-                                <strong id="eg-kpi-booked" class="text-base text-white">0</strong>
+                        <!-- KPI Row for EG (4 Indicadores: Passageiros, Agendamentos, Embarcados, No-show) -->
+                        <div class="grid grid-cols-4 gap-1.5 text-center text-xs">
+                            <div class="bg-gray-950 p-2 rounded-xl border border-indigo-500/30 hover:border-indigo-400 transition cursor-pointer group" onclick="openSitePassengersModal('EG')" title="Clique para ver a lista de passageiros por nome da Base EG">
+                                <span class="text-[8px] text-indigo-400 uppercase block font-bold flex items-center justify-center gap-1 group-hover:underline"><i class="fa-solid fa-users text-[8px]"></i> Passageiros</span>
+                                <strong id="eg-kpi-passengers" class="text-sm text-indigo-300 font-mono underline decoration-dotted">0</strong>
                             </div>
-                            <div class="bg-gray-950 p-2.5 rounded-xl border border-gray-900">
-                                <span class="text-[9px] text-gray-500 uppercase block font-bold">Embarcados</span>
-                                <strong id="eg-kpi-boarded" class="text-base text-emerald-400">0</strong>
+                            <div class="bg-gray-950 p-2 rounded-xl border border-gray-900">
+                                <span class="text-[8px] text-gray-400 uppercase block font-bold">Agendados</span>
+                                <strong id="eg-kpi-booked" class="text-sm text-white font-mono">0</strong>
                             </div>
-                            <div class="bg-gray-950 p-2.5 rounded-xl border border-gray-900">
-                                <span class="text-[9px] text-gray-500 uppercase block font-bold">No-show</span>
-                                <strong id="eg-kpi-noshow" class="text-base text-red-400">0</strong>
+                            <div class="bg-gray-950 p-2 rounded-xl border border-gray-900">
+                                <span class="text-[8px] text-gray-400 uppercase block font-bold">Embarcados</span>
+                                <strong id="eg-kpi-boarded" class="text-sm text-emerald-400 font-mono">0</strong>
+                            </div>
+                            <div class="bg-gray-950 p-2 rounded-xl border border-gray-900">
+                                <span class="text-[8px] text-gray-400 uppercase block font-bold">No-show</span>
+                                <strong id="eg-kpi-noshow" class="text-sm text-red-400 font-mono">0</strong>
                             </div>
                         </div>
                         <!-- Chart container -->
@@ -1491,19 +1507,23 @@
                             <h3 class="text-sm font-extrabold text-white uppercase"><i class="fa-solid fa-bolt mr-1.5 text-yellow-400"></i>Base Íon (ION)</h3>
                             <span class="text-[10px] bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-0.5 rounded font-bold uppercase" id="lbl-ion-direction-badge">Vai</span>
                         </div>
-                        <!-- KPI Row for ION -->
-                        <div class="grid grid-cols-3 gap-2 text-center text-xs">
-                            <div class="bg-gray-950 p-2.5 rounded-xl border border-gray-900">
-                                <span class="text-[9px] text-gray-500 uppercase block font-bold">Agendados</span>
-                                <strong id="ion-kpi-booked" class="text-base text-white">0</strong>
+                        <!-- KPI Row for ION (4 Indicadores: Passageiros, Agendamentos, Embarcados, No-show) -->
+                        <div class="grid grid-cols-4 gap-1.5 text-center text-xs">
+                            <div class="bg-gray-950 p-2 rounded-xl border border-indigo-500/30 hover:border-indigo-400 transition cursor-pointer group" onclick="openSitePassengersModal('ION')" title="Clique para ver a lista de passageiros por nome da Base ÍON">
+                                <span class="text-[8px] text-indigo-400 uppercase block font-bold flex items-center justify-center gap-1 group-hover:underline"><i class="fa-solid fa-users text-[8px]"></i> Passageiros</span>
+                                <strong id="ion-kpi-passengers" class="text-sm text-indigo-300 font-mono underline decoration-dotted">0</strong>
                             </div>
-                            <div class="bg-gray-950 p-2.5 rounded-xl border border-gray-900">
-                                <span class="text-[9px] text-gray-500 uppercase block font-bold">Embarcados</span>
-                                <strong id="ion-kpi-boarded" class="text-base text-emerald-400">0</strong>
+                            <div class="bg-gray-950 p-2 rounded-xl border border-gray-900">
+                                <span class="text-[8px] text-gray-400 uppercase block font-bold">Agendados</span>
+                                <strong id="ion-kpi-booked" class="text-sm text-white font-mono">0</strong>
                             </div>
-                            <div class="bg-gray-950 p-2.5 rounded-xl border border-gray-900">
-                                <span class="text-[9px] text-gray-500 uppercase block font-bold">No-show</span>
-                                <strong id="ion-kpi-noshow" class="text-base text-red-400">0</strong>
+                            <div class="bg-gray-950 p-2 rounded-xl border border-gray-900">
+                                <span class="text-[8px] text-gray-400 uppercase block font-bold">Embarcados</span>
+                                <strong id="ion-kpi-boarded" class="text-sm text-emerald-400 font-mono">0</strong>
+                            </div>
+                            <div class="bg-gray-950 p-2 rounded-xl border border-gray-900">
+                                <span class="text-[8px] text-gray-400 uppercase block font-bold">No-show</span>
+                                <strong id="ion-kpi-noshow" class="text-sm text-red-400 font-mono">0</strong>
                             </div>
                         </div>
                         <!-- Chart container -->
@@ -1613,12 +1633,15 @@
 
                     <!-- Indicadores KPI do Relatório -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                        <div class="bg-gray-950/60 p-3.5 rounded-xl border border-gray-900 flex items-center justify-between">
+                        <div class="bg-gray-950/60 p-3.5 rounded-xl border border-indigo-500/30 hover:border-indigo-400 transition cursor-pointer flex items-center justify-between group" onclick="openScheduledPassengersModal()" title="Clique para abrir a lista nominal completa de Passageiros Agendados (Nome, Área, Site, Empresa)">
                             <div>
-                                <span class="text-[10px] uppercase font-bold text-gray-500 block">Passageiros Agendados</span>
-                                <strong id="kpi-sched-total-passengers" class="text-lg text-white font-mono">0</strong>
+                                <div class="flex items-center gap-1.5 mb-0.5">
+                                    <span class="text-[10px] uppercase font-bold text-gray-400 block group-hover:text-white transition">Passageiros Agendados</span>
+                                    <span class="text-[9px] font-bold text-indigo-400 group-hover:underline flex items-center gap-0.5"><i class="fa-solid fa-list-ul"></i> Ver Lista</span>
+                                </div>
+                                <strong id="kpi-sched-total-passengers" class="text-lg text-white font-mono underline decoration-dotted">0</strong>
                             </div>
-                            <div class="text-indigo-400 bg-indigo-500/10 p-2.5 rounded-lg"><i class="fa-solid fa-user-check text-xl"></i></div>
+                            <div class="text-indigo-400 bg-indigo-500/10 p-2.5 rounded-lg group-hover:bg-indigo-500/20 transition"><i class="fa-solid fa-user-check text-xl"></i></div>
                         </div>
                         <div class="bg-gray-950/60 p-3.5 rounded-xl border border-gray-900 flex items-center justify-between">
                             <div>
@@ -2153,6 +2176,11 @@
                                     <i class="fa-solid fa-file-import"></i>
                                     <span>Importar Mapa</span>
                                 </button>
+                                
+                                <button onclick="abrirManualMonitoringModal()" class="bg-amber-600 hover:bg-amber-500 text-white px-2.5 py-1.5 rounded-xl border border-amber-500/20 text-[10px] font-bold transition flex items-center space-x-1.5 cursor-pointer">
+                                     <i class="fa-solid fa-plus-circle"></i>
+                                     <span>+ Novo Monitoramento</span>
+                                 </button>
                                 
                                 <!-- Filtro de Grupo -->
                                 <div class="flex items-center space-x-2 bg-gray-900 border border-gray-800 rounded-xl px-2.5 py-1.5">
@@ -4060,6 +4088,7 @@
     
     <!-- Application JS logic -->
     <script src="app.js?v=3"></script>
+    <script src="rit-monitoring.js"></script>
     
     <!-- Global Tooltip for tabs -->
     <div id="global-tooltip" class="fixed hidden z-50 bg-[#0f172a]/95 text-xs text-gray-200 border border-gray-800 rounded-xl px-3 py-2 shadow-2xl max-w-xs transition-opacity duration-200 pointer-events-none font-medium backdrop-blur-md"></div>
@@ -4157,6 +4186,211 @@
                     Fechar
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONTROLE DE AGENDAMENTOS POR PESSOA (SITE / BASE) -->
+    <div id="site-passengers-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-gray-950 border border-gray-800 rounded-3xl max-w-4xl w-full p-6 space-y-5 shadow-2xl relative flex flex-col max-h-[90vh]">
+            <button onclick="closeSitePassengersModal()" class="absolute top-5 right-5 text-gray-400 hover:text-white text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-indigo-500/10 text-indigo-400 rounded-2xl border border-indigo-500/20">
+                    <i class="fa-solid fa-users text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        Controle de Agendamentos por Pessoa — Base <span id="spmodal-site-name" class="text-indigo-400 font-mono font-extrabold uppercase">JB</span>
+                    </h3>
+                    <p class="text-xs text-gray-400">Visão consolidada da quantidade de passageiros e agendamentos por pessoa</p>
+                </div>
+            </div>
+
+            <!-- Header KPIs (Número principal = Quantidade de Pessoas) -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="bg-indigo-950/40 p-3.5 rounded-2xl border border-indigo-500/30 flex items-center justify-between shadow-lg">
+                    <div>
+                        <span class="text-[9px] uppercase font-bold text-indigo-300 block">Quantidade de Pessoas (Principal)</span>
+                        <strong id="spmodal-kpi-people" class="text-2xl text-white font-mono">0</strong>
+                    </div>
+                    <div class="text-indigo-400 bg-indigo-500/20 p-2.5 rounded-xl"><i class="fa-solid fa-user-group text-xl"></i></div>
+                </div>
+                <div class="bg-gray-900/60 p-3.5 rounded-2xl border border-gray-800 flex items-center justify-between">
+                    <div>
+                        <span class="text-[9px] uppercase font-bold text-gray-400 block">Total de Agendamentos</span>
+                        <strong id="spmodal-kpi-bookings" class="text-xl text-blue-400 font-mono">0</strong>
+                    </div>
+                    <div class="text-blue-400 bg-blue-500/10 p-2.5 rounded-xl"><i class="fa-solid fa-calendar-check text-xl"></i></div>
+                </div>
+                <div class="bg-gray-900/60 p-3.5 rounded-2xl border border-gray-800 flex items-center justify-between">
+                    <div>
+                        <span class="text-[9px] uppercase font-bold text-gray-400 block">Total Embarcados</span>
+                        <strong id="spmodal-kpi-boarded" class="text-xl text-emerald-400 font-mono">0</strong>
+                    </div>
+                    <div class="text-emerald-400 bg-emerald-500/10 p-2.5 rounded-xl"><i class="fa-solid fa-bus-simple text-xl"></i></div>
+                </div>
+            </div>
+
+            <!-- Toolbar / Search input -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="relative flex-grow">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-500 text-xs"></i>
+                    <input type="text" id="spmodal-search" oninput="filterSitePassengersList()" placeholder="Buscar por Nome, Área de Atuação ou Site..." class="w-full bg-gray-900 border border-gray-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition">
+                </div>
+                <button onclick="exportSitePassengersCSV()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow transition whitespace-nowrap cursor-pointer">
+                    <i class="fa-solid fa-file-csv"></i> Exportar CSV
+                </button>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto rounded-2xl border border-gray-900 max-h-80 overflow-y-auto custom-scrollbar flex-grow">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-gray-900/90 sticky top-0 backdrop-blur-md z-10">
+                        <tr class="text-gray-400 font-bold uppercase text-[10px] border-b border-gray-800">
+                            <th class="p-3">Nome da Pessoa</th>
+                            <th class="p-3">Área de Atuação</th>
+                            <th class="p-3">Site</th>
+                            <th class="p-3 text-center">Qtde. Agendamentos</th>
+                            <th class="p-3 text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="spmodal-tbody" class="divide-y divide-gray-800/50">
+                        <!-- Linhas injetadas via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex justify-between items-center border-t border-gray-900 pt-3">
+                <span id="spmodal-footer-count" class="text-xs font-semibold text-gray-400">Exibindo 0 pessoas</span>
+                <button onclick="closeSitePassengersModal()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold px-5 py-2 rounded-xl text-xs border border-gray-700 transition">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE PASSAGEIROS AGENDADOS (RELATÓRIO DE ADERÊNCIA N1) -->
+    <div id="scheduled-passengers-n1-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-gray-950 border border-gray-800 rounded-3xl max-w-4xl w-full p-6 space-y-5 shadow-2xl relative flex flex-col max-h-[90vh]">
+            <button onclick="closeScheduledPassengersModal()" class="absolute top-5 right-5 text-gray-400 hover:text-white text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-teal-500/10 text-teal-400 rounded-2xl border border-teal-500/20">
+                    <i class="fa-solid fa-address-book text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        Passageiros Agendados — Visão Nominal N1
+                    </h3>
+                    <p class="text-xs text-gray-400">Lista nominal dos colaboradores agendados (Nome, Área de Atuação, Site e Empresa)</p>
+                </div>
+            </div>
+
+            <!-- Toolbar / Search input -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="relative flex-grow">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-500 text-xs"></i>
+                    <input type="text" id="spn1modal-search" oninput="filterScheduledPassengersN1List()" placeholder="Buscar por Nome, Área de Atuação, Site ou Empresa..." class="w-full bg-gray-900 border border-gray-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-teal-500 transition">
+                </div>
+                <button onclick="exportScheduledPassengersN1ModalCSV()" class="bg-teal-600 hover:bg-teal-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow transition whitespace-nowrap cursor-pointer">
+                    <i class="fa-solid fa-file-csv"></i> Exportar CSV
+                </button>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto rounded-2xl border border-gray-900 max-h-80 overflow-y-auto custom-scrollbar flex-grow">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-gray-900/90 sticky top-0 backdrop-blur-md z-10">
+                        <tr class="text-gray-400 font-bold uppercase text-[10px] border-b border-gray-800">
+                            <th class="p-3">Nome da Pessoa</th>
+                            <th class="p-3">Área de Atuação</th>
+                            <th class="p-3">Site</th>
+                            <th class="p-3">Empresa</th>
+                            <th class="p-3 text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="spn1modal-tbody" class="divide-y divide-gray-800/50">
+                        <!-- Linhas injetadas via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex justify-between items-center border-t border-gray-900 pt-3">
+                <span id="spn1modal-footer-count" class="text-xs font-semibold text-gray-400">Exibindo 0 passageiros agendados</span>
+                <button onclick="closeScheduledPassengersModal()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold px-5 py-2 rounded-xl text-xs border border-gray-700 transition">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE NOVO MONITORAMENTO MANUAL (CONTINGÊNCIA CCO) -->
+    <div id="cco-manual-monitoring-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-gray-950 border border-amber-600/80 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative flex flex-col max-h-[90vh] box-shadow-[0_0_20px_rgba(217,119,6,0.15)]">
+            <button onclick="fecharManualMonitoringModal()" class="absolute top-5 right-5 text-gray-400 hover:text-white text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-amber-500/10 text-amber-400 rounded-2xl border border-amber-500/20">
+                    <i class="fa-solid fa-file-signature text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        Novo Monitoramento Manual
+                    </h3>
+                    <p class="text-xs text-gray-400">Contingência para acompanhamento de veículos fora do mapa ou sem sinal automático</p>
+                </div>
+            </div>
+
+            <form id="cco-form-manual-monitoring" onsubmit="handleManualMonitoringSubmit(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div class="sm:col-span-2 flex flex-col gap-1.5">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase">Nome do Programa/Produto</label>
+                    <input type="text" id="cco-m-programa" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-amber-500 transition" required placeholder="Ex: Estúdio A - Novela" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase">Nome do Motorista</label>
+                    <input type="text" id="cco-m-motorista" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-amber-500 transition" required placeholder="Nome do motorista" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase">Contato (Telefone/WhatsApp)</label>
+                    <input type="text" id="cco-m-telefone" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-amber-500 transition" required placeholder="DDD + Número" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase">Veículo (Tipo/Modelo)</label>
+                    <input type="text" id="cco-m-veiculo" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-amber-500 transition" required placeholder="Ex: VAN ou Ônibus" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase">Placa do Veículo</label>
+                    <input type="text" id="cco-m-placa" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-amber-500 transition" required placeholder="Ex: ABC-1234" />
+                </div>
+                <div class="sm:col-span-2 flex flex-col gap-1.5">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase">Passageiro/Produtor Principal</label>
+                    <input type="text" id="cco-m-passageiro" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-amber-500 transition" required placeholder="Ex: Diretor ou Nome do Produtor" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase">Local de Saída</label>
+                    <input type="text" id="cco-m-saida" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-amber-500 transition" required placeholder="Origem" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase">Destino (Bairro/Local)</label>
+                    <input type="text" id="cco-m-destino" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-amber-500 transition" required placeholder="Bairro destino" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase">Horário de Início</label>
+                    <input type="text" id="cco-m-inicio" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-amber-500 transition" required placeholder="Ex: 08:30" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase">Horário de Término</label>
+                    <input type="text" id="cco-m-fim" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-amber-500 transition" required placeholder="Ex: 10:00" />
+                </div>
+                <div class="sm:col-span-2 pt-3">
+                    <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 rounded-xl shadow-lg transition text-xs uppercase tracking-wider cursor-pointer">
+                        Salvar e Enviar Solicitação
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 

@@ -71,10 +71,12 @@ app.post('/api/auth/login', async (req, res) => {
         const queryVal = String(username || '').trim();
         const uLower = queryVal.toLowerCase();
         
+        console.log(`[AUTH/LOGIN] Validating user: "${queryVal}" / email: "${uLower}"`);
         // 1. Verificar se a matrícula / e-mail / CPF existe na base oficial de Colaboradores Globo
         const colabRes = await pool.query(
             `SELECT * FROM collaborators 
              WHERE matricula = $1 
+                OR SPLIT_PART(matricula, '.', 1) = SPLIT_PART($1, '.', 1)
                 OR LOWER(email) = $2 
                 OR (cpf = $3 AND $3 <> '')
                 OR (matricula = '68808' AND ($1 = '68808' OR $2 LIKE '%fabio.paixao%'))
@@ -158,20 +160,31 @@ app.get('/api/collaborators/search', async (req, res) => {
     const { q } = req.query;
     if (!q || q.length < 3) return res.json([]);
     
+    const cleanQ = String(q).trim().replace(/\D/g, '');
+    const cleanNoZero = cleanQ.replace(/^0+/, '');
+
+    console.log(`[COLLAB/SEARCH] Searching collaborators for: "${q}" (cleanQ: "${cleanQ}", cleanNoZero: "${cleanNoZero}")`);
     try {
         const query = `
-            SELECT matricula, nome, cargo, gerencia, departamento, diretoria, tipo_vinculo, empresa 
+            SELECT matricula, cpf, nome, cargo, gerencia, departamento, diretoria, tipo_vinculo, empresa 
             FROM collaborators 
-            WHERE cpf = $1 OR matricula = $1 OR nome ILIKE $2
-            LIMIT 5
+            WHERE cpf = $1 
+               OR matricula = $1 
+               OR SPLIT_PART(matricula, '.', 1) = SPLIT_PART($1, '.', 1)
+               OR LTRIM(SPLIT_PART(matricula, '.', 1), '0') = $2
+               OR REGEXP_REPLACE(cpf, '\\D', '', 'g') = $3
+               OR REGEXP_REPLACE(SPLIT_PART(matricula, '.', 1), '\\D', '', 'g') = $3
+               OR nome ILIKE $4
+            LIMIT 10
         `;
-        const result = await pool.query(query, [q, `%${q}%`]);
+        const result = await pool.query(query, [q, cleanNoZero, cleanQ, `%${q}%`]);
         let rows = result.rows;
         
         // Se a busca for pela matrícula master 68808 ou Fábio Paixão e o banco não tiver retornado resultados (ex: seed pendente)
-        if (rows.length === 0 && (q === '68808' || q.toLowerCase().includes('fabio'))) {
+        if (rows.length === 0 && (q === '68808' || cleanNoZero === '68808' || q.toLowerCase().includes('fabio'))) {
             rows = [{
                 matricula: '68808',
+                cpf: '',
                 nome: 'FABIO PAIXAO DOS SANTOS',
                 cargo: 'COORD OPERACAO TRANSPORTES',
                 gerencia: 'LOGISTICA E TRANSPORTE',
@@ -185,9 +198,10 @@ app.get('/api/collaborators/search', async (req, res) => {
     } catch (err) {
         console.error(err);
         // Fallback em caso de falha temporária no banco
-        if (q === '68808' || q.toLowerCase().includes('fabio')) {
+        if (q === '68808' || cleanNoZero === '68808' || q.toLowerCase().includes('fabio')) {
             return res.json([{
                 matricula: '68808',
+                cpf: '',
                 nome: 'FABIO PAIXAO DOS SANTOS',
                 cargo: 'COORD OPERACAO TRANSPORTES',
                 gerencia: 'LOGISTICA E TRANSPORTE',
@@ -204,20 +218,22 @@ app.get('/api/collaborators/search', async (req, res) => {
 app.get('/api/accredited/search', async (req, res) => {
     const { q } = req.query;
     if (!q || q.length < 3) return res.json([]);
+    
+    const cleanQ = String(q).trim().replace(/\D/g, '');
+    const cleanNoZero = cleanQ.replace(/^0+/, '');
+
     try {
         const query = `
-            SELECT documento as cpf, nome, cargo, area, diretoria, empresa 
+            SELECT documento as cpf, documento as matricula, nome, cargo, area, diretoria, empresa 
             FROM accredited 
-            WHERE documento = $1 OR nome ILIKE $2
-            LIMIT 5
+            WHERE documento = $1 
+               OR LTRIM(documento, '0') = $2
+               OR REGEXP_REPLACE(documento, '\\D', '', 'g') = $3
+               OR nome ILIKE $4
+            LIMIT 10
         `;
-        const result = await pool.query(query, [q, `%${q}%`]);
-        // Máscara do CPF para segurança
-        const safeData = result.rows.map(r => ({
-            ...r,
-            cpf: r.cpf ? `***.${r.cpf.substring(3, 6)}.${r.cpf.substring(6, 9)}-**` : ''
-        }));
-        res.json(safeData);
+        const result = await pool.query(query, [q, cleanNoZero, cleanQ, `%${q}%`]);
+        res.json(result.rows);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Search error' });

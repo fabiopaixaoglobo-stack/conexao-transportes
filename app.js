@@ -229,24 +229,34 @@ function rebuildDatabaseMaps() {
         db.collaborators.forEach(c => {
             if (c.matricula) {
                 const matClean = String(c.matricula).split('.')[0].trim();
+                const matNoZero = matClean.replace(/^0+/, '');
                 collaboratorsMapMat.set(matClean, c);
+                if (matNoZero) collaboratorsMapMat.set(matNoZero, c);
             }
             if (c.cpf) {
                 const cpfClean = String(c.cpf).replace(/\D/g, '').trim();
+                const cpfNoZero = cpfClean.replace(/^0+/, '');
                 collaboratorsMapCpf.set(cpfClean, c);
+                if (cpfNoZero) collaboratorsMapCpf.set(cpfNoZero, c);
             }
         });
     }
     
     if (db && db.accredited) {
         db.accredited.forEach(a => {
-            if (a.matricula) {
-                const matClean = String(a.matricula).split('.')[0].trim();
+            const rawMat = a.matricula || a.documento;
+            if (rawMat) {
+                const matClean = String(rawMat).split('.')[0].trim();
+                const matNoZero = matClean.replace(/^0+/, '');
                 accreditedMapMat.set(matClean, a);
+                if (matNoZero) accreditedMapMat.set(matNoZero, a);
             }
-            if (a.cpf) {
-                const cpfClean = String(a.cpf).replace(/\D/g, '').trim();
+            const rawCpf = a.cpf || a.documento;
+            if (rawCpf) {
+                const cpfClean = String(rawCpf).replace(/\D/g, '').trim();
+                const cpfNoZero = cpfClean.replace(/^0+/, '');
                 accreditedMapCpf.set(cpfClean, a);
+                if (cpfNoZero) accreditedMapCpf.set(cpfNoZero, a);
             }
         });
     }
@@ -254,24 +264,58 @@ function rebuildDatabaseMaps() {
 
 function findCollaborator(id) {
     if (!id) return null;
-    const cleanId = String(id).trim().replace(/\D/g, '');
-    const normalId = String(id).trim().split('.')[0];
+    const str = String(id).trim();
+    const cleanId = str.replace(/\D/g, '');
+    const normalId = str.split('.')[0].trim();
+    const noZeroId = normalId.replace(/^0+/, '');
+    const cleanNoZero = cleanId.replace(/^0+/, '');
     
-    return collaboratorsMapMat.get(normalId) || 
-           collaboratorsMapCpf.get(cleanId) || 
-           collaboratorsMapMat.get(cleanId) || 
-           collaboratorsMapCpf.get(normalId) || null;
+    const match = collaboratorsMapMat.get(normalId) || 
+                  collaboratorsMapMat.get(noZeroId) ||
+                  collaboratorsMapMat.get(cleanId) ||
+                  collaboratorsMapMat.get(cleanNoZero) ||
+                  collaboratorsMapCpf.get(cleanId) || 
+                  collaboratorsMapCpf.get(cleanNoZero) ||
+                  collaboratorsMapCpf.get(normalId);
+    if (match) return match;
+
+    if (db && db.collaborators) {
+        return db.collaborators.find(c => {
+            if (!c) return false;
+            const cMat = String(c.matricula || '').split('.')[0].trim();
+            const cCpf = String(c.cpf || '').replace(/\D/g, '').trim();
+            return cMat === normalId || (noZeroId && cMat.replace(/^0+/, '') === noZeroId) || (cleanId && cCpf === cleanId) || (cleanNoZero && cCpf.replace(/^0+/, '') === cleanNoZero);
+        }) || null;
+    }
+    return null;
 }
 
 function findAccredited(id) {
     if (!id) return null;
-    const cleanId = String(id).trim().replace(/\D/g, '');
-    const normalId = String(id).trim().split('.')[0];
+    const str = String(id).trim();
+    const cleanId = str.replace(/\D/g, '');
+    const normalId = str.split('.')[0].trim();
+    const noZeroId = normalId.replace(/^0+/, '');
+    const cleanNoZero = cleanId.replace(/^0+/, '');
     
-    return accreditedMapMat.get(normalId) || 
-           accreditedMapCpf.get(cleanId) || 
-           accreditedMapMat.get(cleanId) || 
-           accreditedMapCpf.get(normalId) || null;
+    const match = accreditedMapMat.get(normalId) || 
+                  accreditedMapMat.get(noZeroId) ||
+                  accreditedMapMat.get(cleanId) ||
+                  accreditedMapMat.get(cleanNoZero) ||
+                  accreditedMapCpf.get(cleanId) || 
+                  accreditedMapCpf.get(cleanNoZero) ||
+                  accreditedMapCpf.get(normalId);
+    if (match) return match;
+
+    if (db && db.accredited) {
+        return db.accredited.find(a => {
+            if (!a) return false;
+            const aMat = String(a.matricula || a.documento || '').split('.')[0].trim();
+            const aCpf = String(a.cpf || a.documento || '').replace(/\D/g, '').trim();
+            return aMat === normalId || (noZeroId && aMat.replace(/^0+/, '') === noZeroId) || (cleanId && aCpf === cleanId) || (cleanNoZero && aCpf.replace(/^0+/, '') === cleanNoZero);
+        }) || null;
+    }
+    return null;
 }
 
 function findPerson(id) {
@@ -764,7 +808,7 @@ function setupEventHandlers() {
 function switchTab(tabId) {
     currentTab = tabId;
     
-    const tabs = ['booking-portal', 'passenger', 'operation', 'management', 'collaborators', 'bulk-booking', 'fleet', 'driver-portal', 'access-management', 'tutorials'];
+    const tabs = ['booking-portal', 'passenger', 'operation', 'management', 'collaborators', 'bulk-booking', 'fleet', 'driver-portal', 'access-management', 'tutorials', 'rit-monitoring'];
     tabs.forEach(t => {
         const btn = document.getElementById(`tab-${t}`);
         const content = document.getElementById(`view-${t}`);
@@ -800,6 +844,11 @@ function switchTab(tabId) {
         updateAccessManagement();
     } else if (tabId === 'tutorials') {
         switchTutorial('driver');
+    } else if (tabId === 'rit-monitoring') {
+        if (window.ritMonitoring) {
+            window.ritMonitoring.init('view-rit-monitoring');
+            setTimeout(() => window.ritMonitoring.centralizeMap(), 300);
+        }
     }
 }
 
@@ -971,31 +1020,46 @@ function togglePreBookingPassengerList(serviceType) {
 }
 
 async function fetchAndCachePerson(q) {
-    if (q.length < 3) return false;
+    if (!q || q.trim().length < 3) return false;
+    const cleanQ = q.trim();
     try {
-        const res = await fetch(`${getApiUrl()}/collaborators/search?q=${q}`);
-        if (!res.ok) return false;
-        const data = await res.json();
         let updated = false;
-        data.forEach(c => {
-            if (!db.collaborators.find(x => x.matricula === c.matricula)) {
-                db.collaborators.push(c);
-                if (c.cpf) collaboratorsMapCpf.set(String(c.cpf).replace(/\D/g, ''), c);
-                if (c.matricula) collaboratorsMapMat.set(String(c.matricula).trim(), c);
-                updated = true;
-            }
-        });
-        const accRes = await fetch(`${getApiUrl()}/accredited/search?q=${q}`);
-        if (accRes.ok) {
-            const accData = await accRes.json();
-            accData.forEach(a => {
-                if (!db.accredited.find(x => x.cpf === a.cpf)) {
-                    db.accredited.push(a);
-                    if (a.cpf) accreditedMapCpf.set(String(a.cpf).replace(/\D/g, ''), a);
-                    if (a.matricula) accreditedMapMat.set(String(a.matricula).trim(), a);
+        const res = await fetch(`${getApiUrl()}/collaborators/search?q=${encodeURIComponent(cleanQ)}`);
+        if (res.ok) {
+            const data = await res.json();
+            data.forEach(c => {
+                const cMat = String(c.matricula || '').split('.')[0].trim();
+                const cCpf = String(c.cpf || '').replace(/\D/g, '').trim();
+                const exists = db.collaborators.some(x => {
+                    const xMat = String(x.matricula || '').split('.')[0].trim();
+                    const xCpf = String(x.cpf || '').replace(/\D/g, '').trim();
+                    return (cMat && xMat === cMat) || (cCpf && xCpf === cCpf);
+                });
+                if (!exists) {
+                    db.collaborators.push(c);
                     updated = true;
                 }
             });
+        }
+        const accRes = await fetch(`${getApiUrl()}/accredited/search?q=${encodeURIComponent(cleanQ)}`);
+        if (accRes.ok) {
+            const accData = await accRes.json();
+            accData.forEach(a => {
+                const aCpf = String(a.cpf || a.documento || '').replace(/\D/g, '').trim();
+                const aMat = String(a.matricula || a.documento || '').split('.')[0].trim();
+                const exists = db.accredited.some(x => {
+                    const xCpf = String(x.cpf || x.documento || '').replace(/\D/g, '').trim();
+                    const xMat = String(x.matricula || x.documento || '').split('.')[0].trim();
+                    return (aCpf && xCpf === aCpf) || (aMat && xMat === aMat);
+                });
+                if (!exists) {
+                    db.accredited.push(a);
+                    updated = true;
+                }
+            });
+        }
+        if (updated) {
+            rebuildDatabaseMaps();
         }
         return updated;
     } catch(err) { console.error(err); return false; }
@@ -2806,29 +2870,32 @@ function renderMirroredCharts() {
 
         const booked = directionBookings.length;
         const boarded = directionBookings.filter(b => b.status === 'Embarcado').length;
-        
-        const noshow = directionBookings.filter(b => b.status === 'Agendado').length;
+        const noshow = directionBookings.filter(b => b.status === 'Agendado' || b.status === 'No-Show').length;
         const encaixe = directionBookings.filter(b => b.status === 'Embarcado' && b.tipo === 'Encaixe').length;
         
+        const passengers = new Set(directionBookings.map(b => String(b.matricula || b.cpf || b.nome).trim())).size;
         const uniqueBoarded = new Set(directionBookings.filter(b => b.status === 'Embarcado').map(b => b.matricula || b.cpf)).size;
         const baseMasterSize = Math.floor(masterList.length / 3);
         const naoutilizou = Math.max(baseMasterSize - uniqueBoarded, 0);
 
-        return { booked, boarded, noshow, encaixe, naoutilizou };
+        return { passengers, booked, boarded, noshow, encaixe, naoutilizou };
     };
 
     const jbVol = getVolumes('JB');
     const egVol = getVolumes('EG');
     const ionVol = getVolumes('ION');
 
+    if (document.getElementById('jb-kpi-passengers')) document.getElementById('jb-kpi-passengers').textContent = jbVol.passengers;
     document.getElementById('jb-kpi-booked').textContent = jbVol.booked;
     document.getElementById('jb-kpi-boarded').textContent = jbVol.boarded;
     document.getElementById('jb-kpi-noshow').textContent = jbVol.noshow;
 
+    if (document.getElementById('eg-kpi-passengers')) document.getElementById('eg-kpi-passengers').textContent = egVol.passengers;
     document.getElementById('eg-kpi-booked').textContent = egVol.booked;
     document.getElementById('eg-kpi-boarded').textContent = egVol.boarded;
     document.getElementById('eg-kpi-noshow').textContent = egVol.noshow;
 
+    if (document.getElementById('ion-kpi-passengers')) document.getElementById('ion-kpi-passengers').textContent = ionVol.passengers;
     document.getElementById('ion-kpi-booked').textContent = ionVol.booked;
     document.getElementById('ion-kpi-boarded').textContent = ionVol.boarded;
     document.getElementById('ion-kpi-noshow').textContent = ionVol.noshow;
@@ -5157,8 +5224,8 @@ function applyRoleConfiguration(role) {
         defaultTab = 'operation';
         document.getElementById('active-profile-name').textContent = 'Operador de Transportes';
     } else if (role === 'driver') {
-        visibleTabs = ['tutorials'];
-        defaultTab = 'tutorials';
+        visibleTabs = ['driver-portal', 'tutorials'];
+        defaultTab = 'driver-portal';
         document.getElementById('active-profile-name').textContent = 'Motorista';
     } else if (role === 'manager') {
         visibleTabs = ['booking-portal', 'passenger', 'operation', 'management', 'bulk-booking', 'fleet', 'access-management', 'tutorials'];
@@ -5174,6 +5241,7 @@ function applyRoleConfiguration(role) {
         if (btn) {
             if (visibleTabs.includes(t)) {
                 btn.style.display = '';
+                btn.classList.remove('hidden');
             } else {
                 btn.style.display = 'none';
             }
@@ -8165,6 +8233,59 @@ function updateLiveMapMarkers() {
         } else {
             listContainer.innerHTML = '';
         }
+    }
+
+    // Renderizar monitoramentos manuais pendentes
+    try {
+        const manuals = JSON.parse(localStorage.getItem('rit_manual_monitorings') || '[]');
+        console.log(`[CCO/MONITORING] Loaded ${manuals.length} manual monitorings from localStorage.`);
+        manuals.forEach(m => {
+            const isAlreadyActive = Object.keys(filteredTrackers).some(name => name.toLowerCase() === m.motorista.toLowerCase());
+            if (!isAlreadyActive) {
+                if (listContainer) {
+                    if (listContainer.querySelector('.fa-satellite-dish')) {
+                        listContainer.innerHTML = '';
+                    }
+                    
+                    let telClean = String(m.telefone).replace(/\D/g, '');
+                    if (telClean.length === 10 || telClean.length === 11) {
+                        telClean = '55' + telClean;
+                    }
+                    const msgText = `Prezado Sr. ${m.motorista},\n\nSolicitamos a ativação do acompanhamento de rota para o atendimento de contingência no Portal do Motorista - Conexão Transportes RJ / Agente RIT:\n\n• Produto/Programa: ${m.programa}\n• Passageiro: ${m.passageiro}\n• Veículo: ${m.tipoVeiculo || m.veiculo} (${m.placa})\n• Saída: ${m.origem}\n• Destino: ${m.destino}\n\nFavor compartilhar sua posição iniciando o rastreamento no link abaixo:\n🔗 ${window.location.origin}/motorista.html?id=${m.id}\n\nObrigado.`;
+                    const waUrl = `https://wa.me/${telClean}?text=${encodeURIComponent(msgText)}`;
+
+                    const card = document.createElement('div');
+                    card.className = "bg-gray-900/60 border border-amber-500/30 rounded-xl p-3 text-xs space-y-2 relative overflow-hidden";
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <strong class="text-white font-bold block truncate">👤 ${m.motorista}</strong>
+                                <span class="text-[9px] text-gray-500 uppercase font-mono font-bold">${m.placa} | ${m.tipoVeiculo || m.veiculo}</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[9px] bg-amber-500/10 text-amber-400 font-bold px-1.5 py-0.5 rounded border border-amber-500/20">AGUARDANDO</span>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 gap-1 text-[10px] text-gray-300 bg-gray-950/40 p-2 rounded-lg">
+                            <div><span class="text-gray-500 font-medium">Programa:</span> ${m.programa}</div>
+                            <div><span class="text-gray-500 font-medium">Passageiro:</span> ${m.passageiro}</div>
+                            <div><span class="text-gray-500 font-medium">Saída:</span> ${m.origem}</div>
+                            <div><span class="text-gray-500 font-medium">Destino:</span> ${m.destino}</div>
+                        </div>
+                        
+                        <div class="flex gap-2 pt-1">
+                            <a href="${waUrl}" target="_blank" class="w-full text-center bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1.5 px-2 rounded-lg text-[10px] border border-emerald-500/30 transition flex items-center justify-center gap-1.5 cursor-pointer text-decoration-none">
+                                <i class="fa-solid fa-share-nodes"></i> Compartilhar Link
+                            </a>
+                        </div>
+                    `;
+                    listContainer.appendChild(card);
+                }
+            }
+        });
+    } catch(err) {
+        console.error("[CCO/MONITORING] Error rendering manual monitorings in sidebar:", err);
     }
     
     // Renderizar veículos ativos no Leaflet
@@ -11305,3 +11426,369 @@ renderAdherenceReport = function() {
     oldRenderAdherenceReport();
     renderAdherenceNominalReport();
 };
+
+// =========================================================================
+// --- CONTROLE NOMINAL DE PASSAGEIROS POR SITE (DASHBOARD DE EMBARQUES) ---
+// =========================================================================
+let currentSitePassengerModalCode = 'JB';
+
+window.openSitePassengersModal = function(siteCode) {
+    currentSitePassengerModalCode = siteCode || 'JB';
+    const siteNameElement = document.getElementById('spmodal-site-name');
+    if (siteNameElement) siteNameElement.textContent = currentSitePassengerModalCode;
+
+    const searchInput = document.getElementById('spmodal-search');
+    if (searchInput) searchInput.value = '';
+
+    renderSitePassengersList();
+    const modal = document.getElementById('site-passengers-modal');
+    if (modal) modal.classList.remove('hidden');
+};
+
+window.closeSitePassengersModal = function() {
+    const modal = document.getElementById('site-passengers-modal');
+    if (modal) modal.classList.add('hidden');
+};
+
+window.filterSitePassengersList = function() {
+    renderSitePassengersList();
+};
+
+window.renderSitePassengersList = function() {
+    const tbody = document.getElementById('spmodal-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const filterVal = (document.getElementById('spmodal-search')?.value || '').toLowerCase().trim();
+    const siteCode = currentSitePassengerModalCode;
+    const activeDates = getEventDates();
+
+    // Filtrar agendamentos do site no sentido atual
+    const siteBookings = (db.bookings || []).filter(b => {
+        if (b.status === 'Cancelado') return false;
+        if (!activeDates.includes(b.data)) return false;
+
+        if (typeof currentDirection !== 'undefined' && currentDirection === 'VAI') {
+            return (b.origem === siteCode || String(b.origem).includes(siteCode));
+        } else if (typeof currentDirection !== 'undefined' && currentDirection === 'VEM') {
+            return (b.destino === siteCode || String(b.destino).includes(siteCode));
+        }
+        return b.origem === siteCode || b.destino === siteCode;
+    });
+
+    // Agrupar por pessoa
+    const personMap = new Map();
+    let totalBookingsCount = 0;
+    let totalBoardedCount = 0;
+
+    siteBookings.forEach(b => {
+        totalBookingsCount++;
+        if (b.status === 'Embarcado') totalBoardedCount++;
+
+        const idKey = String(b.matricula || b.cpf || b.nome).trim();
+        if (!personMap.has(idKey)) {
+            const p = findPerson(b.matricula || b.cpf) || b;
+            personMap.set(idKey, {
+                id: idKey,
+                nome: p.nome || b.nome || 'Não informado',
+                area: getN1Area(p),
+                site: siteCode,
+                empresa: p.empresa || (p.tipo_vinculo === 'TERCEIRO' ? 'Terceiro' : 'Globo'),
+                bookings: [],
+                boardedCount: 0
+            });
+        }
+        const personObj = personMap.get(idKey);
+        personObj.bookings.push(b);
+        if (b.status === 'Embarcado') personObj.boardedCount++;
+    });
+
+    let personList = Array.from(personMap.values());
+
+    // Filtrar por busca
+    if (filterVal) {
+        personList = personList.filter(p =>
+            p.nome.toLowerCase().includes(filterVal) ||
+            p.area.toLowerCase().includes(filterVal) ||
+            p.site.toLowerCase().includes(filterVal) ||
+            p.id.toLowerCase().includes(filterVal)
+        );
+    }
+
+    // Ordenar por quantidade de agendamentos (decrescente), depois por nome
+    personList.sort((a, b) => b.bookings.length - a.bookings.length || a.nome.localeCompare(b.nome));
+
+    // Atualizar KPIs no cabeçalho do modal
+    const kpiPeople = document.getElementById('spmodal-kpi-people');
+    const kpiBookings = document.getElementById('spmodal-kpi-bookings');
+    const kpiBoarded = document.getElementById('spmodal-kpi-boarded');
+    const footerCount = document.getElementById('spmodal-footer-count');
+
+    if (kpiPeople) kpiPeople.textContent = personMap.size;
+    if (kpiBookings) kpiBookings.textContent = totalBookingsCount;
+    if (kpiBoarded) kpiBoarded.textContent = totalBoardedCount;
+    if (footerCount) footerCount.textContent = `Exibindo ${personList.length} de ${personMap.size} pessoas únicas`;
+
+    if (personList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-gray-500 font-semibold">Nenhum passageiro encontrado para os filtros selecionados.</td></tr>';
+        return;
+    }
+
+    personList.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-gray-900/40 transition-colors";
+        tr.innerHTML = `
+            <td class="p-3">
+                <a href="javascript:void(0)" onclick="closeSitePassengersModal(); openPersonDatesModal('${safeEscapeAttr(p.id)}')" class="font-bold text-white hover:text-indigo-400 transition cursor-pointer flex items-center gap-2">
+                    <i class="fa-solid fa-user text-indigo-400 text-xs"></i> ${safeEscapeHtml(p.nome)}
+                </a>
+                <span class="text-[10px] text-gray-500 font-mono block">ID/CPF: ${safeEscapeHtml(p.id)}</span>
+            </td>
+            <td class="p-3 font-semibold text-gray-300">${safeEscapeHtml(p.area)}</td>
+            <td class="p-3 font-bold text-indigo-300 font-mono uppercase">${safeEscapeHtml(p.site)}</td>
+            <td class="p-3 text-center">
+                <span class="bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-bold px-2.5 py-1 rounded-lg font-mono text-xs inline-block">
+                    ${p.bookings.length} agendamento(s)
+                </span>
+            </td>
+            <td class="p-3 text-right">
+                <button onclick="closeSitePassengersModal(); openPersonDatesModal('${safeEscapeAttr(p.id)}')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3 py-1.5 rounded-xl text-[10px] shadow transition cursor-pointer inline-flex items-center gap-1.5">
+                    <i class="fa-solid fa-ticket"></i> Ver Bilhetes
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+};
+
+window.exportSitePassengersCSV = function() {
+    const siteCode = currentSitePassengerModalCode;
+    const activeDates = getEventDates();
+
+    const siteBookings = (db.bookings || []).filter(b => {
+        if (b.status === 'Cancelado') return false;
+        if (!activeDates.includes(b.data)) return false;
+        if (typeof currentDirection !== 'undefined' && currentDirection === 'VAI') {
+            return (b.origem === siteCode || String(b.origem).includes(siteCode));
+        } else if (typeof currentDirection !== 'undefined' && currentDirection === 'VEM') {
+            return (b.destino === siteCode || String(b.destino).includes(siteCode));
+        }
+        return b.origem === siteCode || b.destino === siteCode;
+    });
+
+    const personMap = new Map();
+    siteBookings.forEach(b => {
+        const idKey = String(b.matricula || b.cpf || b.nome).trim();
+        if (!personMap.has(idKey)) {
+            const p = findPerson(b.matricula || b.cpf) || b;
+            personMap.set(idKey, {
+                nome: p.nome || b.nome || 'Não informado',
+                id: idKey,
+                area: getN1Area(p),
+                site: siteCode,
+                empresa: p.empresa || (p.tipo_vinculo === 'TERCEIRO' ? 'Terceiro' : 'Globo'),
+                count: 0
+            });
+        }
+        personMap.get(idKey).count++;
+    });
+
+    let csv = "NOME_PESSOA,ID_MATRICULA_CPF,AREA_ATUACAO,SITE_BASE,EMPRESA,QUANTIDADE_AGENDAMENTOS\n";
+    personMap.forEach(p => {
+        csv += `"${p.nome}","${p.id}","${p.area}","${p.site}","${p.empresa}","${p.count}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Controle_Passageiros_Site_${siteCode}_${currentEvent}_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+    showToast("CSV Exportado", `Lista nominal do site ${siteCode} exportada com sucesso.`, "success");
+};
+
+// =========================================================================
+// --- PASSAGEIROS AGENDADOS N1 (RELATÓRIO DE ADERÊNCIA N1) ---
+// =========================================================================
+window.openScheduledPassengersModal = function() {
+    const searchInput = document.getElementById('spn1modal-search');
+    if (searchInput) searchInput.value = '';
+
+    renderScheduledPassengersN1ModalList();
+    const modal = document.getElementById('scheduled-passengers-n1-modal');
+    if (modal) modal.classList.remove('hidden');
+};
+
+window.closeScheduledPassengersModal = function() {
+    const modal = document.getElementById('scheduled-passengers-n1-modal');
+    if (modal) modal.classList.add('hidden');
+};
+
+window.filterScheduledPassengersN1List = function() {
+    renderScheduledPassengersN1ModalList();
+};
+
+window.renderScheduledPassengersN1ModalList = function() {
+    const tbody = document.getElementById('spn1modal-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const filterVal = (document.getElementById('spn1modal-search')?.value || '').toLowerCase().trim();
+    const activeDates = getEventDates();
+    const activeBookings = (db.bookings || []).filter(b => activeDates.includes(b.data) && b.status !== 'Cancelado');
+
+    // Agrupa por colaborador
+    const personMap = new Map();
+    activeBookings.forEach(b => {
+        const idKey = String(b.matricula || b.cpf || b.nome).trim();
+        if (!personMap.has(idKey)) {
+            const p = findPerson(b.matricula || b.cpf) || b;
+            const siteBase = p.site || p.base || b.origem || 'JB';
+            personMap.set(idKey, {
+                id: idKey,
+                nome: p.nome || b.nome || 'Não informado',
+                area: getN1Area(p),
+                site: siteBase,
+                empresa: p.empresa || (p.tipo_vinculo === 'TERCEIRO' ? 'Terceiro' : 'Globo'),
+                bookingsCount: 0
+            });
+        }
+        personMap.get(idKey).bookingsCount++;
+    });
+
+    let personList = Array.from(personMap.values());
+
+    if (filterVal) {
+        personList = personList.filter(p =>
+            p.nome.toLowerCase().includes(filterVal) ||
+            p.area.toLowerCase().includes(filterVal) ||
+            p.site.toLowerCase().includes(filterVal) ||
+            p.empresa.toLowerCase().includes(filterVal) ||
+            p.id.toLowerCase().includes(filterVal)
+        );
+    }
+
+    personList.sort((a, b) => a.nome.localeCompare(b.nome));
+
+    const footerCount = document.getElementById('spn1modal-footer-count');
+    if (footerCount) footerCount.textContent = `Exibindo ${personList.length} de ${personMap.size} passageiros agendados`;
+
+    if (personList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-gray-500 font-semibold">Nenhum passageiro agendado encontrado para o filtro informado.</td></tr>';
+        return;
+    }
+
+    personList.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-gray-900/40 transition-colors";
+        tr.innerHTML = `
+            <td class="p-3">
+                <a href="javascript:void(0)" onclick="closeScheduledPassengersModal(); openPersonDatesModal('${safeEscapeAttr(p.id)}')" class="font-bold text-white hover:text-teal-300 transition cursor-pointer flex items-center gap-2">
+                    <i class="fa-solid fa-user text-teal-400 text-xs"></i> ${safeEscapeHtml(p.nome)}
+                </a>
+                <span class="text-[10px] text-gray-500 font-mono block">Matrícula/CPF: ${safeEscapeHtml(p.id)}</span>
+            </td>
+            <td class="p-3 font-semibold text-gray-300">${safeEscapeHtml(p.area)}</td>
+            <td class="p-3 font-bold text-teal-300 font-mono uppercase">${safeEscapeHtml(p.site)}</td>
+            <td class="p-3 text-gray-300 font-medium">${safeEscapeHtml(p.empresa)}</td>
+            <td class="p-3 text-right">
+                <button onclick="closeScheduledPassengersModal(); openPersonDatesModal('${safeEscapeAttr(p.id)}')" class="bg-teal-600 hover:bg-teal-500 text-white font-bold px-3 py-1.5 rounded-xl text-[10px] shadow transition cursor-pointer inline-flex items-center gap-1.5">
+                    <i class="fa-solid fa-calendar-days"></i> Ver Dias
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+};
+
+window.exportScheduledPassengersN1ModalCSV = function() {
+    const activeDates = getEventDates();
+    const activeBookings = (db.bookings || []).filter(b => activeDates.includes(b.data) && b.status !== 'Cancelado');
+
+    const personMap = new Map();
+    activeBookings.forEach(b => {
+        const idKey = String(b.matricula || b.cpf || b.nome).trim();
+        if (!personMap.has(idKey)) {
+            const p = findPerson(b.matricula || b.cpf) || b;
+            const siteBase = p.site || p.base || b.origem || 'JB';
+            personMap.set(idKey, {
+                nome: p.nome || b.nome || 'Não informado',
+                id: idKey,
+                area: getN1Area(p),
+                site: siteBase,
+                empresa: p.empresa || (p.tipo_vinculo === 'TERCEIRO' ? 'Terceiro' : 'Globo')
+            });
+        }
+    });
+
+    let csv = "NOME_PESSOA,MATRICULA_CPF,AREA_ATUACAO,SITE,EMPRESA\n";
+    personMap.forEach(p => {
+        csv += `"${p.nome}","${p.id}","${p.area}","${p.site}","${p.empresa}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Passageiros_Agendados_N1_${currentEvent}_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+    showToast("CSV Exportado", "Lista nominal de passageiros agendados N1 exportada com sucesso.", "success");
+};
+
+// --- MANUAL MONITORING MODAL HANDLERS (CCO) ---
+window.abrirManualMonitoringModal = function() {
+    console.log("[CCO/MONITORING] Opening manual monitoring modal.");
+    const modal = document.getElementById('cco-manual-monitoring-modal');
+    if (modal) modal.classList.remove('hidden');
+};
+
+window.fecharManualMonitoringModal = function() {
+    console.log("[CCO/MONITORING] Closing manual monitoring modal.");
+    const modal = document.getElementById('cco-manual-monitoring-modal');
+    if (modal) modal.classList.add('hidden');
+    const form = document.getElementById('cco-form-manual-monitoring');
+    if (form) form.reset();
+};
+
+window.handleManualMonitoringSubmit = function(event) {
+    event.preventDefault();
+    console.log("[CCO/MONITORING] Form manual monitoring submitted.");
+    
+    const item = {
+        id: 'man_' + Date.now(),
+        programa: document.getElementById('cco-m-programa').value,
+        motorista: document.getElementById('cco-m-motorista').value,
+        telefone: document.getElementById('cco-m-telefone').value,
+        tipoVeiculo: document.getElementById('cco-m-veiculo').value,
+        placa: document.getElementById('cco-m-placa').value,
+        passageiro: document.getElementById('cco-m-passageiro').value,
+        origem: document.getElementById('cco-m-saida').value,
+        destino: document.getElementById('cco-m-destino').value,
+        dataHoraInicioRaw: document.getElementById('cco-m-inicio').value,
+        dataHoraFimRaw: document.getElementById('cco-m-fim').value,
+        statusAtendimento: 'AGUARDANDO',
+        isManual: true
+    };
+
+    try {
+        const list = JSON.parse(localStorage.getItem('rit_manual_monitorings') || '[]');
+        list.push(item);
+        localStorage.setItem('rit_manual_monitorings', JSON.stringify(list));
+        console.log("[CCO/MONITORING] Saved manual item successfully in localStorage:", item);
+        showToast("Monitoramento Salvo", `Motorista ${item.motorista} adicionado à contingência.`, "success");
+    } catch (err) {
+        console.error("[CCO/MONITORING] Error saving manual item in localStorage:", err);
+        showToast("Erro ao Salvar", "Não foi possível salvar o monitoramento manual.", "error");
+    }
+
+    fecharManualMonitoringModal();
+    updateLiveMapMarkers();
+
+    // Trigger WhatsApp link
+    let telClean = String(item.telefone).replace(/\D/g, '');
+    if (telClean.length === 10 || telClean.length === 11) {
+        telClean = '55' + telClean;
+    }
+    const msgText = `Prezado Sr. ${item.motorista},\n\nSolicitamos a ativação do acompanhamento de rota para o atendimento de contingência no Portal do Motorista - Conexão Transportes RJ / Agente RIT:\n\n• Produto/Programa: ${item.programa}\n• Passageiro: ${item.passageiro}\n• Veículo: ${item.tipoVeiculo} (${item.placa})\n• Saída: ${item.origem}\n• Destino: ${item.destino}\n\nFavor compartilhar sua posição iniciando o rastreamento no link abaixo:\n🔗 ${window.location.origin}/motorista.html?id=${item.id}\n\nObrigado.`;
+    const waUrl = `https://wa.me/${telClean}?text=${encodeURIComponent(msgText)}`;
+    window.open(waUrl, '_blank');
+};
+
